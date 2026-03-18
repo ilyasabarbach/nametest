@@ -1,0 +1,29 @@
+{
+  "id": "fame-level",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 8,
+  "titleKey": "test.fame.title",
+  "subtitleKey": "test.fame.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Stage name", "placeholder": "Enter a name", "maxLength": 20 }
+  ],
+  "scoringFormula": "spotlightFormula",
+  "resultBands": [
+    { "key": "rising-star", "minScore": 0, "maxScore": 42, "titleKey": "result.risingStar.title", "descriptionKey": "result.risingStar.body", "accent": "#8ecae6" },
+    { "key": "headline", "minScore": 43, "maxScore": 77, "titleKey": "result.headline.title", "descriptionKey": "result.headline.body", "accent": "#ffb703" },
+    { "key": "legend-mode", "minScore": 78, "maxScore": 100, "titleKey": "result.legendMode.title", "descriptionKey": "result.legendMode.body", "accent": "#fb8500" }
+  ],
+  "resultVariants": [
+    { "key": "rising-soft", "insightKey": "insight.risingStar.soft", "aura": "soft" },
+    { "key": "headline-electric", "insightKey": "insight.headline.electric", "aura": "electric" },
+    { "key": "legend-bold", "insightKey": "insight.legendMode.bold", "aura": "bold" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1d3557", "#e63946"],
+    "symbol": "spotlight"
+  }
+}

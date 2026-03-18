@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cosmic_midnight">#0F1630</color>
+    <color name="cosmic_navy">#17244D</color>
+    <color name="cosmic_gold">#FFD166</color>
+    <color name="cosmic_ember">#FF7A59</color>
+    <color name="cosmic_cream">#F8F4E8</color>
+    <color name="cosmic_glow">#63B3FF</color>
+</resources>

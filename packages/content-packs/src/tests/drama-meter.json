@@ -1,0 +1,29 @@
+{
+  "id": "drama-meter",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 5,
+  "titleKey": "test.drama.title",
+  "subtitleKey": "test.drama.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Other name", "placeholder": "Enter their name", "maxLength": 20 }
+  ],
+  "scoringFormula": "chaosFormula",
+  "resultBands": [
+    { "key": "calm", "minScore": 0, "maxScore": 34, "titleKey": "result.calm.title", "descriptionKey": "result.calm.body", "accent": "#4cc9f0" },
+    { "key": "storm", "minScore": 35, "maxScore": 69, "titleKey": "result.storm.title", "descriptionKey": "result.storm.body", "accent": "#f8961e" },
+    { "key": "cinema", "minScore": 70, "maxScore": 100, "titleKey": "result.cinema.title", "descriptionKey": "result.cinema.body", "accent": "#ef476f" }
+  ],
+  "resultVariants": [
+    { "key": "calm-soft", "insightKey": "insight.calm.soft", "aura": "soft" },
+    { "key": "storm-electric", "insightKey": "insight.storm.electric", "aura": "electric" },
+    { "key": "cinema-bold", "insightKey": "insight.cinema.bold", "aura": "bold" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#111827", "#7c3aed"],
+    "symbol": "storm"
+  }
+}

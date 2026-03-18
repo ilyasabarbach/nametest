@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/cosmic_midnight" />
+
+    <item>
+        <shape android:shape="oval">
+            <size
+                android:width="220dp"
+                android:height="220dp" />
+            <solid android:color="#24FFD166" />
+        </shape>
+    </item>
+
+    <item
+        android:bottom="180dp"
+        android:left="48dp"
+        android:right="48dp"
+        android:top="180dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="28dp" />
+            <gradient
+                android:angle="270"
+                android:endColor="@color/cosmic_navy"
+                android:startColor="@color/cosmic_midnight" />
+            <stroke
+                android:width="1dp"
+                android:color="#26FFFFFF" />
+        </shape>
+    </item>
+
+    <item
+        android:gravity="center"
+        android:height="132dp"
+        android:width="132dp"
+        android:drawable="@drawable/ic_launcher_foreground" />
+</layer-list>

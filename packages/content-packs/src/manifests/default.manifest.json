@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "defaultLocale": "en",
+  "featuredTestId": "love-match",
+  "testIds": ["love-match", "wedding-bells", "friendship-score", "secret-crush", "future-career", "drama-meter", "star-aura", "fame-level"]
+}

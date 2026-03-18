@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "defaultLocale": "en",
+  "featuredTestId": "love-match",
+  "testIds": [
+    "love-match",
+    "friendship-score",
+    "future-career"
+  ]
+}

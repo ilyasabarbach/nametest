@@ -1,0 +1,280 @@
+:root {
+  color: #f8f4e8;
+  background:
+    radial-gradient(circle at top, rgba(255, 209, 102, 0.18), transparent 35%),
+    linear-gradient(180deg, #0f1630 0%, #17244d 100%);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+}
+
+#game-root,
+#hud-root {
+  position: absolute;
+  inset: 0;
+}
+
+#hud-root {
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+.hud-panel {
+  width: min(100%, 360px);
+  max-height: calc(100dvh - 48px);
+  pointer-events: auto;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  padding: 22px;
+  background: rgba(7, 11, 26, 0.78);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  overflow-y: auto;
+}
+
+.hud-panel--home {
+  width: min(100%, 560px);
+}
+
+.hud-panel--home .hud-pill-row-wide {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.hud-panel--home .hud-test-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.hud-panel--home .hud-test-tile {
+  min-height: 72px;
+}
+
+.hud-panel h1,
+.hud-panel h2,
+.hud-panel p {
+  margin: 0;
+}
+
+.hud-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.hud-pill-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.hud-pill-row-wide {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.hud-pill {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.hud-pill strong {
+  font-size: 1.1rem;
+}
+
+.hud-pill span {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+
+.hud-test-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.hud-test-tile {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  color: #f8f4e8;
+  background: rgba(255, 255, 255, 0.05);
+  text-align: left;
+  cursor: pointer;
+}
+
+.hud-test-tile.selected {
+  border-color: rgba(255, 209, 102, 0.7);
+  background: rgba(255, 209, 102, 0.12);
+}
+
+.hud-test-tile:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.hud-label {
+  font-size: 0.9rem;
+  opacity: 0.86;
+}
+
+.hud-input,
+.hud-button {
+  width: 100%;
+  border: 0;
+  border-radius: 18px;
+  padding: 14px 16px;
+  font: inherit;
+}
+
+.hud-input {
+  color: #f8f4e8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hud-button {
+  cursor: pointer;
+  color: #1a1a1a;
+  background: linear-gradient(135deg, #ffd166, #ff7a59);
+  font-weight: 700;
+}
+
+.hud-button.secondary {
+  color: #f8f4e8;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.hud-score {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+@media (max-height: 820px) {
+  #hud-root {
+    place-items: start center;
+    padding: 14px;
+  }
+
+  .hud-panel {
+    max-height: calc(100dvh - 28px);
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .hud-stack {
+    gap: 10px;
+  }
+
+  .hud-pill {
+    padding: 8px 10px;
+  }
+
+  .hud-test-tile {
+    gap: 4px;
+    padding: 10px;
+  }
+
+  .hud-input,
+  .hud-button {
+    padding: 12px 14px;
+  }
+
+  .hud-score {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-height: 680px) {
+  #hud-root {
+    padding: 10px;
+  }
+
+  .hud-panel {
+    width: min(100%, 380px);
+    max-height: calc(100dvh - 20px);
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .hud-stack {
+    gap: 8px;
+  }
+
+  .hud-pill-row,
+  .hud-pill-row-wide,
+  .hud-test-grid {
+    gap: 8px;
+  }
+
+  .hud-label,
+  .hud-pill span,
+  .hud-test-tile small {
+    font-size: 0.8rem;
+  }
+
+  .hud-panel h1,
+  .hud-panel h2 {
+    font-size: 1.35rem;
+  }
+
+  .hud-panel p {
+    font-size: 0.92rem;
+  }
+
+  .hud-score {
+    font-size: 2.15rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .hud-panel--home {
+    width: min(100%, 420px);
+  }
+
+  .hud-panel--home .hud-pill-row-wide,
+  .hud-panel--home .hud-test-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  #hud-root {
+    padding: 12px;
+  }
+
+  .hud-panel {
+    width: 100%;
+    padding: 18px;
+  }
+
+  .hud-panel--home {
+    width: 100%;
+  }
+}

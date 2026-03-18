@@ -1,0 +1,29 @@
+{
+  "id": "star-aura",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 6,
+  "titleKey": "test.aura.title",
+  "subtitleKey": "test.aura.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Star sign name", "placeholder": "Enter any name", "maxLength": 20 }
+  ],
+  "scoringFormula": "spotlightFormula",
+  "resultBands": [
+    { "key": "glow", "minScore": 0, "maxScore": 39, "titleKey": "result.glow.title", "descriptionKey": "result.glow.body", "accent": "#90e0ef" },
+    { "key": "nova", "minScore": 40, "maxScore": 79, "titleKey": "result.nova.title", "descriptionKey": "result.nova.body", "accent": "#ffd166" },
+    { "key": "eclipse", "minScore": 80, "maxScore": 100, "titleKey": "result.eclipse.title", "descriptionKey": "result.eclipse.body", "accent": "#ff9f1c" }
+  ],
+  "resultVariants": [
+    { "key": "glow-soft", "insightKey": "insight.glow.soft", "aura": "soft" },
+    { "key": "nova-lucky", "insightKey": "insight.nova.lucky", "aura": "lucky" },
+    { "key": "eclipse-bold", "insightKey": "insight.eclipse.bold", "aura": "bold" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1b1b3a", "#6930c3"],
+    "symbol": "halo"
+  }
+}

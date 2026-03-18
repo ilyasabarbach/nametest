@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+.turbo/
+.pnpm-store/
+playwright-report/
+test-results/
+android-shell-output/
+*.log
+.env

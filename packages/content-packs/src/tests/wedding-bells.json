@@ -1,0 +1,29 @@
+{
+  "id": "wedding-bells",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 1,
+  "titleKey": "test.wedding.title",
+  "subtitleKey": "test.wedding.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Their name", "placeholder": "Enter their name", "maxLength": 20 }
+  ],
+  "scoringFormula": "futureFormula",
+  "resultBands": [
+    { "key": "maybe", "minScore": 0, "maxScore": 39, "titleKey": "result.maybe.title", "descriptionKey": "result.maybe.body", "accent": "#78c0e0" },
+    { "key": "promise", "minScore": 40, "maxScore": 74, "titleKey": "result.promise.title", "descriptionKey": "result.promise.body", "accent": "#f28482" },
+    { "key": "bells", "minScore": 75, "maxScore": 100, "titleKey": "result.bells.title", "descriptionKey": "result.bells.body", "accent": "#f6bd60" }
+  ],
+  "resultVariants": [
+    { "key": "maybe-soft", "insightKey": "insight.maybe.soft", "aura": "soft" },
+    { "key": "promise-bold", "insightKey": "insight.promise.bold", "aura": "bold" },
+    { "key": "bells-lucky", "insightKey": "insight.bells.lucky", "aura": "lucky" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#341c3f", "#7a306c"],
+    "symbol": "ring"
+  }
+}

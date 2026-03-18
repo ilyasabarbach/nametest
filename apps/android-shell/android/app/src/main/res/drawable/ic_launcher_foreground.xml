@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:gravity="center"
+        android:height="88dp"
+        android:width="88dp">
+        <shape android:shape="oval">
+            <gradient
+                android:angle="315"
+                android:endColor="@color/cosmic_ember"
+                android:startColor="@color/cosmic_gold" />
+        </shape>
+    </item>
+
+    <item
+        android:gravity="center"
+        android:height="30dp"
+        android:width="130dp"
+        android:right="26dp"
+        android:top="8dp">
+        <rotate android:fromDegrees="-22" android:toDegrees="-22">
+            <shape android:shape="rectangle">
+                <corners android:radius="15dp" />
+                <gradient
+                    android:angle="0"
+                    android:endColor="#00FFFFFF"
+                    android:startColor="@color/cosmic_glow" />
+            </shape>
+        </rotate>
+    </item>
+
+    <item
+        android:gravity="center"
+        android:height="18dp"
+        android:width="18dp"
+        android:left="34dp"
+        android:top="34dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/cosmic_cream" />
+        </shape>
+    </item>
+</layer-list>

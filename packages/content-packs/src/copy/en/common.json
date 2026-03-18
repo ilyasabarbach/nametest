@@ -1,0 +1,18 @@
+{
+  "app.title": "Cosmic Match",
+  "home.start": "Start the reading",
+  "home.primaryLabel": "Your name",
+  "home.partnerLabel": "Their name",
+  "home.daily": "Daily cosmic pick",
+  "home.streak": "Streak",
+  "home.sessions": "Sessions",
+  "home.rewards": "Reward coins",
+  "home.collection": "Collected results",
+  "home.event": "Live event",
+  "home.unlock": "Unlocks at session {count}",
+  "result.share": "Share result",
+  "result.retry": "Try another name",
+  "result.reward": "Unlock secret reading",
+  "result.secretTitle": "Secret reading unlocked",
+  "result.signature": "Signature"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "friendship-score",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 2,
+  "titleKey": "test.friendship.title",
+  "subtitleKey": "test.friendship.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Bestie name", "placeholder": "Enter their name", "maxLength": 20 }
+  ],
+  "scoringFormula": "compatibilityFormula",
+  "resultBands": [
+    { "key": "solid", "minScore": 0, "maxScore": 49, "titleKey": "result.solid.title", "descriptionKey": "result.solid.body", "accent": "#57cc99" },
+    { "key": "legendary", "minScore": 50, "maxScore": 100, "titleKey": "result.legendary.title", "descriptionKey": "result.legendary.body", "accent": "#f4a261" }
+  ],
+  "resultVariants": [
+    { "key": "solid-soft", "insightKey": "insight.solid.soft", "aura": "soft" },
+    { "key": "legendary-lucky", "insightKey": "insight.legendary.lucky", "aura": "lucky" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#0d2f2f", "#227c70"],
+    "symbol": "ribbon"
+  }
+}

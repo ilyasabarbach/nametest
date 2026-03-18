@@ -1,0 +1,27 @@
+{
+  "id": "future-career",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 4,
+  "titleKey": "test.future.title",
+  "subtitleKey": "test.future.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Dream role", "placeholder": "Enter a dream title", "maxLength": 20 }
+  ],
+  "scoringFormula": "compatibilityFormula",
+  "resultBands": [
+    { "key": "rising", "minScore": 0, "maxScore": 54, "titleKey": "result.rising.title", "descriptionKey": "result.rising.body", "accent": "#7b5cff" },
+    { "key": "iconic", "minScore": 55, "maxScore": 100, "titleKey": "result.iconic.title", "descriptionKey": "result.iconic.body", "accent": "#ffbe0b" }
+  ],
+  "resultVariants": [
+    { "key": "rising-soft", "insightKey": "insight.rising.soft", "aura": "soft" },
+    { "key": "iconic-bold", "insightKey": "insight.iconic.bold", "aura": "bold" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1c1538", "#49306b"],
+    "symbol": "badge"
+  }
+}

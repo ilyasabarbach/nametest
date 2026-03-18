@@ -1,0 +1,29 @@
+{
+  "id": "love-match",
+  "category": "compatibility",
+  "enabled": true,
+  "featured": true,
+  "unlockAfterSessions": 0,
+  "titleKey": "test.loveMatch.title",
+  "subtitleKey": "test.loveMatch.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Their name", "placeholder": "Enter their name", "maxLength": 20 }
+  ],
+  "scoringFormula": "compatibilityFormula",
+  "resultBands": [
+    { "key": "steady", "minScore": 0, "maxScore": 39, "titleKey": "result.steady.title", "descriptionKey": "result.steady.body", "accent": "#5d7df5" },
+    { "key": "spark", "minScore": 40, "maxScore": 69, "titleKey": "result.spark.title", "descriptionKey": "result.spark.body", "accent": "#ff9966" },
+    { "key": "destiny", "minScore": 70, "maxScore": 100, "titleKey": "result.destiny.title", "descriptionKey": "result.destiny.body", "accent": "#ffd166" }
+  ],
+  "resultVariants": [
+    { "key": "steady-soft", "insightKey": "insight.steady.soft", "aura": "soft" },
+    { "key": "spark-electric", "insightKey": "insight.spark.electric", "aura": "electric" },
+    { "key": "destiny-bold", "insightKey": "insight.destiny.bold", "aura": "bold" }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#131b35", "#23406c"],
+    "symbol": "comet"
+  }
+}

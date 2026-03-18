@@ -1,0 +1,12 @@
+{
+  "featureFlags": {
+    "adsEnabled": true,
+    "shareEnabled": true,
+    "hiddenTestsEnabled": false
+  },
+  "balance": {
+    "interstitialEvery": 3,
+    "rewardUnlockThreshold": 40
+  },
+  "featuredTestId": "love-match"
+}
