@@ -1,0 +1,14 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="360" rx="36" fill="#FFF4EC"/>
+  <rect x="26" y="26" width="588" height="308" rx="28" fill="url(#paint0_linear)"/>
+  <circle cx="504" cy="110" r="84" fill="white" fill-opacity="0.22"/>
+  <path d="M188 140C188 116 208 98 232 98C250 98 266 107 276 122C286 107 302 98 320 98C344 98 364 116 364 140C364 192 276 246 276 246C276 246 188 192 188 140Z" fill="#FFF8F1"/>
+  <text x="68" y="284" fill="#FFF8F1" font-family="Georgia, serif" font-size="42" font-weight="700">Cosmic Match</text>
+  <text x="68" y="315" fill="#FFF8F1" font-family="Georgia, serif" font-size="19">Romance, screenshots, impossible chemistry</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="74" y1="42" x2="560" y2="318" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8A65"/>
+      <stop offset="1" stop-color="#F94144"/>
+    </linearGradient>
+  </defs>
+</svg>

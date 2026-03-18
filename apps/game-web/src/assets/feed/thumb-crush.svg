@@ -1,0 +1,16 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="360" rx="36" fill="#FFF1F4"/>
+  <rect x="26" y="26" width="588" height="308" rx="28" fill="url(#paint0_linear)"/>
+  <circle cx="494" cy="102" r="82" fill="white" fill-opacity="0.18"/>
+  <path d="M252 98C272 98 288 114 288 134C288 160 252 188 252 188C252 188 216 160 216 134C216 114 232 98 252 98Z" fill="#FFF8FA"/>
+  <path d="M320 136L380 196" stroke="#FFF8FA" stroke-width="16" stroke-linecap="round"/>
+  <path d="M364 196L380 196L380 180" stroke="#FFF8FA" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="284" fill="#FFF8FA" font-family="Georgia, serif" font-size="42" font-weight="700">Secret Crush Signal</text>
+  <text x="68" y="315" fill="#FFF8FA" font-family="Georgia, serif" font-size="19">Quiet spark or impossible-to-ignore pull</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="66" y1="44" x2="570" y2="318" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F497B6"/>
+      <stop offset="1" stop-color="#F94144"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -17,9 +17,12 @@
     { "key": "destiny", "minScore": 70, "maxScore": 100, "titleKey": "result.destiny.title", "descriptionKey": "result.destiny.body", "accent": "#ffd166" }
   ],
   "resultVariants": [
-    { "key": "steady-soft", "insightKey": "insight.steady.soft", "aura": "soft" },
-    { "key": "spark-electric", "insightKey": "insight.spark.electric", "aura": "electric" },
-    { "key": "destiny-bold", "insightKey": "insight.destiny.bold", "aura": "bold" }
+    { "key": "steady-soft", "insightKey": "insight.steady.soft", "aura": "soft", "resultKeys": ["steady"] },
+    { "key": "steady-patient", "insightKey": "insight.steady.patient", "aura": "soft", "resultKeys": ["steady"] },
+    { "key": "spark-electric", "insightKey": "insight.spark.electric", "aura": "electric", "resultKeys": ["spark"] },
+    { "key": "spark-playful", "insightKey": "insight.spark.playful", "aura": "electric", "resultKeys": ["spark"] },
+    { "key": "destiny-bold", "insightKey": "insight.destiny.bold", "aura": "bold", "resultKeys": ["destiny"] },
+    { "key": "destiny-cinematic", "insightKey": "insight.destiny.cinematic", "aura": "lucky", "resultKeys": ["destiny"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

@@ -9,6 +9,7 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @nametests/game-web",
+    "dev:feed-api": "npm run dev --workspace @nametests/discovery-feed-api",
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",

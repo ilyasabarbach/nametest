@@ -17,9 +17,12 @@
     { "key": "eclipse", "minScore": 80, "maxScore": 100, "titleKey": "result.eclipse.title", "descriptionKey": "result.eclipse.body", "accent": "#ff9f1c" }
   ],
   "resultVariants": [
-    { "key": "glow-soft", "insightKey": "insight.glow.soft", "aura": "soft" },
-    { "key": "nova-lucky", "insightKey": "insight.nova.lucky", "aura": "lucky" },
-    { "key": "eclipse-bold", "insightKey": "insight.eclipse.bold", "aura": "bold" }
+    { "key": "glow-soft", "insightKey": "insight.glow.soft", "aura": "soft", "resultKeys": ["glow"] },
+    { "key": "glow-charm", "insightKey": "insight.glow.charm", "aura": "soft", "resultKeys": ["glow"] },
+    { "key": "nova-lucky", "insightKey": "insight.nova.lucky", "aura": "lucky", "resultKeys": ["nova"] },
+    { "key": "nova-bright", "insightKey": "insight.nova.bright", "aura": "electric", "resultKeys": ["nova"] },
+    { "key": "eclipse-bold", "insightKey": "insight.eclipse.bold", "aura": "bold", "resultKeys": ["eclipse"] },
+    { "key": "eclipse-rare", "insightKey": "insight.eclipse.rare", "aura": "lucky", "resultKeys": ["eclipse"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

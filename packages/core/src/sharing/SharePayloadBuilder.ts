@@ -9,15 +9,28 @@ const templates: Record<string, string> = {
 export function buildSharePayload(
   definition: TestDefinition,
   result: TestRunResult,
-  names: { primaryName: string; partnerName: string }
+  names: { primaryName: string; partnerName: string },
+  copy?: Record<string, string>
 ): string {
-  const template = templates[definition.shareTemplateKey] ?? "{primaryName} scored {score}%!";
+  const template =
+    copy
+      ? "{primaryName} + {partnerName} got {title} at {score}% in Cosmic Match. {hook} {sharePrompt}"
+      : templates[definition.shareTemplateKey] ?? "{primaryName} scored {score}%!";
   const flavor = getResultFlavor(definition, result, names);
+  const title = copy?.[result.resultTitleKey] ?? result.resultTitleKey;
+  const hook = copy?.[`result.hook.${flavor.variant.aura}`] ?? flavor.variant.aura;
+  const sharePrompt =
+    copy?.[
+      result.score >= 80 ? "result.sharePrompt.high" : result.score >= 55 ? "result.sharePrompt.mid" : "result.sharePrompt.low"
+    ] ?? "This one is built for screenshots.";
 
   return template
     .replace("{primaryName}", names.primaryName)
     .replace("{partnerName}", names.partnerName)
+    .replace("{title}", title)
     .replace("{score}", String(result.score))
     .replace("{aura}", flavor.variant.aura)
-    .replace("{signature}", flavor.signature);
+    .replace("{signature}", flavor.signature)
+    .replace("{hook}", hook)
+    .replace("{sharePrompt}", sharePrompt);
 }

@@ -11,6 +11,9 @@ import weddingBells from "./tests/wedding-bells.json";
 import common from "./copy/en/common.json";
 import tests from "./copy/en/tests.json";
 import results from "./copy/en/results.json";
+export * from "./discovery/homeFeed";
+export * from "./discovery/feedFallback";
+export * from "./copy";
 
 export const defaultManifest = manifest as ContentManifest;
 export const defaultTests = [

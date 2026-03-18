@@ -18,6 +18,7 @@ export class TestScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.revealComplete = false;
     clearHud();
     const width = this.scale.width;
     const height = this.scale.height;
@@ -48,7 +49,7 @@ export class TestScene extends Phaser.Scene {
     }).setOrigin(0.5);
     testTitle.setAlpha(0.92);
 
-    const reading = this.add.text(width / 2, height / 2 + 30, revealSteps[0]?.title ?? "Reading the stars...", {
+    const reading = this.add.text(width / 2, height / 2 + 30, revealSteps[0]?.title ?? runtime.copy["test.readingDefault"], {
       fontFamily: "Georgia",
       fontSize: `${Math.max(28, Math.min(40, width * 0.05))}px`,
       color: "#f8f4e8",
@@ -84,7 +85,7 @@ export class TestScene extends Phaser.Scene {
       color: "#b7c8ef"
     }).setOrigin(0.5);
 
-    const skipHint = this.add.text(width / 2, height - 44, "Tap to skip reveal", {
+    const skipHint = this.add.text(width / 2, height - 44, runtime.copy["test.skipHint"], {
       fontFamily: "Georgia",
       fontSize: "14px",
       color: "#f8f4e8"
@@ -125,7 +126,9 @@ export class TestScene extends Phaser.Scene {
 
       reading.setText(step.title);
       detail.setText(step.detail);
-      progressLabel.setText(`Step ${index + 1} of ${revealSteps.length}`);
+      progressLabel.setText(
+        runtime.copy["test.stepLabel"].replace("{current}", String(index + 1)).replace("{total}", String(revealSteps.length))
+      );
       reading.setAlpha(0.18);
       detail.setAlpha(0.18);
       reading.y = height / 2 + 42;
@@ -150,7 +153,7 @@ export class TestScene extends Phaser.Scene {
     };
 
     this.input.once("pointerdown", () => {
-      skipHint.setText("Reveal skipped");
+      skipHint.setText(runtime.copy["test.skipped"]);
       finishReveal();
     });
 
@@ -165,23 +168,28 @@ export class TestScene extends Phaser.Scene {
 
     return [
       {
-        title: `Opening the ${testTitle}`,
-        detail: `${names.primaryName} and ${names.partnerName} just entered the ${categoryLabel} chamber.`,
+        title: runtime.copy["test.step.opening"].replace("{test}", testTitle),
+        detail: runtime.copy["test.step.openingDetail"]
+          .replace("{left}", names.primaryName)
+          .replace("{right}", names.partnerName)
+          .replace("{category}", categoryLabel),
         duration: 700
       },
       {
-        title: `Tracing the ${symbolLabel}`,
-        detail: `Lining up hidden patterns between ${names.primaryName} and ${names.partnerName}.`,
+        title: runtime.copy["test.step.tracing"].replace("{symbol}", symbolLabel),
+        detail: runtime.copy["test.step.tracingDetail"]
+          .replace("{left}", names.primaryName)
+          .replace("{right}", names.partnerName),
         duration: 850
       },
       {
-        title: "Reading the energy",
-        detail: `Weighing the chemistry, chaos, and lucky timing behind this match.`,
+        title: runtime.copy["test.step.energy"],
+        detail: runtime.copy["test.step.energyDetail"],
         duration: 850
       },
       {
-        title: "Locking your result",
-        detail: "Finalizing the score and preparing your headline reveal.",
+        title: runtime.copy["test.step.locking"],
+        detail: runtime.copy["test.step.lockingDetail"],
         duration: 650
       }
     ];
@@ -190,39 +198,39 @@ export class TestScene extends Phaser.Scene {
   private getCategoryLabel(category: string): string {
     switch (category) {
       case "compatibility":
-        return "compatibility";
+        return runtime.copy["test.category.compatibility"];
       case "personality":
-        return "personality";
+        return runtime.copy["test.category.personality"];
       case "future":
-        return "future-reading";
+        return runtime.copy["test.category.future"];
       default:
-        return "mystery";
+        return runtime.copy["test.category.default"];
     }
   }
 
   private getSymbolGlyph(symbol: string): string {
     switch (symbol) {
       case "comet":
-        return "COMET";
+        return runtime.copy["test.symbol.cometGlyph"];
       case "badge":
-        return "BADGE";
+        return runtime.copy["test.symbol.badgeGlyph"];
       case "storm":
-        return "STORM";
+        return runtime.copy["test.symbol.stormGlyph"];
       default:
-        return "STAR";
+        return runtime.copy["test.symbol.defaultGlyph"];
     }
   }
 
   private getSymbolLabel(symbol: string): string {
     switch (symbol) {
       case "comet":
-        return "comet trail";
+        return runtime.copy["test.symbol.cometLabel"];
       case "badge":
-        return "spotlight badge";
+        return runtime.copy["test.symbol.badgeLabel"];
       case "storm":
-        return "storm signal";
+        return runtime.copy["test.symbol.stormLabel"];
       default:
-        return "star map";
+        return runtime.copy["test.symbol.defaultLabel"];
     }
   }
 }

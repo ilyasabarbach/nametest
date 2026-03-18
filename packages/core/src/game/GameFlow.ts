@@ -19,11 +19,14 @@ export class GameFlow {
       selectedTest,
       names: { primaryName, partnerName },
       rewardState: createRewardState(),
-      playerProgress: createPlayerProgress()
+      playerProgress: createPlayerProgress(),
+      progressSummary: undefined
     };
   }
 
   runSession(state: SessionState, input: TestRunInput, allTests: TestDefinition[], currentDate = new Date()): SessionState {
+    const previouslyUnlockedIds = new Set(state.playerProgress.unlockedTestIds);
+    const previouslyCollectedResults = new Set(state.playerProgress.collectedResultKeys);
     const latestResult = this.runner.run(state.selectedTest, input);
     const nextProgress = updateProgressAfterSession(
       state.playerProgress,
@@ -37,6 +40,10 @@ export class GameFlow {
     return {
       ...state,
       latestResult,
+      progressSummary: {
+        newlyUnlockedTestIds: unlockedTestIds.filter((testId) => !previouslyUnlockedIds.has(testId)),
+        newlyCollectedResultKey: previouslyCollectedResults.has(latestResult.resultKey) ? undefined : latestResult.resultKey
+      },
       playerProgress: {
         ...collectedProgress,
         unlockedTestIds

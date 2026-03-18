@@ -1,0 +1,18 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="360" rx="36" fill="#FFF3F6"/>
+  <rect x="26" y="26" width="588" height="308" rx="28" fill="url(#paint0_linear)"/>
+  <circle cx="490" cy="108" r="82" fill="white" fill-opacity="0.18"/>
+  <path d="M238 230C238 184 276 146 322 146C368 146 406 184 406 230" stroke="#FFF8FA" stroke-width="24" stroke-linecap="round"/>
+  <path d="M256 160L286 126" stroke="#FFF8FA" stroke-width="18" stroke-linecap="round"/>
+  <path d="M388 160L358 126" stroke="#FFF8FA" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="280" cy="216" r="16" fill="#FFF8FA"/>
+  <circle cx="364" cy="216" r="16" fill="#FFF8FA"/>
+  <text x="68" y="284" fill="#FFF8FA" font-family="Georgia, serif" font-size="42" font-weight="700">Drama Meter</text>
+  <text x="68" y="315" fill="#FFF8FA" font-family="Georgia, serif" font-size="19">Calm, stormy, or pure cinema energy</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="66" y1="44" x2="572" y2="316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#EF476F"/>
+    </linearGradient>
+  </defs>
+</svg>

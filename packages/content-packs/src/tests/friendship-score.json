@@ -16,8 +16,10 @@
     { "key": "legendary", "minScore": 50, "maxScore": 100, "titleKey": "result.legendary.title", "descriptionKey": "result.legendary.body", "accent": "#f4a261" }
   ],
   "resultVariants": [
-    { "key": "solid-soft", "insightKey": "insight.solid.soft", "aura": "soft" },
-    { "key": "legendary-lucky", "insightKey": "insight.legendary.lucky", "aura": "lucky" }
+    { "key": "solid-soft", "insightKey": "insight.solid.soft", "aura": "soft", "resultKeys": ["solid"] },
+    { "key": "solid-trust", "insightKey": "insight.solid.trust", "aura": "soft", "resultKeys": ["solid"] },
+    { "key": "legendary-lucky", "insightKey": "insight.legendary.lucky", "aura": "lucky", "resultKeys": ["legendary"] },
+    { "key": "legendary-chaotic", "insightKey": "insight.legendary.chaotic", "aura": "electric", "resultKeys": ["legendary"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

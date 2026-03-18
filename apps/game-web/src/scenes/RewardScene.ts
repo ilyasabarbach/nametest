@@ -13,7 +13,7 @@ export class RewardScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     this.add.rectangle(width / 2, height / 2, width, height, 0x120f26);
-    this.add.text(width / 2, height / 2 - 42, "Unlocking secret reading...", {
+    this.add.text(width / 2, height / 2 - 42, runtime.copy["reward.loading"], {
       fontFamily: "Georgia",
       fontSize: "28px",
       color: "#f8f4e8"
@@ -33,17 +33,25 @@ export class RewardScene extends Phaser.Scene {
 
     const card = runtime.latestCard();
     showResultOverlay({
+      hook: card.hook,
       title: runtime.copy["result.secretTitle"],
-      body: `${card.body} Secret reading: your names rise when you stay bold, playful, and curious.`,
-      insight: `${card.insight} This rare variant is designed for replay and sharing.`,
+      body: `${card.body} ${runtime.copy["result.secretBodySuffix"]}`,
+      insight: `${card.insight} ${runtime.copy["result.secretInsightSuffix"]}`,
       score: card.score,
       signature: `${card.signature}-PLUS`,
+      signatureLabel: runtime.copy["result.signatureLabel"],
+      shareHint: card.sharePrompt,
+      shareLabel: runtime.copy["result.shareLabel"],
+      progressTitle: runtime.copy["result.progressTitle"],
       partnerName: runtime.session.names.partnerName,
       partnerLabel: runtime.copy["home.partnerLabel"],
+      retryLabel: runtime.copy["result.retry"],
+      rewardLabel: runtime.copy["result.reward"],
       meta: [
         { value: String(runtime.progress.rewardCoins), label: runtime.copy["home.rewards"] },
         { value: String(runtime.progress.collectedResultKeys.length), label: runtime.copy["home.collection"] }
       ],
+      progressionItems: [],
       accent: "#ffd166",
       rewardVisible: false,
       onRetry: (partnerName) => {
@@ -54,13 +62,17 @@ export class RewardScene extends Phaser.Scene {
       onShare: async () =>
         runtime.share.share({
           title: runtime.copy["result.secretTitle"],
-          text: `${runtime.latestShareText()} Secret reading unlocked.`,
+          text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
           imageDataUrl: await buildShareCard({
+            brandLabel: runtime.copy["app.title"],
+            hook: card.hook,
             title: runtime.copy["result.secretTitle"],
             score: card.score,
-            body: `${card.body} Secret reading unlocked.`,
-            insight: `${card.insight} Secret reading unlocked.`,
+            body: `${card.body} ${runtime.copy["result.secretUnlockedShort"]}`,
+            insight: `${card.insight} ${runtime.copy["result.secretUnlockedShort"]}`,
             signature: `${card.signature}-PLUS`,
+            signatureLabel: runtime.copy["result.signatureLabel"],
+            sharePrompt: card.sharePrompt,
             names: `${runtime.session.names.primaryName} + ${runtime.session.names.partnerName}`,
             accent: "#ffd166"
           }),

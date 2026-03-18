@@ -17,9 +17,12 @@
     { "key": "cinema", "minScore": 70, "maxScore": 100, "titleKey": "result.cinema.title", "descriptionKey": "result.cinema.body", "accent": "#ef476f" }
   ],
   "resultVariants": [
-    { "key": "calm-soft", "insightKey": "insight.calm.soft", "aura": "soft" },
-    { "key": "storm-electric", "insightKey": "insight.storm.electric", "aura": "electric" },
-    { "key": "cinema-bold", "insightKey": "insight.cinema.bold", "aura": "bold" }
+    { "key": "calm-soft", "insightKey": "insight.calm.soft", "aura": "soft", "resultKeys": ["calm"] },
+    { "key": "calm-steady", "insightKey": "insight.calm.steady", "aura": "soft", "resultKeys": ["calm"] },
+    { "key": "storm-electric", "insightKey": "insight.storm.electric", "aura": "electric", "resultKeys": ["storm"] },
+    { "key": "storm-chaotic", "insightKey": "insight.storm.chaotic", "aura": "electric", "resultKeys": ["storm"] },
+    { "key": "cinema-bold", "insightKey": "insight.cinema.bold", "aura": "bold", "resultKeys": ["cinema"] },
+    { "key": "cinema-spotlight", "insightKey": "insight.cinema.spotlight", "aura": "lucky", "resultKeys": ["cinema"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

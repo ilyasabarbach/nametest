@@ -1,0 +1,16 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="360" rx="36" fill="#F1FBF7"/>
+  <rect x="26" y="26" width="588" height="308" rx="28" fill="url(#paint0_linear)"/>
+  <circle cx="472" cy="104" r="76" fill="white" fill-opacity="0.2"/>
+  <path d="M214 112C214 96 227 83 243 83C256 83 267 90 274 101C281 90 292 83 305 83C321 83 334 96 334 112V173C334 189 321 202 305 202H243C227 202 214 189 214 173V112Z" fill="#F8FFF9"/>
+  <path d="M196 133H214V152H196C185 152 176 143 176 133C176 122 185 113 196 113V133Z" fill="#F8FFF9"/>
+  <path d="M334 133H352C363 133 372 142 372 153C372 164 363 173 352 173H334V133Z" fill="#F8FFF9"/>
+  <text x="68" y="284" fill="#F8FFF9" font-family="Georgia, serif" font-size="42" font-weight="700">Friendship Voltage</text>
+  <text x="68" y="315" fill="#F8FFF9" font-family="Georgia, serif" font-size="19">Trust, chaos, and legendary duo timing</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="70" y1="44" x2="572" y2="316" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#57CC99"/>
+      <stop offset="1" stop-color="#2A9D8F"/>
+    </linearGradient>
+  </defs>
+</svg>

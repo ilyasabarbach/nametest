@@ -3,7 +3,7 @@
   "category": "personality",
   "enabled": false,
   "featured": false,
-  "unlockAfterSessions": 8,
+  "unlockAfterSessions": 7,
   "titleKey": "test.fame.title",
   "subtitleKey": "test.fame.subtitle",
   "prompts": [
@@ -17,9 +17,12 @@
     { "key": "legend-mode", "minScore": 78, "maxScore": 100, "titleKey": "result.legendMode.title", "descriptionKey": "result.legendMode.body", "accent": "#fb8500" }
   ],
   "resultVariants": [
-    { "key": "rising-soft", "insightKey": "insight.risingStar.soft", "aura": "soft" },
-    { "key": "headline-electric", "insightKey": "insight.headline.electric", "aura": "electric" },
-    { "key": "legend-bold", "insightKey": "insight.legendMode.bold", "aura": "bold" }
+    { "key": "rising-soft", "insightKey": "insight.risingStar.soft", "aura": "soft", "resultKeys": ["rising-star"] },
+    { "key": "rising-buzz", "insightKey": "insight.risingStar.buzz", "aura": "soft", "resultKeys": ["rising-star"] },
+    { "key": "headline-electric", "insightKey": "insight.headline.electric", "aura": "electric", "resultKeys": ["headline"] },
+    { "key": "headline-caption", "insightKey": "insight.headline.caption", "aura": "electric", "resultKeys": ["headline"] },
+    { "key": "legend-bold", "insightKey": "insight.legendMode.bold", "aura": "bold", "resultKeys": ["legend-mode"] },
+    { "key": "legend-crowd", "insightKey": "insight.legendMode.crowd", "aura": "lucky", "resultKeys": ["legend-mode"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

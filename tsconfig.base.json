@@ -11,6 +11,8 @@
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {
+      "@nametests/backend-contracts": ["packages/backend-contracts/src/index.ts"],
+      "@nametests/content-packs": ["packages/content-packs/src/index.ts"],
       "@nametests/core": ["packages/core/src/index.ts"],
       "@nametests/platform-sdk": ["packages/platform-sdk/src/index.ts"],
       "@nametests/content-packs/*": ["packages/content-packs/src/*"],

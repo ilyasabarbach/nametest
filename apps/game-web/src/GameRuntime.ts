@@ -1,5 +1,13 @@
-import type { RemoteConfigPayload } from "@nametests/backend-contracts/remoteConfig.schema";
-import { defaultManifest, defaultTests, enCopy } from "@nametests/content-packs";
+import { isDiscoveryFeedPagePayload, type DiscoveryFeedItemPayload, type RemoteConfigPayload } from "@nametests/backend-contracts";
+import {
+  defaultManifest,
+  defaultTests,
+  enCopy,
+  getFallbackDiscoveryFeedPage,
+  homeFeedLocales,
+  resolveCopyForLocale,
+  type HomeFeedLocale
+} from "@nametests/content-packs";
 import {
   GameFlow,
   STORAGE_KEYS,
@@ -11,8 +19,10 @@ import {
   defaultFeatureFlags,
   generateResultCard,
   getLimitedEvent,
+  getNextUnlockTarget,
   getUnlockedTests,
   selectDailyFeaturedTest,
+  toDateKey,
   type PlayerProgress,
   type SessionState,
   type TestDefinition
@@ -32,6 +42,9 @@ type RuntimeState = {
   remoteConfigService: IRemoteConfig;
   share: IShare;
   storage: IStorage;
+  locale: HomeFeedLocale;
+  discoveryFeedItems: DiscoveryFeedItemPayload[];
+  discoveryFeedNextCursor?: string;
   remoteConfig: RemoteConfigPayload;
   progress: PlayerProgress;
   allTests: TestDefinition[];
@@ -75,9 +88,25 @@ async function loadStoredProgress(storage: IStorage): Promise<PlayerProgress> {
   }
 }
 
+async function loadStoredLocale(storage: IStorage): Promise<HomeFeedLocale> {
+  const raw = await storage.getItem(STORAGE_KEYS.locale);
+  switch (raw) {
+    case "fr":
+    case "es":
+    case "de":
+    case "ar":
+    case "pt":
+    case "en":
+      return raw;
+    default:
+      return "en";
+  }
+}
+
 function createInitialState(services: PlatformServices): RuntimeState {
   const flow = new GameFlow(defaultFeatureFlags);
   const dailyFeatured = defaultTests[0];
+  const today = toDateKey(new Date());
 
   return {
     initialized: false,
@@ -90,15 +119,42 @@ function createInitialState(services: PlatformServices): RuntimeState {
     remoteConfigService: services.remoteConfig,
     share: services.share,
     storage: services.storage,
+    locale: "en",
+    discoveryFeedItems: [],
+    discoveryFeedNextCursor: undefined,
     remoteConfig: fallbackRemoteConfig as RemoteConfigPayload,
     progress: createPlayerProgress(),
     allTests: defaultTests,
     availableTests: [dailyFeatured],
     dailyFeatured,
-    activeEvent: getLimitedEvent(new Date().toISOString().slice(0, 10)),
+    activeEvent: getLimitedEvent(today),
     lastDailyRewardCoins: 0,
     session: flow.createSession(dailyFeatured)
   };
+}
+
+async function loadDiscoveryFeedPage(locale: HomeFeedLocale, cursor?: string) {
+  const configuredBase = import.meta.env.VITE_DISCOVERY_FEED_URL as string | undefined;
+  if (configuredBase) {
+    try {
+      const url = new URL(configuredBase, window.location.href);
+      url.searchParams.set("locale", locale);
+      if (cursor) {
+        url.searchParams.set("cursor", cursor);
+      }
+      const response = await fetch(url.toString());
+      if (response.ok) {
+        const payload = (await response.json()) as unknown;
+        if (isDiscoveryFeedPagePayload(payload)) {
+          return payload;
+        }
+      }
+    } catch {
+      // Fall back to the local published snapshot builder.
+    }
+  }
+
+  return getFallbackDiscoveryFeedPage(locale, cursor);
 }
 
 export const runtime = {
@@ -114,20 +170,24 @@ export const runtime = {
   },
 
   async init(): Promise<void> {
-    const [remoteConfig, progress] = await Promise.all([
+    const [remoteConfig, progress, locale] = await Promise.all([
       loadRemoteConfig(this.state.remoteConfigService),
-      loadStoredProgress(this.state.storage)
+      loadStoredProgress(this.state.storage),
+      loadStoredLocale(this.state.storage)
     ]);
     this.state.remoteConfig = remoteConfig;
     this.state.progress = progress;
+    this.state.locale = locale;
+    this.state.copy = resolveCopyForLocale(locale);
     this.state.flow.setFlags(remoteConfig.featureFlags);
 
     const manifest = {
       ...defaultManifest,
       featuredTestId: remoteConfig.featuredTestId
     };
-    const dateKey = new Date().toISOString().slice(0, 10);
-    const dailyReward = claimDailyReward(progress, new Date());
+    const currentDate = new Date();
+    const dateKey = toDateKey(currentDate);
+    const dailyReward = claimDailyReward(progress, currentDate);
     const effectiveProgress = dailyReward.progress;
     const dailyFeatured = selectDailyFeaturedTest(manifest, defaultTests, dateKey);
     const availableTests = getUnlockedTests(defaultTests, effectiveProgress, remoteConfig.featureFlags.hiddenTestsEnabled);
@@ -143,6 +203,9 @@ export const runtime = {
     this.state.registry = new TestRegistry(availableTests);
     this.state.activeEvent = getLimitedEvent(dateKey);
     this.state.lastDailyRewardCoins = dailyReward.rewardCoins;
+    const firstFeedPage = await loadDiscoveryFeedPage(locale);
+    this.state.discoveryFeedItems = firstFeedPage.items;
+    this.state.discoveryFeedNextCursor = firstFeedPage.nextCursor;
     this.state.session = {
       ...this.state.flow.createSession(activeTest),
       playerProgress: effectiveProgress,
@@ -186,6 +249,22 @@ export const runtime = {
 
   get progress() {
     return this.state.progress;
+  },
+
+  get locale() {
+    return this.state.locale;
+  },
+
+  getSupportedLocales() {
+    return homeFeedLocales;
+  },
+
+  getDiscoveryFeedItems() {
+    return this.state.discoveryFeedItems;
+  },
+
+  hasMoreDiscoveryFeed() {
+    return Boolean(this.state.discoveryFeedNextCursor);
   },
 
   get session() {
@@ -256,7 +335,7 @@ export const runtime = {
       return "";
     }
 
-    return buildSharePayload(this.state.session.selectedTest, this.state.session.latestResult, this.state.session.names);
+    return buildSharePayload(this.state.session.selectedTest, this.state.session.latestResult, this.state.session.names, this.state.copy);
   },
 
   canShowReward() {
@@ -269,6 +348,26 @@ export const runtime = {
     await this.state.storage.setItem(STORAGE_KEYS.progress, JSON.stringify(this.state.progress));
   },
 
+  async setLocale(locale: HomeFeedLocale): Promise<void> {
+    this.state.locale = locale;
+    this.state.copy = resolveCopyForLocale(locale);
+    const firstFeedPage = await loadDiscoveryFeedPage(locale);
+    this.state.discoveryFeedItems = firstFeedPage.items;
+    this.state.discoveryFeedNextCursor = firstFeedPage.nextCursor;
+    await this.state.storage.setItem(STORAGE_KEYS.locale, locale);
+  },
+
+  async loadMoreDiscoveryFeed(): Promise<DiscoveryFeedItemPayload[]> {
+    if (!this.state.discoveryFeedNextCursor) {
+      return [];
+    }
+
+    const nextPage = await loadDiscoveryFeedPage(this.state.locale, this.state.discoveryFeedNextCursor);
+    this.state.discoveryFeedItems = [...this.state.discoveryFeedItems, ...nextPage.items];
+    this.state.discoveryFeedNextCursor = nextPage.nextCursor;
+    return nextPage.items;
+  },
+
   getUnlockLabel(test: TestDefinition): string | null {
     if (this.state.availableTests.some((entry) => entry.id === test.id)) {
       return null;
@@ -276,6 +375,31 @@ export const runtime = {
 
     const unlockAt = test.unlockAfterSessions ?? 0;
     return this.state.copy["home.unlock"].replace("{count}", String(unlockAt));
+  },
+
+  getNextUnlock() {
+    const target = getNextUnlockTarget(
+      this.state.allTests,
+      this.state.progress,
+      this.state.remoteConfig.featureFlags.hiddenTestsEnabled
+    );
+
+    if (!target) {
+      return null;
+    }
+
+    const test = this.state.allTests.find((entry) => entry.id === target.testId);
+    if (!test) {
+      return null;
+    }
+
+    return {
+      id: target.testId,
+      label: this.state.copy[test.titleKey] ?? target.testId,
+      unlockAtSessions: target.unlockAtSessions,
+      sessionsRemaining: target.sessionsRemaining,
+      sessionsPlayedTowardUnlock: Math.min(this.state.progress.sessionsPlayed, target.unlockAtSessions)
+    };
   },
 
   refreshAvailability(): void {

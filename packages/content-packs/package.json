@@ -11,6 +11,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@nametests/backend-contracts": "workspace:*",
     "@nametests/core": "workspace:*"
   }
 }

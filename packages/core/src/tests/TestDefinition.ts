@@ -15,6 +15,7 @@ export type ResultVariant = {
   key: string;
   insightKey: string;
   aura: "soft" | "bold" | "electric" | "lucky";
+  resultKeys?: string[];
 };
 
 export type TestDefinition = {

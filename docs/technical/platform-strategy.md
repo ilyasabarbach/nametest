@@ -29,8 +29,11 @@ Current readiness by engineering judgment:
 - the core loop exists end to end: choose a test, enter names, run the reveal, get a result, replay, and share
 - the game already has progression systems that fit the genre: unlocks, daily feature, daily reward, result collection, and event flavor
 - the content system is data-driven, which is the correct architecture for a NameTests-style product
+- the home surface is now much closer to the correct genre shape: bright, editorial, feed-first, and thumbnail-led
+- the game now supports multi-language presentation across the supported selector locales
+- the discovery feed now has a real API seam instead of being only a front-end mock
 - the project has a clear platform abstraction package, even though not all adapters are finished yet
-- the browser build is reasonably small for future Playables work
+- the browser build is functional and production-buildable, though still too large for comfort
 - workspace typecheck, unit tests, and content validation pass
 
 ### What Is Still Structurally Weak
@@ -40,14 +43,19 @@ Current readiness by engineering judgment:
 - the Android shell now has first-pass branding resources and launch theming, but it is still not a release-ready shell
 - automated QA is not release-grade yet
 - the current content catalog is still MVP-sized rather than category-leading
+- translation quality is still implementation-grade rather than release-grade
+- the new discovery-feed API is a real backend seam, but not yet a full live-ops/content-management system
 
 ### Concrete Repo Facts To Remember
 
 - `apps/game-web/src/platform/services.ts` now selects a platform service bundle for browser, Android, or Facebook
 - `apps/game-web/src/GameRuntime.ts` now consumes platform interfaces instead of hardcoded browser adapters
+- `apps/game-web/src/GameRuntime.ts` also now owns locale-aware copy resolution and paginated discovery-feed loading
 - `packages/platform-sdk/src/capacitor/index.ts` now uses Capacitor platform detection, Preferences-backed storage, a native share path with browser fallback, and Android lifecycle/back-button hooks
 - `apps/game-web/src/platform/installLifecycle.ts` now binds platform lifecycle behavior to the Phaser game at startup
 - `apps/android-shell/android/app/src/main/res` now contains strings, colors, themes, splash background, and adaptive icon resources
+- `apps/discovery-feed-api` now exists as a local backend workspace serving paginated feed payloads
+- `packages/backend-contracts/src/discoveryFeed.schema.ts` defines the shared feed payload shape
 - `packages/platform-sdk/src/facebookInstant/index.ts` currently returns no-op or placeholder behavior for storage, share, analytics, and ads
 - `apps/android-shell` contains the shell package, manifest, Capacitor config, and Gradle config, but those are still minimal
 - `tests/e2e` exists, but the current browser QA story is still thin and some expectations can drift as scenes evolve
@@ -63,14 +71,17 @@ This project is intentionally original, but it is trying to match the product st
 - share-card generation
 - content-driven test catalog
 - replayability and collection hooks
+- white browse-first discovery surface with thread-like cards and curiosity-led headlines
+- multilingual presentation foundation
 
 ### Where The Current Game Still Falls Short
 
 - NameTests-style products use stronger platform-native personalization; this project still relies on manual text entry only
-- NameTests-style products make sharing a native viral loop; this project still uses a generic browser-style share path
+- NameTests-style products make sharing a native viral loop; this project still has Android-native edge cases and no Facebook-native viral surface yet
 - NameTests-style products win on catalog size and result variety; this project only has a small starter catalog today
 - NameTests-style products are tuned through real analytics and content iteration; this project still has placeholder analytics
 - NameTests-style products have clearer public trust and privacy messaging than the project currently exposes
+- NameTests-style products use very high-volume editorial content operations; this project only has the first backend seam, not the full live-content system
 
 ### Important Product Rule
 
@@ -103,11 +114,12 @@ Why:
 - the package id and namespace are set
 - the Android shell targets SDK 35
 - the web build output is already pointed at the Android shell
+- the Android shell is now a complete Gradle project that Android Studio can sync and run on a real phone
 
 ### What Is Still Missing Before Google Play Release
 
 - deeper native lifecycle handling beyond the current pause/resume/back baseline
-- image-file sharing and richer Android-native share behavior
+- final Android-native share reliability across real targets such as WhatsApp
 - hardened persistence expectations for the Android wrapper beyond the current Preferences baseline
 - Android-specific QA on real devices
 - deeper icon/splash polish, release metadata, privacy materials, and store listing assets
@@ -147,7 +159,6 @@ YouTube Playables is a valid future target, but it should be treated as a dedica
 ### Why The Current Codebase Is Promising
 
 - the game is HTML5-based already
-- the build size is promising for Playables constraints
 - the core loop is simple enough to fit Playables expectations
 
 ### Why The Current Codebase Is Not Yet Playables-Ready
@@ -221,7 +232,7 @@ What remains:
 
 - stronger unit coverage around progression and share payload behavior
 - E2E coverage for the actual current scene flow
-- regression tests for replay, persistence, unlocks, reward flow, and share-card generation
+- regression tests for replay, persistence, unlocks, reward flow, discovery-feed selection behavior, locale switching, and share-card generation
 - Android lifecycle QA
 - certification-style checks for later platforms
 
@@ -237,6 +248,8 @@ What remains:
 - better copy polish
 - better event rotation
 - better progression pacing
+- stronger feed freshness and ranking behavior
+- more editorial card diversity and seasonal/live content cadence
 
 ### 4. Measurement And Live Tuning
 
@@ -250,6 +263,17 @@ What remains:
 - feature flags / balance tuning strategy
 - a practical content iteration workflow
 
+### 5. Localization Maturity
+
+The game now supports multiple locales in code, but localization still needs to become release-grade.
+
+What remains:
+
+- native-speaker review
+- terminology consistency pass
+- line-length / overflow QA across devices
+- localized content operations for future live-feed updates
+
 ## What Still Needs To Be Implemented
 
 This is the durable backlog view.
@@ -259,24 +283,36 @@ This is the durable backlog view.
 - finish the new platform-injection foundation by making all platform adapters conform to the same real production expectations
 - remove browser-only assumptions from flows that will later run inside Android, Facebook Instant, or YouTube Playables
 - separate platform-safe behavior for share, ads, and persistence
+- keep the shared feed contract, API workspace, and runtime fetch path aligned as the discovery surface grows
 
 ### Android Release Work
 
 - continue expanding the real Capacitor platform behavior now that storage/share/lifecycle wiring exists
 - verify back button, pause/resume, and background behavior on real Android hardware
+- return to WhatsApp/native-share debugging after the current gameplay/UI pass
 - continue refining icons, splash assets, app theme polish, and release signing process
 - prepare privacy policy, target audience, content rating, and store listing assets
 - run closed testing if the account type requires it
 - test on real Android hardware
 - add production analytics and crash monitoring
 
+### Current Android QA Status
+
+- Android Studio can now sync the shell and launch the app on a real phone
+- the old home-screen scroll bug was reproduced on-device and then fixed
+- the home surface was then redesigned into a white editorial feed
+- the newest QA issues shifted toward feed interaction details rather than shell bootstrap
+
 ### Product Work Before Shipping
 
 - continue fixing short-height and edge-case layout issues
+- keep polishing the white editorial home/feed until it fully sells the genre
 - expand the content catalog meaningfully beyond the current starter set
 - reduce result repetition
 - strengthen the result-card and replay loop until retention feels real
+- improve feed ranking, feed freshness, and live-content controls beyond the local API baseline
 - validate that share, replay, and progression feel satisfying on repeat sessions
+- validate localization quality and layout quality across supported locales
 
 ### Facebook Instant Work Later
 
@@ -306,13 +342,13 @@ Use this order unless product strategy changes:
 
 ## Current Best Next Step
 
-The immediate next engineering step is still:
+The immediate next engineering step is now:
 
-- finish the remaining short-height home-screen polish
+- run and fix full on-device gameplay QA issues across the feed, thread selection, reading, result, replay, share, back-button, background/resume, persistence, and locale-switching flows
 
 The next strategic step after that is:
 
-- deepen the Android-native layer beyond the current storage/share/lifecycle baseline
+- deepen the Android-native layer beyond the current storage/share/lifecycle baseline, while also maturing the new feed/live-content path
 
 ## External Research Notes
 

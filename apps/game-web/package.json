@@ -10,6 +10,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@nametests/backend-contracts": "workspace:*",
     "@nametests/content-packs": "workspace:*",
     "@nametests/core": "workspace:*",
     "@nametests/platform-sdk": "workspace:*",

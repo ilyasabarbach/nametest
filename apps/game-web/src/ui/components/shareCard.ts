@@ -1,9 +1,13 @@
 type ShareCardOptions = {
+  brandLabel: string;
+  hook: string;
   title: string;
   score: string;
   body: string;
   insight: string;
   signature: string;
+  signatureLabel: string;
+  sharePrompt: string;
   names: string;
   accent: string;
 };
@@ -31,41 +35,45 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
 
   context.fillStyle = "#f8f4e8";
   context.font = "bold 66px Georgia";
-  context.fillText("COSMIC MATCH", 90, 160);
+  context.fillText(options.brandLabel, 90, 160);
 
   context.font = "32px Georgia";
   context.fillStyle = "#ffd166";
   context.fillText(options.names, 90, 240);
 
+  context.font = "bold 34px Georgia";
+  context.fillStyle = options.accent;
+  context.fillText(options.hook.toUpperCase(), 90, 296);
+
   context.fillStyle = "rgba(9, 13, 28, 0.72)";
-  roundRect(context, 72, 310, 936, 1060, 42);
+  roundRect(context, 72, 330, 936, 1030, 42);
   context.fill();
 
   context.fillStyle = options.accent;
   context.font = "bold 144px Georgia";
-  context.fillText(options.score, 110, 520);
+  context.fillText(options.score, 110, 530);
 
   context.fillStyle = "#f8f4e8";
   context.font = "bold 84px Georgia";
-  wrapText(context, options.title, 110, 660, 820, 94);
+  wrapText(context, options.title, 110, 670, 820, 94);
 
   context.font = "40px Georgia";
-  wrapText(context, options.body, 110, 860, 840, 58);
+  wrapText(context, options.body, 110, 870, 840, 58);
 
   context.fillStyle = "#b7d7ff";
   context.font = "italic 34px Georgia";
-  wrapText(context, options.insight, 110, 1180, 820, 48);
+  wrapText(context, options.insight, 110, 1160, 820, 48);
 
   context.fillStyle = "#ffd166";
   context.font = "bold 34px Georgia";
-  context.fillText(`Signature: ${options.signature}`, 110, 1440);
+  context.fillText(`${options.signatureLabel}: ${options.signature}`, 110, 1380);
 
   context.fillStyle = "rgba(255,255,255,0.12)";
   roundRect(context, 72, 1560, 936, 200, 36);
   context.fill();
   context.fillStyle = "#f8f4e8";
   context.font = "32px Georgia";
-  wrapText(context, "Type two names. Reveal the hidden reading. Replay until the universe gives you a collectible result.", 110, 1640, 840, 46);
+  wrapText(context, options.sharePrompt, 110, 1640, 840, 46);
 
   return canvas.toDataURL("image/png");
 }

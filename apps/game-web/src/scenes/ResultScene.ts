@@ -14,6 +14,25 @@ export class ResultScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const card = runtime.latestCard();
+    const progressionSummary = runtime.session.progressSummary;
+    const unlockCelebrated = Boolean(progressionSummary?.newlyUnlockedTestIds?.length);
+    const progressionItems = [
+      ...(progressionSummary?.newlyCollectedResultKey
+        ? [
+            {
+              title: runtime.copy["result.progressCollected"],
+              detail: card.headline
+            }
+          ]
+        : []),
+      ...(progressionSummary?.newlyUnlockedTestIds ?? []).map((testId) => {
+        const unlockedTest = runtime.state.allTests.find((test) => test.id === testId);
+        return {
+          title: runtime.copy["result.progressUnlocked"],
+          detail: unlockedTest ? runtime.copy[unlockedTest.titleKey] : testId
+        };
+      })
+    ];
     this.add.rectangle(width / 2, height / 2, width, height, 0x101528);
     this.add.circle(width - 110, 164, Math.min(72, width * 0.16), Phaser.Display.Color.HexStringToColor(card.accent).color, 0.16);
     this.createParticles(card.accent);
@@ -25,17 +44,25 @@ export class ResultScene extends Phaser.Scene {
     });
 
     showResultOverlay({
+      hook: card.hook,
       title: card.headline,
       body: card.body,
       insight: card.insight,
       score: card.score,
       signature: card.signature,
+      signatureLabel: runtime.copy["result.signatureLabel"],
+      shareHint: card.sharePrompt,
+      shareLabel: runtime.copy["result.shareLabel"],
+      progressTitle: runtime.copy[unlockCelebrated ? "result.progressUnlockTitle" : "result.progressTitle"],
       partnerName: runtime.session.names.partnerName,
       partnerLabel: runtime.copy["home.partnerLabel"],
+      retryLabel: runtime.copy["result.retry"],
+      rewardLabel: runtime.copy["result.reward"],
       meta: [
         { value: String(runtime.progress.rewardCoins), label: runtime.copy["home.rewards"] },
         { value: String(runtime.progress.collectedResultKeys.length), label: runtime.copy["home.collection"] }
       ],
+      progressionItems,
       accent: card.accent,
       rewardVisible: runtime.canShowReward(),
       onRetry: (partnerName) => {
@@ -45,11 +72,15 @@ export class ResultScene extends Phaser.Scene {
       },
       onShare: async () => {
         const imageDataUrl = await buildShareCard({
+          brandLabel: runtime.copy["app.title"],
+          hook: card.hook,
           title: card.headline,
           score: card.score,
           body: card.body,
           insight: card.insight,
           signature: card.signature,
+          signatureLabel: runtime.copy["result.signatureLabel"],
+          sharePrompt: card.sharePrompt,
           names: `${runtime.session.names.primaryName} + ${runtime.session.names.partnerName}`,
           accent: card.accent
         });

@@ -1,5 +1,6 @@
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Preferences } from "@capacitor/preferences";
 import { Share } from "@capacitor/share";
 import type { IAds } from "../interfaces/IAds";
@@ -98,11 +99,53 @@ export const capacitorRemoteConfig: IRemoteConfig = {
 };
 
 async function shareWithCapacitor(payload: SharePayload): Promise<void> {
-  await Share.share({
+  const sharedImageUri = payload.imageDataUrl ? await persistShareImage(payload.imageDataUrl, payload.filename) : undefined;
+  const baseOptions = {
     title: payload.title,
     text: payload.text,
     dialogTitle: payload.title ?? "Share result"
+  };
+
+  if (sharedImageUri) {
+    try {
+      await Share.share({
+        ...baseOptions,
+        url: sharedImageUri,
+        files: [sharedImageUri]
+      });
+      return;
+    } catch {
+      try {
+        await Share.share({
+          ...baseOptions,
+          url: sharedImageUri
+        });
+        return;
+      } catch {
+        // Fall through to text-only sharing below.
+      }
+    }
+  }
+
+  await Share.share(baseOptions);
+}
+
+function toBase64Payload(dataUrl: string): string {
+  const [, base64 = ""] = dataUrl.split(",", 2);
+  return base64;
+}
+
+async function persistShareImage(imageDataUrl: string, filename = "nametests-card.png"): Promise<string> {
+  const normalizedFilename = filename.endsWith(".png") ? filename : `${filename}.png`;
+  const path = `shares/${Date.now()}-${normalizedFilename}`;
+  const writtenFile = await Filesystem.writeFile({
+    path,
+    directory: Directory.Cache,
+    data: toBase64Payload(imageDataUrl),
+    recursive: true
   });
+
+  return writtenFile.uri;
 }
 
 export const capacitorShare: IShare = {

@@ -17,9 +17,12 @@
     { "key": "bells", "minScore": 75, "maxScore": 100, "titleKey": "result.bells.title", "descriptionKey": "result.bells.body", "accent": "#f6bd60" }
   ],
   "resultVariants": [
-    { "key": "maybe-soft", "insightKey": "insight.maybe.soft", "aura": "soft" },
-    { "key": "promise-bold", "insightKey": "insight.promise.bold", "aura": "bold" },
-    { "key": "bells-lucky", "insightKey": "insight.bells.lucky", "aura": "lucky" }
+    { "key": "maybe-soft", "insightKey": "insight.maybe.soft", "aura": "soft", "resultKeys": ["maybe"] },
+    { "key": "maybe-timing", "insightKey": "insight.maybe.timing", "aura": "soft", "resultKeys": ["maybe"] },
+    { "key": "promise-bold", "insightKey": "insight.promise.bold", "aura": "bold", "resultKeys": ["promise"] },
+    { "key": "promise-sincere", "insightKey": "insight.promise.sincere", "aura": "lucky", "resultKeys": ["promise"] },
+    { "key": "bells-lucky", "insightKey": "insight.bells.lucky", "aura": "lucky", "resultKeys": ["bells"] },
+    { "key": "bells-fireworks", "insightKey": "insight.bells.fireworks", "aura": "bold", "resultKeys": ["bells"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

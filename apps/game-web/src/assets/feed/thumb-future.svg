@@ -1,0 +1,15 @@
+<svg width="640" height="360" viewBox="0 0 640 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="360" rx="36" fill="#FFF9EB"/>
+  <rect x="26" y="26" width="588" height="308" rx="28" fill="url(#paint0_linear)"/>
+  <circle cx="498" cy="106" r="84" fill="white" fill-opacity="0.18"/>
+  <path d="M214 204C214 154 252 114 302 114H350V148H302C271 148 246 173 246 204C246 235 271 260 302 260H350V294H302C252 294 214 254 214 204Z" fill="#FFF9F0"/>
+  <path d="M352 114L424 204L352 294" stroke="#FFF9F0" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="68" y="284" fill="#FFF9F0" font-family="Georgia, serif" font-size="42" font-weight="700">Future Calling</text>
+  <text x="68" y="315" fill="#FFF9F0" font-family="Georgia, serif" font-size="19">Safe path, bold path, or iconic path</text>
+  <defs>
+    <linearGradient id="paint0_linear" x1="72" y1="44" x2="574" y2="318" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7B5CFF"/>
+      <stop offset="1" stop-color="#FFBE0B"/>
+    </linearGradient>
+  </defs>
+</svg>

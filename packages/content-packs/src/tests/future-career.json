@@ -16,8 +16,10 @@
     { "key": "iconic", "minScore": 55, "maxScore": 100, "titleKey": "result.iconic.title", "descriptionKey": "result.iconic.body", "accent": "#ffbe0b" }
   ],
   "resultVariants": [
-    { "key": "rising-soft", "insightKey": "insight.rising.soft", "aura": "soft" },
-    { "key": "iconic-bold", "insightKey": "insight.iconic.bold", "aura": "bold" }
+    { "key": "rising-soft", "insightKey": "insight.rising.soft", "aura": "soft", "resultKeys": ["rising"] },
+    { "key": "rising-momentum", "insightKey": "insight.rising.momentum", "aura": "soft", "resultKeys": ["rising"] },
+    { "key": "iconic-bold", "insightKey": "insight.iconic.bold", "aura": "bold", "resultKeys": ["iconic"] },
+    { "key": "iconic-spotlight", "insightKey": "insight.iconic.spotlight", "aura": "lucky", "resultKeys": ["iconic"] }
   ],
   "shareTemplateKey": "share.compatibility.default",
   "art": {

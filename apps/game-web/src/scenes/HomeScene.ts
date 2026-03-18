@@ -1,5 +1,8 @@
 import Phaser from "phaser";
+import { homeFeedUiCopy } from "@nametests/content-packs";
+import type { DiscoveryFeedItemPayload } from "@nametests/backend-contracts";
 import { isNameValid, sanitizeName } from "@nametests/core";
+import { homeFeedThumbs } from "../assets/feed";
 import { runtime } from "../GameRuntime";
 import { showHomeOverlay } from "../ui/overlays/homeOverlay";
 
@@ -10,37 +13,27 @@ export class HomeScene extends Phaser.Scene {
 
   create(): void {
     this.drawBackdrop();
-    const width = this.scale.width;
-
-    const featured = runtime.session.selectedTest;
-    this.add.text(36, 96, "COSMIC", { fontFamily: "Georgia", fontSize: "28px", color: "#ffd166" });
-    this.add.text(36, 126, "MATCH", { fontFamily: "Georgia", fontSize: "52px", color: "#f8f4e8" });
-    this.add.text(36, 214, "Daily feature, unlockable tests,\nand flavored viral results.", {
-      fontFamily: "Georgia",
-      fontSize: "20px",
-      color: "#dfe8ff",
-      lineSpacing: 10
-    });
-
+    const locale = runtime.locale;
     const daily = runtime.getDailyFeatured();
     const activeEvent = runtime.getActiveEvent();
-    this.add.text(36, 292, `${runtime.copy["home.daily"]}: ${runtime.copy[daily.titleKey]}`, {
-      fontFamily: "Georgia",
-      fontSize: "18px",
-      color: "#ffd166"
-    });
-    this.add.text(36, 318, `${runtime.copy["home.event"]}: ${activeEvent.name}`, {
-      fontFamily: "Georgia",
-      fontSize: "16px",
-      color: "#9ad1ff"
-    });
+    const nextUnlock = runtime.getNextUnlock();
+    const feedItems = this.decorateFeedItems(runtime.getDiscoveryFeedItems());
+
+    const selectedTestId = runtime.session.selectedTest.id;
 
     showHomeOverlay({
-      title: runtime.copy[featured.titleKey],
-      subtitle: runtime.copy[featured.subtitleKey],
+      homeLabel: homeFeedUiCopy.homeLabel[locale],
+      heroTitle: homeFeedUiCopy.heroTitle[locale],
+      heroBody: homeFeedUiCopy.heroBody[locale],
+      languageLabel: homeFeedUiCopy.languageLabel[locale],
+      hotLabel: homeFeedUiCopy.hotLabel[locale],
+      popularLabel: homeFeedUiCopy.popularLabel[locale],
+      composerLabel: homeFeedUiCopy.composerLabel[locale],
+      selectedLabel: homeFeedUiCopy.selectedLabel[locale],
+      startLabel: homeFeedUiCopy.startLabel[locale],
       dailyLabel: `${runtime.copy["home.daily"]}: ${runtime.copy[daily.titleKey]}`,
       eventLabel: runtime.copy["home.event"],
-      eventTheme: activeEvent.theme,
+      eventTheme: activeEvent.name,
       primaryLabel: runtime.copy["home.primaryLabel"],
       partnerLabel: runtime.copy["home.partnerLabel"],
       streakLabel: runtime.copy["home.streak"],
@@ -52,27 +45,62 @@ export class HomeScene extends Phaser.Scene {
       rewardValue: runtime.progress.rewardCoins,
       collectionValue: runtime.progress.collectedResultKeys.length,
       dailyRewardCoins: runtime.getDailyRewardCoins(),
+      locales: runtime.getSupportedLocales(),
+      currentLocale: locale,
+      nextUnlock: nextUnlock
+        ? {
+            label: nextUnlock.label,
+            title: runtime.copy["home.nextUnlock"],
+            remainingLabel:
+              nextUnlock.sessionsRemaining === 0
+                ? runtime.copy["home.nextUnlockReady"]
+                : runtime.copy[
+                    nextUnlock.sessionsRemaining === 1
+                      ? "home.nextUnlockRemaining"
+                      : "home.nextUnlockRemainingPlural"
+                  ].replace("{count}", String(nextUnlock.sessionsRemaining)),
+            progressLabel: runtime.copy["home.nextUnlockProgress"]
+              .replace("{current}", String(nextUnlock.sessionsPlayedTowardUnlock))
+              .replace("{target}", String(nextUnlock.unlockAtSessions)),
+            progressValue: nextUnlock.unlockAtSessions === 0 ? 1 : nextUnlock.sessionsPlayedTowardUnlock / nextUnlock.unlockAtSessions
+          }
+        : null,
       tests: runtime.state.allTests.map((test) => ({
         id: test.id,
         label: runtime.copy[test.titleKey],
-        selected: test.id === featured.id,
+        subtitle: runtime.copy[test.subtitleKey],
+        selected: test.id === selectedTestId,
         lockedLabel: runtime.getUnlockLabel(test)
       })),
+      feedItems,
+      feedLoadingLabel: runtime.copy["feed.loadingMore"],
       onSelectTest: (testId) => {
         runtime.selectTest(testId);
+      },
+      onChangeLocale: async (nextLocale) => {
+        await runtime.setLocale(nextLocale);
         this.scene.restart();
       },
-      onSubmit: (primaryName, partnerName) => {
+      onLoadMore: async () => {
+        const items = await runtime.loadMoreDiscoveryFeed();
+        return {
+          items: this.decorateFeedItems(items),
+          hasMore: runtime.hasMoreDiscoveryFeed()
+        };
+      },
+      hasMoreFeed: runtime.hasMoreDiscoveryFeed(),
+      onSubmit: (selectedTestId, primaryName, partnerName) => {
         const left = sanitizeName(primaryName);
         const right = sanitizeName(partnerName);
 
         if (!isNameValid(left) || !isNameValid(right)) {
-          window.alert("Please enter two names with at least 2 letters.");
+          window.alert(runtime.copy["home.validationNames"]);
           return;
         }
 
+        runtime.selectTest(selectedTestId);
         runtime.startSession(left, right);
-        runtime.analytics.track({ name: "test_started", payload: { testId: featured.id } });
+        runtime.analytics.track({ name: "test_started", payload: { testId: runtime.session.selectedTest.id } });
         this.scene.start("TestScene");
       }
     });
@@ -82,11 +110,27 @@ export class HomeScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const graphics = this.add.graphics();
-    graphics.fillGradientStyle(0x0f1630, 0x0f1630, 0x17244d, 0x17244d, 1);
+    graphics.fillGradientStyle(0xfffbf5, 0xfffbf5, 0xf3ece3, 0xf3ece3, 1);
     graphics.fillRect(0, 0, width, height);
-    graphics.fillStyle(0xffd166, 0.14);
-    graphics.fillCircle(width - 76, 120, Math.min(90, width * 0.18));
-    graphics.fillStyle(0x63b3ff, 0.09);
-    graphics.fillCircle(Math.max(92, width * 0.2), height - 224, Math.min(120, width * 0.26));
+    graphics.fillStyle(0xffc58f, 0.22);
+    graphics.fillCircle(width - 90, 150, Math.min(104, width * 0.17));
+    graphics.fillStyle(0xff8c66, 0.14);
+    graphics.fillCircle(width * 0.18, height * 0.22, Math.min(140, width * 0.22));
+    graphics.fillStyle(0xf0d7b7, 0.22);
+    graphics.fillCircle(width * 0.78, height * 0.76, Math.min(180, width * 0.28));
+
+    this.add.text(26, 34, runtime.copy["home.brand"], {
+      fontFamily: "Georgia",
+      fontSize: "18px",
+      color: "#b8562d"
+    }).setAlpha(0.9);
+  }
+
+  private decorateFeedItems(items: DiscoveryFeedItemPayload[]) {
+    return items.map((item) => ({
+      ...item,
+      imageUrl: homeFeedThumbs[item.imageKey] ?? homeFeedThumbs[item.testId],
+      lockedLabel: runtime.getUnlockLabel(runtime.state.allTests.find((test) => test.id === item.testId)!)
+    }));
   }
 }

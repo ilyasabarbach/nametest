@@ -12,11 +12,15 @@ export function getResultFlavor(
   result: TestRunResult,
   names: { primaryName: string; partnerName: string }
 ): ResultFlavor {
+  const matchingVariants = definition.resultVariants.filter((variant) =>
+    !variant.resultKeys || variant.resultKeys.includes(result.resultKey)
+  );
+  const candidateVariants = matchingVariants.length > 0 ? matchingVariants : definition.resultVariants;
   const index = seededIndex(
     `${definition.id}:${result.score}:${result.resultKey}:${names.primaryName}:${names.partnerName}`,
-    definition.resultVariants.length
+    candidateVariants.length
   );
-  const variant = definition.resultVariants[index] ?? definition.resultVariants[0];
+  const variant = candidateVariants[index] ?? candidateVariants[0];
   const signature = `${variant.aura.toUpperCase()}-${result.score}`;
 
   return {

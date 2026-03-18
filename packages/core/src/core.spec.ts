@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { canUnlockAlternateResult, GameFlow, generateResultCard, defaultFeatureFlags, getUnlockedTests, createPlayerProgress } from "./index";
+import { canUnlockAlternateResult, GameFlow, generateResultCard, defaultFeatureFlags, getUnlockedTests, createPlayerProgress, toDateKey } from "./index";
+import { getResultFlavor } from "./game/ResultFlavoring";
 import type { TestDefinition } from "./tests/TestDefinition";
 
 const definition: TestDefinition = {
@@ -78,5 +79,36 @@ describe("game flow", () => {
 
     expect(getUnlockedTests([definition, locked], createPlayerProgress(), false)).toHaveLength(1);
     expect(getUnlockedTests([definition, locked], { ...createPlayerProgress(), sessionsPlayed: 2 }, false)).toHaveLength(2);
+  });
+
+  it("builds day keys from the local calendar date instead of UTC", () => {
+    const date = new Date(2026, 2, 18, 0, 30, 0);
+
+    expect(toDateKey(date)).toBe("2026-03-18");
+  });
+
+  it("only chooses flavor variants that match the actual result band when scoped variants exist", () => {
+    const flavoredDefinition: TestDefinition = {
+      ...definition,
+      resultVariants: [
+        { key: "steady-soft", insightKey: "insight.steady.soft", aura: "soft", resultKeys: ["steady"] },
+        { key: "spark-bold", insightKey: "insight.spark.electric", aura: "bold", resultKeys: ["spark"] }
+      ]
+    };
+
+    const flavor = getResultFlavor(
+      flavoredDefinition,
+      {
+        testId: flavoredDefinition.id,
+        score: 82,
+        resultKey: "spark",
+        resultTitleKey: "result.spark.title",
+        resultDescriptionKey: "result.spark.body",
+        accent: "#ff7a59"
+      },
+      { primaryName: "Ilyas", partnerName: "Maya" }
+    );
+
+    expect(flavor.variant.key).toBe("spark-bold");
   });
 });

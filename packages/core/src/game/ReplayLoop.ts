@@ -9,6 +9,7 @@ export function createReplayState(state: SessionState, partnerName: string): Ses
       partnerName
     },
     latestResult: undefined,
+    progressSummary: undefined,
     rewardState: createRewardState()
   };
 }
