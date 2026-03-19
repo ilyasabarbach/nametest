@@ -74,7 +74,7 @@ export class PreloadScene extends Phaser.Scene {
 
         if (runtimeReady && visualProgress >= 1) {
           visualTimer.remove();
-          this.scene.start("HomeScene");
+          this.scene.start(runtime.getRestoreSceneKey());
         }
       }
     });
@@ -83,7 +83,7 @@ export class PreloadScene extends Phaser.Scene {
     runtimeReady = true;
     if (visualProgress >= 1) {
       visualTimer.remove();
-      this.scene.start("HomeScene");
+      this.scene.start(runtime.getRestoreSceneKey());
       return;
     }
 

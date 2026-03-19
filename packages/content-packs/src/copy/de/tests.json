@@ -14,5 +14,11 @@
   "test.aura.title": "Star Aura Reading",
   "test.aura.subtitle": "Enthulle, welche Aura diese Namen zusammen erzeugen.",
   "test.fame.title": "Fame Level Scan",
-  "test.fame.subtitle": "Schau, ob diese Namenskombi eher Rising Star oder Legenden-Energie ausstrahlt."
+  "test.fame.subtitle": "Schau, ob diese Namenskombi eher Rising Star oder Legenden-Energie ausstrahlt.",
+  "test.destinyHeadline.title": "Tomorrow's Headline",
+  "test.destinyHeadline.subtitle": "See the one-line future story your name keeps trying to reveal.",
+  "test.pastLife.title": "Past Life Echo",
+  "test.pastLife.subtitle": "Find out what kind of old legend still lingers around your name.",
+  "test.hiddenGift.title": "Hidden Gift Decoder",
+  "test.hiddenGift.subtitle": "Reveal the quiet power people notice in you before they can explain it."
 }

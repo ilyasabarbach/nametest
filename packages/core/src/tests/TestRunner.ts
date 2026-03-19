@@ -34,8 +34,9 @@ export class TestRunner {
       throw new Error(`Unknown scoring formula: ${definition.scoringFormula}`);
     }
 
-    const first = String(input.values.primaryName ?? "");
-    const second = String(input.values.partnerName ?? "");
+    const flattenedValues = Object.values(input.values).flatMap((value) => (Array.isArray(value) ? value : [value]));
+    const first = String(input.values.primaryName ?? flattenedValues[0] ?? "");
+    const second = String(input.values.partnerName ?? flattenedValues[1] ?? input.testId);
     const score = formula(first, second);
     const band =
       definition.resultBands.find((candidate) => score >= candidate.minScore && score <= candidate.maxScore) ??

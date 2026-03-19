@@ -8,6 +8,10 @@ export function createReplayState(state: SessionState, partnerName: string): Ses
       ...state.names,
       partnerName
     },
+    inputValues: {
+      ...state.inputValues,
+      partnerName
+    },
     latestResult: undefined,
     progressSummary: undefined,
     rewardState: createRewardState()

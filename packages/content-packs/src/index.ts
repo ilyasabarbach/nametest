@@ -8,6 +8,9 @@ import futureCareer from "./tests/future-career.json";
 import secretCrush from "./tests/secret-crush.json";
 import starAura from "./tests/star-aura.json";
 import weddingBells from "./tests/wedding-bells.json";
+import destinyHeadline from "./tests/destiny-headline.json";
+import pastLifeEcho from "./tests/past-life-echo.json";
+import hiddenGift from "./tests/hidden-gift.json";
 import common from "./copy/en/common.json";
 import tests from "./copy/en/tests.json";
 import results from "./copy/en/results.json";
@@ -24,7 +27,10 @@ export const defaultTests = [
   futureCareer,
   dramaMeter,
   starAura,
-  fameLevel
+  fameLevel,
+  destinyHeadline,
+  pastLifeEcho,
+  hiddenGift
 ] as TestDefinition[];
 export const enCopy: Record<string, string> = {
   ...common,

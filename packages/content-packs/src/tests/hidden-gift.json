@@ -1,0 +1,31 @@
+{
+  "id": "hidden-gift",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 10,
+  "titleKey": "test.hiddenGift.title",
+  "subtitleKey": "test.hiddenGift.subtitle",
+  "prompts": [
+    { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
+  ],
+  "scoringFormula": "compatibilityFormula",
+  "resultBands": [
+    { "key": "ember", "minScore": 0, "maxScore": 37, "titleKey": "result.ember.title", "descriptionKey": "result.ember.body", "accent": "#8ecae6" },
+    { "key": "magnet", "minScore": 38, "maxScore": 74, "titleKey": "result.magnet.title", "descriptionKey": "result.magnet.body", "accent": "#ffb703" },
+    { "key": "crown", "minScore": 75, "maxScore": 100, "titleKey": "result.crown.title", "descriptionKey": "result.crown.body", "accent": "#ef476f" }
+  ],
+  "resultVariants": [
+    { "key": "ember-soft", "insightKey": "insight.ember.soft", "aura": "soft", "resultKeys": ["ember"] },
+    { "key": "ember-steady", "insightKey": "insight.ember.steady", "aura": "soft", "resultKeys": ["ember"] },
+    { "key": "magnet-electric", "insightKey": "insight.magnet.electric", "aura": "electric", "resultKeys": ["magnet"] },
+    { "key": "magnet-social", "insightKey": "insight.magnet.social", "aura": "electric", "resultKeys": ["magnet"] },
+    { "key": "crown-bold", "insightKey": "insight.crown.bold", "aura": "bold", "resultKeys": ["crown"] },
+    { "key": "crown-iconic", "insightKey": "insight.crown.iconic", "aura": "lucky", "resultKeys": ["crown"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#111827", "#ef476f"],
+    "symbol": "storm"
+  }
+}

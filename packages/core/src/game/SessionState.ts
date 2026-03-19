@@ -1,7 +1,7 @@
 import type { RewardState } from "../progression/RewardState";
 import type { PlayerProgress } from "../progression/PlayerProgress";
 import type { TestDefinition } from "../tests/TestDefinition";
-import type { TestRunResult } from "../tests/TestRunner";
+import type { TestInputValue, TestRunResult } from "../tests/TestRunner";
 
 export type SessionProgressSummary = {
   newlyUnlockedTestIds: string[];
@@ -14,6 +14,7 @@ export type SessionState = {
     primaryName: string;
     partnerName: string;
   };
+  inputValues: Record<string, TestInputValue>;
   latestResult?: TestRunResult;
   rewardState: RewardState;
   playerProgress: PlayerProgress;

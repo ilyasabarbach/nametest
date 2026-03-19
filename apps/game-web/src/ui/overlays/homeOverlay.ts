@@ -7,6 +7,13 @@ type HomeTest = {
   subtitle: string;
   selected: boolean;
   lockedLabel?: string | null;
+  primaryPromptLabel: string;
+  primaryPromptPlaceholder: string;
+  partnerPromptLabel?: string;
+  partnerPromptPlaceholder?: string;
+  requiresPartner: boolean;
+  interactionMode: "form" | "tap";
+  tapLabel: string;
 };
 
 type FeedItem = {
@@ -23,6 +30,10 @@ type FeedItem = {
 };
 
 export function showHomeOverlay(args: {
+  socialBrandLabel: string;
+  socialSectionLabel: string;
+  socialStatusLabel: string;
+  socialMetaLabel: string;
   homeLabel: string;
   heroTitle: string;
   heroBody: string;
@@ -34,6 +45,7 @@ export function showHomeOverlay(args: {
   startLabel: string;
   primaryLabel: string;
   partnerLabel: string;
+  privacyLabel: string;
   dailyLabel: string;
   eventLabel: string;
   eventTheme: string;
@@ -51,6 +63,7 @@ export function showHomeOverlay(args: {
   tests: HomeTest[];
   feedItems: FeedItem[];
   feedLoadingLabel: string;
+  initialSelectedFeedItemId?: string;
   nextUnlock: {
     title: string;
     label: string;
@@ -58,14 +71,21 @@ export function showHomeOverlay(args: {
     progressLabel: string;
     progressValue: number;
   } | null;
-  onSelectTest: (testId: string) => void;
+  onSelectTest: (testId: string, feedItemId?: string) => void;
   onChangeLocale: (locale: HomeFeedLocale) => Promise<void> | void;
   onLoadMore: () => Promise<{ items: FeedItem[]; hasMore: boolean }>;
   hasMoreFeed: boolean;
-  onSubmit: (selectedTestId: string, primaryName: string, partnerName: string) => void;
+  defaultPrimaryName: string;
+  defaultPartnerName: string;
+  onDraftChange: (primaryName: string, partnerName: string) => void;
+  onSubmit: (selectedTestId: string, selectedFeedItemId: string, primaryName: string, partnerName: string) => void;
 }): void {
   const testsById = new Map(args.tests.map((test) => [test.id, test]));
-  let currentSelectedId = args.tests.find((test) => test.selected)?.id ?? args.tests[0]?.id ?? "";
+  let currentSelectedId = args.tests.find((test) => test.selected)?.id ?? "";
+  let currentSelectedFeedItemId =
+    args.feedItems.find((item) => item.id === args.initialSelectedFeedItemId && item.testId === currentSelectedId)?.id ??
+    args.feedItems.find((item) => item.testId === currentSelectedId)?.id ??
+    "";
   let feedItems = [...args.feedItems];
   let hasMoreFeed = args.hasMoreFeed;
   let loadingMore = false;
@@ -74,16 +94,65 @@ export function showHomeOverlay(args: {
   panel.className = "hud-panel hud-panel--home-feed hud-stack";
   panel.dir = args.currentLocale === "ar" ? "rtl" : "ltr";
 
-  const renderCards = (items: FeedItem[], extraClass = "") =>
+  const hasSelection = () => Boolean(currentSelectedId);
+
+  const getSelectedFeedItem = () =>
+    hasSelection()
+      ? (feedItems.find((item) => item.id === currentSelectedFeedItemId) ??
+        feedItems.find((item) => item.testId === currentSelectedId))
+      : undefined;
+
+  const getStoriesForSelectedTest = () => (hasSelection() ? feedItems.filter((item) => item.testId === currentSelectedId) : []);
+
+  const selectedFeedItem = getSelectedFeedItem();
+  const getSelectedTest = () => testsById.get(currentSelectedId);
+  const isTouchSelection = () => getSelectedTest()?.interactionMode === "tap";
+
+  const getCardTemplate = (item: FeedItem, index: number, lane: "hot" | "feed") => {
+    if (lane === "hot") {
+      return index === 0 ? "lead" : index % 2 === 0 ? "compact" : "stacked";
+    }
+
+    if (item.hot && index % 4 === 0) {
+      return "wide";
+    }
+
+    return index % 3 === 1 ? "compact" : "stacked";
+  };
+
+  const getCardFamily = (item: FeedItem, lane: "hot" | "feed") => {
+    if (item.testId === "past-life-echo" || item.testId === "star-aura") {
+      return "portrait";
+    }
+
+    if (item.testId === "destiny-headline" || item.testId === "fame-level") {
+      return "tabloid";
+    }
+
+    if (item.testId === "future-career" || item.testId === "wedding-bells") {
+      return "calendar";
+    }
+
+    if (item.testId === "friendship-score" || item.testId === "hidden-gift") {
+      return "touch";
+    }
+
+    return lane === "hot" ? "feature" : "story";
+  };
+
+  const renderCards = (items: FeedItem[], lane: "hot" | "feed", extraClass = "") =>
     items
-      .map((item) => {
-        const selected = item.testId === currentSelectedId;
+      .map((item, index) => {
+        const selected = item.id === currentSelectedFeedItemId;
         const lockedLabel = item.lockedLabel ?? testsById.get(item.testId)?.lockedLabel;
+        const template = getCardTemplate(item, index, lane);
+        const family = getCardFamily(item, lane);
         return `
           <button
-            class="hud-feed-card ${selected ? "selected" : ""} ${lockedLabel ? "locked" : ""} ${extraClass}"
+            class="hud-feed-card hud-feed-card--${template} hud-feed-card--family-${family} ${selected ? "selected" : ""} ${lockedLabel ? "locked" : ""} ${extraClass}"
             type="button"
             data-test-id="${item.testId}"
+            data-feed-item-id="${item.id}"
             style="--feed-start:${item.palette[0]}; --feed-end:${item.palette[1]};"
           >
             <span class="hud-feed-card__thumb">
@@ -102,65 +171,115 @@ export function showHomeOverlay(args: {
       .join("");
 
   panel.innerHTML = `
-    <div class="hud-home-hero hud-stack">
-      <div class="hud-home-hero__topline">
-        <span class="hud-home-hero__label">${args.homeLabel}</span>
-        <span class="hud-home-hero__signal">${args.dailyLabel}</span>
+    <div class="hud-social-chrome hud-social-chrome--home">
+      <div class="hud-social-chrome__brand">
+        <strong>${args.socialBrandLabel}</strong>
+        <span>${args.socialSectionLabel}</span>
       </div>
-      <h1>${args.heroTitle}</h1>
-      <p>${args.heroBody}</p>
-      <div class="hud-home-locale">
-        <span class="hud-label">${args.languageLabel}</span>
-        <div class="hud-home-locale__list">
-          ${args.locales
+      <div class="hud-social-chrome__meta">
+        <span class="hud-social-chrome__pill">${args.socialStatusLabel}</span>
+        <span class="hud-social-chrome__text">${args.socialMetaLabel}</span>
+        <button class="hud-settings-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
+          &#9881;
+        </button>
+        <div class="hud-settings-menu hidden" data-settings-menu>
+          <strong>${args.languageLabel}</strong>
+          <div class="hud-settings-menu__list">
+            ${args.locales
+              .map(
+                (locale) => `
+                  <button
+                    class="hud-locale-chip ${locale.id === args.currentLocale ? "selected" : ""}"
+                    type="button"
+                    data-locale-id="${locale.id}"
+                    title="${locale.nativeLabel}"
+                  >
+                    ${locale.label}
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hud-landing-story hud-stack ${hasSelection() ? "" : "hidden"}" data-landing-story>
+      <div class="hud-landing-story__media ${isTouchSelection() ? "is-touch" : ""}" data-selected-media>
+        <img class="hud-landing-story__image" data-selected-image src="${selectedFeedItem?.imageUrl ?? ""}" alt="${selectedFeedItem?.title ?? ""}" />
+        <span class="hud-feed-card__hot ${selectedFeedItem?.hot ? "" : "hidden"}" data-selected-hot>${args.hotLabel}</span>
+        <span class="hud-feed-card__tag" data-selected-tag>${selectedFeedItem?.tag ?? ""}</span>
+        <button class="hud-landing-story__tap ${isTouchSelection() ? "" : "hidden"}" type="button" data-action="tap-photo">
+          ${getSelectedTest()?.tapLabel ?? ""}
+        </button>
+      </div>
+      <div class="hud-landing-story__copy">
+        <span class="hud-label">${args.selectedLabel}</span>
+        <h2 data-selected-headline>${selectedFeedItem?.title ?? testsById.get(currentSelectedId)?.label ?? ""}</h2>
+        <p class="hud-label" data-selected-teaser>${selectedFeedItem?.teaser ?? testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
+        <div class="hud-landing-story__meta">
+          <span class="hud-feed-card__tag hud-feed-card__tag--inline" data-selected-inline-tag>${selectedFeedItem?.tag ?? ""}</span>
+          <span class="hud-landing-story__proof" data-selected-proof>${selectedFeedItem?.socialProof ?? ""}</span>
+        </div>
+        <div class="hud-landing-story__related" data-related-strip>
+          ${getStoriesForSelectedTest()
+            .slice(0, 4)
             .map(
-              (locale) => `
+              (item) => `
                 <button
-                  class="hud-locale-chip ${locale.id === args.currentLocale ? "selected" : ""}"
+                  class="hud-related-story ${item.id === currentSelectedFeedItemId ? "selected" : ""}"
                   type="button"
-                  data-locale-id="${locale.id}"
-                  title="${locale.nativeLabel}"
+                  data-test-id="${item.testId}"
+                  data-feed-item-id="${item.id}"
                 >
-                  ${locale.label}
+                  <strong>${item.title}</strong>
+                  <span>${item.socialProof}</span>
                 </button>
               `
             )
             .join("")}
         </div>
       </div>
+      <div class="hud-landing-story__prompt" data-selected-prompt>${isTouchSelection() ? getSelectedTest()?.tapLabel ?? "" : args.composerLabel}</div>
+      <div class="hud-home-composer hud-stack ${isTouchSelection() ? "hidden" : ""}" data-home-composer>
+        <div class="hud-home-composer__copy">
+          <strong data-selected-title>${testsById.get(currentSelectedId)?.label ?? ""}</strong>
+          <p class="hud-label" data-selected-subtitle>${testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
+          <p class="hud-home-composer__meta">${selectedFeedItem?.socialProof ?? args.selectedLabel}</p>
+        </div>
+        <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
+        <label class="hud-stack hud-home-composer__field">
+          <span class="hud-label hud-home-composer__field-label" data-primary-label>${testsById.get(currentSelectedId)?.primaryPromptLabel ?? args.primaryLabel}</span>
+          <input
+            class="hud-input"
+            name="primaryName"
+            maxlength="20"
+            autocomplete="off"
+            value="${args.defaultPrimaryName}"
+            placeholder="${testsById.get(currentSelectedId)?.primaryPromptPlaceholder ?? ""}"
+          />
+        </label>
+        <label class="hud-stack hud-home-composer__field ${testsById.get(currentSelectedId)?.requiresPartner ? "" : "hidden"}" data-partner-field>
+          <span class="hud-label hud-home-composer__field-label" data-partner-label>${testsById.get(currentSelectedId)?.partnerPromptLabel ?? args.partnerLabel}</span>
+          <input
+            class="hud-input"
+            name="partnerName"
+            maxlength="20"
+            autocomplete="off"
+            value="${args.defaultPartnerName}"
+            placeholder="${testsById.get(currentSelectedId)?.partnerPromptPlaceholder ?? ""}"
+          />
+        </label>
+        <button class="hud-button hud-button--editorial" type="submit">${args.startLabel}</button>
+        <p class="hud-home-privacy">${args.privacyLabel}</p>
+      </div>
     </div>
-    <div class="hud-pill-row hud-pill-row-wide">
-      <div class="hud-pill"><strong>${args.streakValue}</strong><span>${args.streakLabel}</span></div>
-      <div class="hud-pill"><strong>${args.sessionsValue}</strong><span>${args.sessionsLabel}</span></div>
-      <div class="hud-pill"><strong>${args.rewardValue}</strong><span>${args.rewardsLabel}</span></div>
-      <div class="hud-pill"><strong>${args.collectionValue}</strong><span>${args.collectionLabel}</span></div>
-    </div>
-    ${
-      args.nextUnlock
-        ? `
-          <div class="hud-next-unlock hud-stack">
-            <div class="hud-next-unlock__header">
-              <span class="hud-label">${args.nextUnlock.title}</span>
-              <strong>${args.nextUnlock.label}</strong>
-            </div>
-            <div class="hud-next-unlock__track">
-              <span class="hud-next-unlock__fill" style="width:${Math.max(8, Math.min(100, Math.round(args.nextUnlock.progressValue * 100)))}%"></span>
-            </div>
-            <div class="hud-next-unlock__meta">
-              <span>${args.nextUnlock.remainingLabel}</span>
-              <span>${args.nextUnlock.progressLabel}</span>
-            </div>
-          </div>
-        `
-        : ""
-    }
     <div class="hud-home-section hud-stack">
       <div class="hud-home-section__title">
         <span class="hud-home-section__badge">${args.hotLabel}</span>
         <strong>${args.popularLabel}</strong>
       </div>
       <div class="hud-home-hot-strip" data-hot-strip>
-        ${renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hud-feed-card--hot")}
+        ${renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hot", "hud-feed-card--hot")}
       </div>
     </div>
     <div class="hud-home-section hud-stack">
@@ -169,64 +288,118 @@ export function showHomeOverlay(args: {
         ${args.dailyRewardCoins > 0 ? `<span class="hud-home-section__reward">+${args.dailyRewardCoins}</span>` : ""}
       </div>
       <div class="hud-discovery-feed" data-feed-grid>
-        ${renderCards(feedItems)}
+        ${renderCards(feedItems, "feed")}
       </div>
       <div class="hud-feed-sentinel" data-feed-sentinel>${hasMoreFeed ? args.feedLoadingLabel : ""}</div>
     </div>
-    <div class="hud-home-composer-backdrop hidden" data-composer-backdrop></div>
-    <div class="hud-home-composer hud-stack hidden" data-composer-panel>
-      <button class="hud-home-composer__close" type="button" data-action="close-composer" aria-label="Close">×</button>
-      <div class="hud-home-composer__copy">
-        <span class="hud-label">${args.composerLabel}</span>
-        <strong data-selected-title>${testsById.get(currentSelectedId)?.label ?? ""}</strong>
-        <p class="hud-label" data-selected-subtitle>${testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
-        <p class="hud-home-composer__meta">${args.selectedLabel}</p>
+    <div class="hud-home-footnote hud-stack">
+      ${
+        args.nextUnlock
+          ? `
+            <div class="hud-next-unlock hud-stack">
+              <div class="hud-next-unlock__header">
+                <span class="hud-label">${args.nextUnlock.title}</span>
+                <strong>${args.nextUnlock.label}</strong>
+              </div>
+              <div class="hud-next-unlock__track">
+                <span class="hud-next-unlock__fill" style="width:${Math.max(8, Math.min(100, Math.round(args.nextUnlock.progressValue * 100)))}%"></span>
+              </div>
+              <div class="hud-next-unlock__meta">
+                <span>${args.nextUnlock.remainingLabel}</span>
+                <span>${args.nextUnlock.progressLabel}</span>
+              </div>
+            </div>
+          `
+          : ""
+      }
+      <div class="hud-pill-row hud-pill-row-wide hud-home-stats">
+        <div class="hud-pill"><strong>${args.streakValue}</strong><span>${args.streakLabel}</span></div>
+        <div class="hud-pill"><strong>${args.sessionsValue}</strong><span>${args.sessionsLabel}</span></div>
+        <div class="hud-pill"><strong>${args.rewardValue}</strong><span>${args.rewardsLabel}</span></div>
+        <div class="hud-pill"><strong>${args.collectionValue}</strong><span>${args.collectionLabel}</span></div>
       </div>
-      <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
-      <label class="hud-stack">
-        <span class="hud-label">${args.primaryLabel}</span>
-        <input class="hud-input" name="primaryName" maxlength="20" autocomplete="off" />
-      </label>
-      <label class="hud-stack">
-        <span class="hud-label">${args.partnerLabel}</span>
-        <input class="hud-input" name="partnerName" maxlength="20" autocomplete="off" />
-      </label>
-      <button class="hud-button" type="submit">${args.startLabel}</button>
     </div>
   `;
 
   const selectedTitle = panel.querySelector<HTMLElement>("[data-selected-title]");
   const selectedSubtitle = panel.querySelector<HTMLElement>("[data-selected-subtitle]");
+  const selectedHeadline = panel.querySelector<HTMLElement>("[data-selected-headline]");
+  const selectedTeaser = panel.querySelector<HTMLElement>("[data-selected-teaser]");
+  const selectedTag = panel.querySelector<HTMLElement>("[data-selected-tag]");
+  const selectedInlineTag = panel.querySelector<HTMLElement>("[data-selected-inline-tag]");
+  const selectedHot = panel.querySelector<HTMLElement>("[data-selected-hot]");
+  const selectedImage = panel.querySelector<HTMLImageElement>("[data-selected-image]");
+  const selectedProof = panel.querySelector<HTMLElement>("[data-selected-proof]");
+  const selectedPrompt = panel.querySelector<HTMLElement>("[data-selected-prompt]");
   const selectedInput = panel.querySelector<HTMLInputElement>('input[name="selectedTestId"]');
   const selectedMeta = panel.querySelector<HTMLElement>(".hud-home-composer__meta");
   const submitButton = panel.querySelector<HTMLButtonElement>('button[type="submit"]');
-  const composerPanel = panel.querySelector<HTMLElement>("[data-composer-panel]");
-  const composerBackdrop = panel.querySelector<HTMLElement>("[data-composer-backdrop]");
+  const primaryInput = panel.querySelector<HTMLInputElement>('input[name="primaryName"]');
+  const partnerInput = panel.querySelector<HTMLInputElement>('input[name="partnerName"]');
+  const primaryLabel = panel.querySelector<HTMLElement>("[data-primary-label]");
+  const partnerField = panel.querySelector<HTMLElement>("[data-partner-field]");
+  const partnerLabel = panel.querySelector<HTMLElement>("[data-partner-label]");
   const hotStrip = panel.querySelector<HTMLElement>("[data-hot-strip]");
   const feedGrid = panel.querySelector<HTMLElement>("[data-feed-grid]");
   const sentinel = panel.querySelector<HTMLElement>("[data-feed-sentinel]");
+  const relatedStrip = panel.querySelector<HTMLElement>("[data-related-strip]");
+  const landingStory = panel.querySelector<HTMLElement>("[data-landing-story]");
+  const composer = panel.querySelector<HTMLElement>("[data-home-composer]");
+  const settingsMenu = panel.querySelector<HTMLElement>("[data-settings-menu]");
+  const selectedMedia = panel.querySelector<HTMLElement>("[data-selected-media]");
+  const tapPhotoButton = panel.querySelector<HTMLButtonElement>('[data-action="tap-photo"]');
 
-  const openComposer = () => {
-    panel.scrollTo({ top: 0, behavior: "smooth" });
-    composerPanel?.classList.remove("hidden");
-    composerBackdrop?.classList.remove("hidden");
-    window.setTimeout(() => {
-      panel.querySelector<HTMLInputElement>('input[name="primaryName"]')?.focus();
-    }, 120);
+  const syncDraft = () => {
+    args.onDraftChange(primaryInput?.value ?? "", partnerInput?.value ?? "");
   };
 
-  const closeComposer = () => {
-    composerPanel?.classList.add("hidden");
-    composerBackdrop?.classList.add("hidden");
+  const syncLandingVisibility = () => {
+    landingStory?.classList.toggle("hidden", !hasSelection());
   };
 
-  const updateSelection = (testId: string) => {
+  const submitCurrentSelection = () => {
+    if (!currentSelectedId) {
+      return;
+    }
+
+    if (testsById.get(currentSelectedId)?.lockedLabel) {
+      return;
+    }
+
+    syncDraft();
+    args.onSubmit(currentSelectedId, currentSelectedFeedItemId, primaryInput?.value ?? "", partnerInput?.value ?? "");
+  };
+
+  const renderRelatedStories = () =>
+    getStoriesForSelectedTest()
+      .slice(0, 4)
+      .map((item) => {
+        const selected = item.id === currentSelectedFeedItemId;
+        return `
+          <button
+            class="hud-related-story ${selected ? "selected" : ""}"
+            type="button"
+            data-test-id="${item.testId}"
+            data-feed-item-id="${item.id}"
+          >
+            <strong>${item.title}</strong>
+            <span>${item.socialProof}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+  const updateSelection = (testId: string, feedItemId?: string) => {
     const nextTest = testsById.get(testId);
     if (!nextTest) {
       return;
     }
 
     currentSelectedId = testId;
+    currentSelectedFeedItemId =
+      feedItems.find((item) => item.id === feedItemId && item.testId === testId)?.id ??
+      feedItems.find((item) => item.testId === testId)?.id ??
+      currentSelectedFeedItemId;
     selectedInput?.setAttribute("value", testId);
     if (selectedInput) {
       selectedInput.value = testId;
@@ -237,17 +410,75 @@ export function showHomeOverlay(args: {
     if (selectedSubtitle) {
       selectedSubtitle.textContent = nextTest.subtitle;
     }
+    if (primaryLabel) {
+      primaryLabel.textContent = nextTest.primaryPromptLabel;
+    }
+    if (primaryInput) {
+      primaryInput.placeholder = nextTest.primaryPromptPlaceholder;
+    }
+    if (partnerField) {
+      partnerField.classList.toggle("hidden", !nextTest.requiresPartner);
+    }
+    if (partnerLabel) {
+      partnerLabel.textContent = nextTest.partnerPromptLabel ?? args.partnerLabel;
+    }
+    if (partnerInput) {
+      partnerInput.placeholder = nextTest.partnerPromptPlaceholder ?? "";
+      if (!nextTest.requiresPartner) {
+        partnerInput.value = "";
+      }
+    }
+    const nextFeedItem = getSelectedFeedItem();
+    if (selectedHeadline) {
+      selectedHeadline.textContent = nextFeedItem?.title ?? nextTest.label;
+    }
+    if (selectedTeaser) {
+      selectedTeaser.textContent = nextFeedItem?.teaser ?? nextTest.subtitle;
+    }
+    if (selectedTag) {
+      selectedTag.textContent = nextFeedItem?.tag ?? "";
+    }
+    if (selectedInlineTag) {
+      selectedInlineTag.textContent = nextFeedItem?.tag ?? "";
+    }
+    if (selectedHot) {
+      selectedHot.classList.toggle("hidden", !nextFeedItem?.hot);
+    }
+    if (selectedImage && nextFeedItem) {
+      selectedImage.src = nextFeedItem.imageUrl;
+      selectedImage.alt = nextFeedItem.title;
+    }
+    if (selectedProof) {
+      selectedProof.textContent = nextFeedItem?.socialProof ?? "";
+    }
     if (selectedMeta) {
-      selectedMeta.textContent = nextTest.lockedLabel ?? args.selectedLabel;
+      selectedMeta.textContent = nextTest.lockedLabel ?? nextFeedItem?.socialProof ?? args.selectedLabel;
+    }
+    if (selectedPrompt) {
+      selectedPrompt.textContent = nextTest.interactionMode === "tap" ? nextTest.tapLabel : args.composerLabel;
     }
     if (submitButton) {
       submitButton.disabled = Boolean(nextTest.lockedLabel);
       submitButton.textContent = nextTest.lockedLabel ?? args.startLabel;
     }
+    composer?.classList.toggle("hidden", nextTest.interactionMode === "tap");
+    selectedMedia?.classList.toggle("is-touch", nextTest.interactionMode === "tap");
+    tapPhotoButton?.classList.toggle("hidden", nextTest.interactionMode !== "tap");
+    if (tapPhotoButton) {
+      tapPhotoButton.textContent = nextTest.tapLabel;
+      tapPhotoButton.disabled = Boolean(nextTest.lockedLabel);
+    }
+    if (relatedStrip) {
+      relatedStrip.innerHTML = renderRelatedStories();
+      attachCardListeners();
+    }
 
     panel.querySelectorAll<HTMLElement>("[data-test-id]").forEach((button) => {
-      button.classList.toggle("selected", button.dataset.testId === testId);
+      if (button.classList.contains("hud-feed-card") || button.classList.contains("hud-related-story")) {
+        button.classList.toggle("selected", button.dataset.feedItemId === currentSelectedFeedItemId);
+      }
     });
+    syncLandingVisibility();
   };
 
   panel.querySelectorAll<HTMLButtonElement>("[data-locale-id]").forEach((button) => {
@@ -261,7 +492,17 @@ export function showHomeOverlay(args: {
     });
   });
 
-  const attachCardListeners = () => {
+  panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
+    settingsMenu?.classList.toggle("hidden");
+  });
+  panel.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest("[data-action='toggle-settings']") && !target?.closest("[data-settings-menu]")) {
+      settingsMenu?.classList.add("hidden");
+    }
+  });
+
+  function attachCardListeners() {
     panel.querySelectorAll<HTMLButtonElement>("[data-test-id]").forEach((button) => {
       if (button.dataset.bound === "true") {
         return;
@@ -269,31 +510,51 @@ export function showHomeOverlay(args: {
       button.dataset.bound = "true";
       button.addEventListener("click", () => {
         const testId = button.dataset.testId;
+        const feedItemId = button.dataset.feedItemId;
         const lockedLabel = testsById.get(testId ?? "")?.lockedLabel;
         if (!testId) {
           return;
         }
 
-        updateSelection(testId);
-        openComposer();
+        updateSelection(testId, feedItemId);
+        panel.scrollTo({ top: 0, behavior: "smooth" });
+        landingStory?.scrollIntoView({ behavior: "smooth", block: "start" });
         if (!lockedLabel) {
-          args.onSelectTest(testId);
+          args.onSelectTest(testId, feedItemId);
         }
       });
     });
-  };
+  }
+
+  tapPhotoButton?.addEventListener("click", submitCurrentSelection);
+  selectedMedia?.addEventListener("click", (event) => {
+    if (!isTouchSelection()) {
+      return;
+    }
+
+    const target = event.target as HTMLElement | null;
+    if (target?.closest("[data-action='tap-photo']")) {
+      return;
+    }
+
+    submitCurrentSelection();
+  });
+
+  primaryInput?.addEventListener("input", syncDraft);
+  partnerInput?.addEventListener("input", syncDraft);
 
   const rerenderFeed = () => {
     if (hotStrip) {
-      hotStrip.innerHTML = renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hud-feed-card--hot");
+      hotStrip.innerHTML = renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hot", "hud-feed-card--hot");
     }
     if (feedGrid) {
-      feedGrid.innerHTML = renderCards(feedItems);
+      feedGrid.innerHTML = renderCards(feedItems, "feed");
     }
     if (sentinel) {
       sentinel.textContent = hasMoreFeed ? args.feedLoadingLabel : "";
     }
     attachCardListeners();
+    updateSelection(currentSelectedId, currentSelectedFeedItemId);
   };
 
   attachCardListeners();
@@ -325,21 +586,29 @@ export function showHomeOverlay(args: {
     observer.observe(sentinel);
   }
 
-  composerBackdrop?.addEventListener("click", closeComposer);
-  panel.querySelector('[data-action="close-composer"]')?.addEventListener("click", closeComposer);
-
   panel.addEventListener("submit", (event) => {
     event.preventDefault();
     const form = new FormData(panel);
     const selectedTestId = String(form.get("selectedTestId") ?? currentSelectedId);
+    if (!selectedTestId) {
+      return;
+    }
     const selectedTest = testsById.get(selectedTestId);
     if (selectedTest?.lockedLabel) {
       return;
     }
-    closeComposer();
-    args.onSubmit(selectedTestId, String(form.get("primaryName") ?? ""), String(form.get("partnerName") ?? ""));
+    syncDraft();
+    args.onSubmit(
+      selectedTestId,
+      currentSelectedFeedItemId,
+      String(form.get("primaryName") ?? ""),
+      String(form.get("partnerName") ?? "")
+    );
   });
 
-  updateSelection(currentSelectedId);
+  syncLandingVisibility();
+  if (hasSelection()) {
+    updateSelection(currentSelectedId, currentSelectedFeedItemId);
+  }
   setHud(panel);
 }

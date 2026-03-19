@@ -53,6 +53,9 @@ Current readiness by engineering judgment:
 - `apps/game-web/src/GameRuntime.ts` also now owns locale-aware copy resolution and paginated discovery-feed loading
 - `packages/platform-sdk/src/capacitor/index.ts` now uses Capacitor platform detection, Preferences-backed storage, a native share path with browser fallback, and Android lifecycle/back-button hooks
 - `apps/game-web/src/platform/installLifecycle.ts` now binds platform lifecycle behavior to the Phaser game at startup
+- `apps/game-web/src/GameRuntime.ts` now also tracks a lightweight scene-history path so Android back can step through the active home/test/result/reward flow more naturally
+- `apps/game-web/src/GameRuntime.ts` now also persists the active session flow, drafts, selected story, and scene history so preload can restore the player into the right main scene after a hard background/restart
+- lifecycle pause/unload now explicitly snapshots that app-flow state, and restore logic now avoids obvious mis-restores when the app was backgrounded during the reveal/result handoff
 - `apps/android-shell/android/app/src/main/res` now contains strings, colors, themes, splash background, and adaptive icon resources
 - `apps/discovery-feed-api` now exists as a local backend workspace serving paginated feed payloads
 - `packages/backend-contracts/src/discoveryFeed.schema.ts` defines the shared feed payload shape
@@ -82,6 +85,53 @@ This project is intentionally original, but it is trying to match the product st
 - NameTests-style products are tuned through real analytics and content iteration; this project still has placeholder analytics
 - NameTests-style products have clearer public trust and privacy messaging than the project currently exposes
 - NameTests-style products use very high-volume editorial content operations; this project only has the first backend seam, not the full live-content system
+
+### Screenshot-Based Gap Analysis
+
+Recent screenshot review of the reference product sharpened the comparison in an important way:
+
+- the biggest gap is not a single missing widget; it is the overall surface model
+- the reference product behaves like an endless viral content site where each card opens its own simple landing page
+- the result then lives on that same page as a shareable poster, with more popular content continuing below it
+- our version still behaves more like a game app with scenes, overlays, progression framing, and modal-style interactions
+
+What the screenshots show that matters most:
+
+- each thread opens a dedicated page with a huge headline, a simple prompt bar, one input, one blue CTA, and a small privacy reassurance
+- results are presented as poster-like artifacts, not dramatic game cards
+- the feed uses many visual template families instead of one repeated design system
+- the feed is built around real human-photo-led imagery and editorial compositions
+- the page never feels terminal; even after the result there is more "Most popular" content below
+- the primary emotional driver is curiosity and shareability, not visible progression systems
+
+Recent implementation progress against that gap:
+
+- the home flow now promotes a tapped story into a landing-page style surface instead of a popup selector
+- fresh home loads now stay browse-first instead of auto-promoting a default story, so the landing surface only appears after a real thread tap
+- thread taps now keep the landing transition browse-first on mobile by avoiding an automatic keyboard pop the moment a story is selected
+- the home flow now preserves in-progress name entry across locale changes and landing-surface refreshes instead of dropping the player's draft
+- the runtime now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of flattening back to a generic story for that test
+- the home surface now de-emphasizes visible gamification in the first screenful and uses a simpler blue editorial CTA so the page reads more like a viral test landing page than a game dashboard
+- the home and result surfaces now use a lightweight dark social-page chrome so the white editorial content feels more like a page living inside a social feed environment
+- the top of the home page is now lighter because the oversized hero box is gone and locale switching has moved into a small settings menu inside the chrome instead of dominating the opening viewport
+- the result flow now uses a more poster-like presentation and can launch another story directly from the result page
+- the result flow now also keeps a dedicated browse-more layer under the poster/actions path so the page has a stronger "most popular stories below" rhythm
+- the result page now lets that lower browse layer pull from a wider follow-up story set instead of only mirroring the short continuation list
+- the result flow now preserves the in-progress partner-name draft across retry, next-story continuation, and reward/secret-result paths
+- the flow now supports single-name readings instead of assuming every test needs two visible name inputs, which opens the door to broader fate/story/identity content
+- the flow now also includes a first touch-photo interaction path, so selected stories like hidden-gift and past-life-echo can start from the promoted image instead of always requiring text input first
+- the first single-name content batch now has localization parity across the supported locales, even though overall translation quality still needs native-speaker review
+- the feed now has multiple card treatments instead of one completely repeated card template
+- the feed now also has clearer editorial families such as portrait, tabloid, calendar, and touch-style cards instead of only reshuffling one shared presentation
+- the result and share-poster layer now has multiple visual families instead of one repeated poster treatment
+- short-height home/result layouts now keep multi-column editorial flow when the screen is wide enough, instead of collapsing prematurely into cramped narrow columns
+- Android back-button behavior now follows a lightweight in-app history for the main scene flow instead of always collapsing back to home immediately
+- app-flow persistence now survives more than just progress/locale, but it still needs real-device validation around process death, share-return, and lifecycle edge cases
+- app-flow persistence now survives more than just progress/locale and is less timing-sensitive around interrupted transitions, but it still needs real-device validation around process death, share-return, and lifecycle edge cases
+- the remaining gap is broader architectural continuity and polish, not the total absence of feed-to-result continuation
+- the remaining gap also includes content breadth, more human-photo-led editorial density, and further simplification of the surface model
+
+That means the project still needs to move from "bright game feed" toward "endless editorial test pages" if the goal is to match the product strength shown in those screenshots.
 
 ### Important Product Rule
 
@@ -305,11 +355,15 @@ This is the durable backlog view.
 
 ### Product Work Before Shipping
 
-- continue fixing short-height and edge-case layout issues
+- continue fixing the remaining short-height and edge-case layout issues after the latest home/result responsive hardening pass
 - keep polishing the white editorial home/feed until it fully sells the genre
+- replace popup-style thread selection with dedicated landing-page style test pages
+- keep result and retry flows on the same page architecture instead of making the experience feel terminal
 - expand the content catalog meaningfully beyond the current starter set
 - reduce result repetition
 - strengthen the result-card and replay loop until retention feels real
+- keep expanding editorial template families for both feed cards and result posters
+- increase single-name and identity/fate/story test coverage well beyond the first new batch that now exists
 - improve feed ranking, feed freshness, and live-content controls beyond the local API baseline
 - validate that share, replay, and progression feel satisfying on repeat sessions
 - validate localization quality and layout quality across supported locales
@@ -344,11 +398,20 @@ Use this order unless product strategy changes:
 
 The immediate next engineering step is now:
 
-- run and fix full on-device gameplay QA issues across the feed, thread selection, reading, result, replay, share, back-button, background/resume, persistence, and locale-switching flows
+- run and fix the remaining on-device gameplay QA issues across the feed, thread selection, reading, result, replay, share, back-button, background/resume, persistence, locale-switching, selected-story continuity, short-height layouts, and the new result-page continuation flow
 
 The next strategic step after that is:
 
 - deepen the Android-native layer beyond the current storage/share/lifecycle baseline, while also maturing the new feed/live-content path
+
+### Updated Product Priority From Screenshot Review
+
+The highest-leverage product order is now:
+
+1. move from popup thread selection to dedicated landing-page style test pages
+2. redesign results so they feel like poster artifacts that live inside the page flow
+3. increase editorial template variety and content breadth
+4. only after that, keep polishing progression, Android-native depth, and later platform branches
 
 ## External Research Notes
 

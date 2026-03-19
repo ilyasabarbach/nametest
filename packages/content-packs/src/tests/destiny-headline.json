@@ -1,0 +1,31 @@
+{
+  "id": "destiny-headline",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 8,
+  "titleKey": "test.destinyHeadline.title",
+  "subtitleKey": "test.destinyHeadline.subtitle",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
+  ],
+  "scoringFormula": "spotlightFormula",
+  "resultBands": [
+    { "key": "signal", "minScore": 0, "maxScore": 39, "titleKey": "result.signalPath.title", "descriptionKey": "result.signalPath.body", "accent": "#8ecae6" },
+    { "key": "spotlight", "minScore": 40, "maxScore": 74, "titleKey": "result.spotlightPath.title", "descriptionKey": "result.spotlightPath.body", "accent": "#ffd166" },
+    { "key": "prophecy", "minScore": 75, "maxScore": 100, "titleKey": "result.prophecyPath.title", "descriptionKey": "result.prophecyPath.body", "accent": "#fb8500" }
+  ],
+  "resultVariants": [
+    { "key": "signal-soft", "insightKey": "insight.signalPath.soft", "aura": "soft", "resultKeys": ["signal"] },
+    { "key": "signal-rising", "insightKey": "insight.signalPath.rising", "aura": "soft", "resultKeys": ["signal"] },
+    { "key": "spotlight-electric", "insightKey": "insight.spotlightPath.electric", "aura": "electric", "resultKeys": ["spotlight"] },
+    { "key": "spotlight-public", "insightKey": "insight.spotlightPath.public", "aura": "electric", "resultKeys": ["spotlight"] },
+    { "key": "prophecy-bold", "insightKey": "insight.prophecyPath.bold", "aura": "bold", "resultKeys": ["prophecy"] },
+    { "key": "prophecy-headline", "insightKey": "insight.prophecyPath.headline", "aura": "lucky", "resultKeys": ["prophecy"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1d3557", "#fb8500"],
+    "symbol": "badge"
+  }
+}

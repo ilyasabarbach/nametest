@@ -1,7 +1,7 @@
 import type { FeatureFlags } from "../config/FeatureFlags";
 import type { SessionState } from "./SessionState";
 import type { TestDefinition } from "../tests/TestDefinition";
-import { TestRunner, type TestRunInput } from "../tests/TestRunner";
+import { TestRunner, type TestInputValue, type TestRunInput } from "../tests/TestRunner";
 import { createRewardState } from "../progression/RewardState";
 import { addResultToCollection, createPlayerProgress, getUnlockedTestIds, updateProgressAfterSession } from "../progression";
 
@@ -14,10 +14,19 @@ export class GameFlow {
     this.flags = flags;
   }
 
-  createSession(selectedTest: TestDefinition, primaryName = "", partnerName = ""): SessionState {
+  createSession(
+    selectedTest: TestDefinition,
+    primaryName = "",
+    partnerName = "",
+    inputValues?: Record<string, TestInputValue>
+  ): SessionState {
     return {
       selectedTest,
       names: { primaryName, partnerName },
+      inputValues: inputValues ?? {
+        primaryName,
+        partnerName
+      },
       rewardState: createRewardState(),
       playerProgress: createPlayerProgress(),
       progressSummary: undefined

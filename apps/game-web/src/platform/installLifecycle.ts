@@ -10,6 +10,8 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
 
   const removeListeners = await runtime.platform.installLifecycle?.({
     pauseGame() {
+      void runtime.persistProgress();
+      void runtime.persistAppState();
       activeSceneKeys.clear();
       getActiveSceneKeys(game).forEach((key) => {
         activeSceneKeys.add(key);
@@ -26,8 +28,23 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
       });
       activeSceneKeys.clear();
     },
+    navigateBack() {
+      activeSceneKeys.clear();
+      const previousSceneKey = runtime.popBackScene();
+      if (!previousSceneKey) {
+        runtime.resetSceneHistory("HomeScene");
+        game.scene.start("HomeScene");
+        return;
+      }
+
+      game.scene.start(previousSceneKey);
+    },
+    canNavigateBack() {
+      return runtime.canNavigateBackScene();
+    },
     navigateHome() {
       activeSceneKeys.clear();
+      runtime.resetSceneHistory("HomeScene");
       game.scene.start("HomeScene");
     },
     canExitApp() {
@@ -42,6 +59,8 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
   window.addEventListener(
     "beforeunload",
     () => {
+      void runtime.persistProgress();
+      void runtime.persistAppState();
       removeListeners();
     },
     { once: true }

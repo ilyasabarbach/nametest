@@ -15,5 +15,8 @@ export const homeFeedThumbs: Record<string, string> = {
   "future-career": futureThumb,
   "drama-meter": dramaThumb,
   "star-aura": auraThumb,
-  "fame-level": fameThumb
+  "fame-level": fameThumb,
+  "destiny-headline": fameThumb,
+  "past-life-echo": auraThumb,
+  "hidden-gift": futureThumb
 };

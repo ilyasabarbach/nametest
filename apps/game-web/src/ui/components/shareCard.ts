@@ -1,6 +1,7 @@
 type ShareCardOptions = {
   brandLabel: string;
   hook: string;
+  testLabel: string;
   title: string;
   score: string;
   body: string;
@@ -10,6 +11,7 @@ type ShareCardOptions = {
   sharePrompt: string;
   names: string;
   accent: string;
+  template?: "cosmic" | "spotlight" | "tabloid";
 };
 
 export async function buildShareCard(options: ShareCardOptions): Promise<string> {
@@ -21,17 +23,38 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
     return "";
   }
 
+  const template = options.template ?? "cosmic";
   const gradient = context.createLinearGradient(0, 0, 1080, 1920);
-  gradient.addColorStop(0, "#0f1630");
-  gradient.addColorStop(0.55, "#1f2e63");
-  gradient.addColorStop(1, options.accent);
+  if (template === "spotlight") {
+    gradient.addColorStop(0, "#22112c");
+    gradient.addColorStop(0.5, "#5b1f44");
+    gradient.addColorStop(1, options.accent);
+  } else if (template === "tabloid") {
+    gradient.addColorStop(0, "#17131f");
+    gradient.addColorStop(0.42, "#3f1d32");
+    gradient.addColorStop(1, options.accent);
+  } else {
+    gradient.addColorStop(0, "#0f1630");
+    gradient.addColorStop(0.55, "#1f2e63");
+    gradient.addColorStop(1, options.accent);
+  }
   context.fillStyle = gradient;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  context.fillStyle = "rgba(255,255,255,0.06)";
-  context.beginPath();
-  context.arc(860, 250, 180, 0, Math.PI * 2);
-  context.fill();
+  if (template === "spotlight") {
+    context.fillStyle = "rgba(255,255,255,0.08)";
+    roundRect(context, 790, 90, 170, 430, 90);
+    context.fill();
+  } else if (template === "tabloid") {
+    context.fillStyle = "rgba(255,255,255,0.06)";
+    context.fillRect(92, 116, 896, 12);
+    context.fillRect(92, 144, 520, 12);
+  } else {
+    context.fillStyle = "rgba(255,255,255,0.06)";
+    context.beginPath();
+    context.arc(860, 250, 180, 0, Math.PI * 2);
+    context.fill();
+  }
 
   context.fillStyle = "#f8f4e8";
   context.font = "bold 66px Georgia";
@@ -45,31 +68,35 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
   context.fillStyle = options.accent;
   context.fillText(options.hook.toUpperCase(), 90, 296);
 
-  context.fillStyle = "rgba(9, 13, 28, 0.72)";
-  roundRect(context, 72, 330, 936, 1030, 42);
+  context.fillStyle = template === "tabloid" ? "rgba(18, 12, 24, 0.78)" : "rgba(9, 13, 28, 0.72)";
+  roundRect(context, 72, 330, 936, 1030, template === "spotlight" ? 28 : 42);
   context.fill();
+
+  context.fillStyle = "rgba(255,255,255,0.1)";
+  context.font = "bold 28px Georgia";
+  context.fillText(options.testLabel.toUpperCase(), 110, 392);
 
   context.fillStyle = options.accent;
   context.font = "bold 144px Georgia";
-  context.fillText(options.score, 110, 530);
+  context.fillText(options.score, 110, 560);
 
   context.fillStyle = "#f8f4e8";
   context.font = "bold 84px Georgia";
-  wrapText(context, options.title, 110, 670, 820, 94);
+  wrapText(context, options.title, 110, 700, 820, 94);
 
   context.font = "40px Georgia";
-  wrapText(context, options.body, 110, 870, 840, 58);
+  wrapText(context, options.body, 110, 900, 840, 58);
 
   context.fillStyle = "#b7d7ff";
   context.font = "italic 34px Georgia";
-  wrapText(context, options.insight, 110, 1160, 820, 48);
+  wrapText(context, options.insight, 110, 1190, 820, 48);
 
   context.fillStyle = "#ffd166";
   context.font = "bold 34px Georgia";
-  context.fillText(`${options.signatureLabel}: ${options.signature}`, 110, 1380);
+  context.fillText(`${options.signatureLabel}: ${options.signature}`, 110, 1410);
 
   context.fillStyle = "rgba(255,255,255,0.12)";
-  roundRect(context, 72, 1560, 936, 200, 36);
+  roundRect(context, 72, 1560, 936, 200, template === "tabloid" ? 20 : 36);
   context.fill();
   context.fillStyle = "#f8f4e8";
   context.font = "32px Georgia";

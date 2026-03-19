@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { homeFeedUiCopy } from "@nametests/content-packs";
 import type { DiscoveryFeedItemPayload } from "@nametests/backend-contracts";
-import { isNameValid, sanitizeName } from "@nametests/core";
+import { isNameValid, sanitizeName, type TestInputValue } from "@nametests/core";
 import { homeFeedThumbs } from "../assets/feed";
 import { runtime } from "../GameRuntime";
 import { showHomeOverlay } from "../ui/overlays/homeOverlay";
@@ -12,16 +12,23 @@ export class HomeScene extends Phaser.Scene {
   }
 
   create(): void {
+    runtime.recordSceneVisit("HomeScene");
     this.drawBackdrop();
     const locale = runtime.locale;
     const daily = runtime.getDailyFeatured();
     const activeEvent = runtime.getActiveEvent();
     const nextUnlock = runtime.getNextUnlock();
     const feedItems = this.decorateFeedItems(runtime.getDiscoveryFeedItems());
+    const homeDraftNames = runtime.getHomeDraftNames();
+    const homeSelection = runtime.getHomeSelection();
 
-    const selectedTestId = runtime.session.selectedTest.id;
+    const selectedTestId = homeSelection.selectedTestId;
 
     showHomeOverlay({
+      socialBrandLabel: runtime.copy["app.title"],
+      socialSectionLabel: homeFeedUiCopy.homeLabel[locale],
+      socialStatusLabel: homeFeedUiCopy.popularLabel[locale],
+      socialMetaLabel: `${homeFeedUiCopy.hotLabel[locale]} · ${runtime.copy[daily.titleKey]}`,
       homeLabel: homeFeedUiCopy.homeLabel[locale],
       heroTitle: homeFeedUiCopy.heroTitle[locale],
       heroBody: homeFeedUiCopy.heroBody[locale],
@@ -36,6 +43,7 @@ export class HomeScene extends Phaser.Scene {
       eventTheme: activeEvent.name,
       primaryLabel: runtime.copy["home.primaryLabel"],
       partnerLabel: runtime.copy["home.partnerLabel"],
+      privacyLabel: runtime.copy["home.privacyHint"],
       streakLabel: runtime.copy["home.streak"],
       sessionsLabel: runtime.copy["home.sessions"],
       rewardsLabel: runtime.copy["home.rewards"],
@@ -65,17 +73,37 @@ export class HomeScene extends Phaser.Scene {
             progressValue: nextUnlock.unlockAtSessions === 0 ? 1 : nextUnlock.sessionsPlayedTowardUnlock / nextUnlock.unlockAtSessions
           }
         : null,
-      tests: runtime.state.allTests.map((test) => ({
-        id: test.id,
-        label: runtime.copy[test.titleKey],
-        subtitle: runtime.copy[test.subtitleKey],
-        selected: test.id === selectedTestId,
-        lockedLabel: runtime.getUnlockLabel(test)
-      })),
+      tests: runtime.state.allTests.map((test) => {
+        const primaryPrompt = test.prompts.find(
+          (prompt): prompt is Extract<(typeof test.prompts)[number], { type: "name" }> =>
+            prompt.type === "name" && prompt.id === "primaryName"
+        );
+        const partnerPrompt = test.prompts.find(
+          (prompt): prompt is Extract<(typeof test.prompts)[number], { type: "name" }> =>
+            prompt.type === "name" && prompt.id === "partnerName"
+        );
+        const hasNamePrompt = test.prompts.some((prompt) => prompt.type === "name");
+
+        return {
+          id: test.id,
+          label: runtime.copy[test.titleKey],
+          subtitle: runtime.copy[test.subtitleKey],
+          selected: test.id === selectedTestId,
+          lockedLabel: runtime.getUnlockLabel(test),
+          primaryPromptLabel: runtime.copy["home.primaryLabel"],
+          primaryPromptPlaceholder: primaryPrompt?.placeholder ?? "",
+          partnerPromptLabel: runtime.copy["home.partnerLabel"],
+          partnerPromptPlaceholder: partnerPrompt?.placeholder,
+          requiresPartner: Boolean(partnerPrompt),
+          interactionMode: hasNamePrompt ? "form" : "tap",
+          tapLabel: runtime.copy["home.tapPhotoCta"]
+        };
+      }),
       feedItems,
       feedLoadingLabel: runtime.copy["feed.loadingMore"],
-      onSelectTest: (testId) => {
-        runtime.selectTest(testId);
+      initialSelectedFeedItemId: homeSelection.selectedFeedItemId,
+      onSelectTest: (testId, feedItemId) => {
+        runtime.selectTest(testId, feedItemId);
       },
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);
@@ -89,17 +117,42 @@ export class HomeScene extends Phaser.Scene {
         };
       },
       hasMoreFeed: runtime.hasMoreDiscoveryFeed(),
-      onSubmit: (selectedTestId, primaryName, partnerName) => {
+      defaultPrimaryName: homeDraftNames.primaryName || runtime.session.names.primaryName,
+      defaultPartnerName: homeDraftNames.partnerName || runtime.session.names.partnerName,
+      onDraftChange: (primaryName, partnerName) => {
+        runtime.setHomeDraftNames(primaryName, partnerName);
+      },
+      onSubmit: (selectedTestId, selectedFeedItemId, primaryName, partnerName) => {
+        const selectedTest = runtime.state.allTests.find((test) => test.id === selectedTestId);
+        const hasPrimaryPrompt = selectedTest?.prompts.some(
+          (prompt) => prompt.type === "name" && prompt.id === "primaryName"
+        ) ?? true;
+        const requiresPartner = selectedTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName") ?? true;
         const left = sanitizeName(primaryName);
-        const right = sanitizeName(partnerName);
+        const right = requiresPartner ? sanitizeName(partnerName) : "";
 
-        if (!isNameValid(left) || !isNameValid(right)) {
+        if (hasPrimaryPrompt && !isNameValid(left)) {
+          window.alert(runtime.copy["home.validationPrimaryName"] ?? runtime.copy["home.validationNames"]);
+          return;
+        }
+
+        if (requiresPartner && !isNameValid(right)) {
           window.alert(runtime.copy["home.validationNames"]);
           return;
         }
 
-        runtime.selectTest(selectedTestId);
-        runtime.startSession(left, right);
+        const inputValues: Record<string, TestInputValue> = hasPrimaryPrompt
+          ? {
+              primaryName: left,
+              partnerName: right
+            }
+          : {
+              tapSeed: selectedFeedItemId || selectedTestId,
+              revealSeed: selectedTestId
+            };
+
+        runtime.selectTest(selectedTestId, selectedFeedItemId);
+        runtime.startSession(hasPrimaryPrompt ? left : "", right, inputValues);
         runtime.analytics.track({ name: "test_started", payload: { testId: runtime.session.selectedTest.id } });
         this.scene.start("TestScene");
       }

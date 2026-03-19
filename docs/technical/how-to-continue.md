@@ -8,8 +8,8 @@ The project is already locally playable.
 
 The smartest next phase is:
 
-1. keep running full on-device gameplay QA against the new editorial home/feed flow
-2. fix the remaining highest-friction mobile issues
+1. continue deepening the new landing-page style test flow until it feels like a true destination instead of an upgraded selector
+2. keep running full on-device gameplay QA against that new flow
 3. then deepen product polish and Android publishability
 
 Before doing deeper platform work, reread `docs/technical/platform-strategy.md`.
@@ -18,7 +18,9 @@ Before doing deeper platform work, reread `docs/technical/platform-strategy.md`.
 
 Focus here:
 
-- run full on-device gameplay QA now that the white discovery feed, selection sheet, and replay flow are in place
+- deepen the new landing-page style test surface into something that feels closer to a dedicated test page
+- keep result / retry / related-content flow feeling like one continuous page
+- run full on-device gameplay QA now that the white discovery feed is in place
 - refine copy quality and native-speaker localization quality
 - tune unlock thresholds
 - tune event rotation
@@ -33,8 +35,28 @@ Recent progress already made:
 - the result flow now surfaces progression wins like collected results and new unlocks
 - result flavoring was expanded with band-aware variants and more replay depth
 - the home experience was redesigned into a bright editorial feed with real thumbnails and locale switching
-- thread selection now opens a focused sheet instead of a sticky bottom composer
-- tapping a thread deep in the feed now scrolls the panel back to the top before opening the sheet
+- the home feed now mixes multiple editorial card treatments instead of repeating one exact card shape everywhere
+- the home feed now also separates more clearly into editorial families like portrait, tabloid, calendar, and touch-style cards instead of only varying card layout
+- thread selection no longer depends on a sticky bottom composer and now promotes the tapped story into a landing-page style surface
+- fresh home loads now stay browse-first instead of auto-opening a default story, so the promoted landing surface only appears after a real tap
+- the selected landing surface now preserves the tapped story variant instead of flattening immediately into test-only selection
+- tapping a thread deep in the feed now scrolls the panel back to the top before refreshing the landing surface
+- thread taps no longer auto-focus the input fields on mobile, so the promoted surface opens without forcing the keyboard immediately
+- in-progress name entry on the home surface now survives locale switches and other scene refreshes, which removes one of the more obvious continuity breaks
+- the runtime now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of only remembering the selected test id
+- the landing page now pushes streak/reward/collection and unlock framing lower on the page and switches the primary action to a simpler blue editorial CTA so the first impression feels less game-like
+- the home and result surfaces now have a lightweight dark social-page chrome so the editorial content reads more like a page inside a viral feed environment and less like a bare game overlay
+- the oversized home hero and inline locale chips are now removed, and locale switching now sits behind a small settings control in the social chrome instead of occupying the full top section
+- short-height and small-window home/result layouts now preserve wider editorial grids where possible and only collapse fully when the screen is truly narrow
+- the flow now supports single-name readings end to end, and the catalog now includes a first batch of headline / past-life / hidden-gift style tests instead of staying almost entirely pair-based
+- the first touch-photo readings now exist for the editorial flow, so not every promoted story depends on typed input before reveal
+- the first single-name content batch now has locale parity across the supported languages, so the next work should shift back toward QA and broader editorial depth
+- screenshot comparison of the reference product clarified that the next structural gap is dedicated landing pages, not more popup polish
+- the result surface now looks more like a poster artifact and can continue straight into another story without forcing the player back through a dead-end state
+- the result surface now also keeps a dedicated "more popular stories" layer below the main continuation block so the page feels less terminal and more browseable after the poster/actions flow
+- the lower result-page browse layer now pulls from a broader follow-up story pool instead of just repeating the short quick-pick set, which improves endless-feed continuity
+- the result layer and generated share posters now have multiple visual families instead of one single poster treatment
+- result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector
 - a local discovery-feed API workspace now exists, and `GameRuntime` can consume a real feed endpoint via `VITE_DISCOVERY_FEED_URL`
 - the web build now succeeds after aligning Vite workspace alias resolution with TypeScript path resolution
@@ -43,6 +65,9 @@ Recent progress already made:
 - `GameRuntime` now resolves platform services through `apps/game-web/src/platform/services.ts`, so future platform work can build on real injection instead of browser-only wiring
 - `packages/platform-sdk/src/capacitor/index.ts` now uses Capacitor-aware storage and share behavior instead of re-exporting the browser adapter
 - Android lifecycle hooks are now bound at app startup through `apps/game-web/src/platform/installLifecycle.ts`
+- Android back-button handling now walks a lightweight in-app scene history for home, reading, result, and reward instead of always hard-jumping to home
+- the active reading flow is now also persisted through runtime storage and restored after preload, so hard background/restart continuity is better than a simple cold reset
+- pause/unload now explicitly snapshots the app-flow state, and restore logic now resolves interrupted reveal/result transitions more defensively
 - `apps/android-shell/android/app/src/main/res` now contains first-pass native app resources and launch theming instead of an empty shell
 - Android Studio can now sync and launch the app on a real phone after completing the missing Gradle project files and running `cap sync`
 
@@ -106,11 +131,11 @@ If you only have a few minutes:
 
 ## Current Practical Next Step
 
-The game now launches on a real Android phone, the home feed fits the intended genre much better, and thread selection works through a dedicated sheet.
+The game now launches on a real Android phone, the home feed fits the intended genre much better, and thread selection has started moving into a landing-page style surface.
 
 The next session should:
 
-1. run the full gameplay loop on-device with special attention to the new feed-selection flow
-2. note every issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, and locale switching
-3. fix the highest-impact mobile issues before moving deeper into store-release work
-4. after QA stabilizes, tackle bundle splitting, translation quality review, and deeper feed/live-content control
+1. run the full gameplay loop on-device with special attention to feed continuity, result continuity, retry flow, locale switching, and the new social-page chrome on small screens
+2. note every remaining issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, locale switching, selected-story continuity, short-height device layouts, the new settings menu, and the first touch-photo readings
+3. fix the concrete QA issues that shake out of that pass before shifting platform effort deeper into Android
+4. after QA stabilizes, tackle bundle splitting, translation quality review, more human-photo-led feed art direction, deeper live-content control, and the next larger batch of non-pair editorial tests

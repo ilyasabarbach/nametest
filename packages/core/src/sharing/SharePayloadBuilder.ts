@@ -12,10 +12,21 @@ export function buildSharePayload(
   names: { primaryName: string; partnerName: string },
   copy?: Record<string, string>
 ): string {
+  const testLabel = copy?.[definition.titleKey] ?? definition.id;
+  const hasPartner = names.partnerName.trim().length > 0;
+  const hasPrimary = names.primaryName.trim().length > 0;
   const template =
     copy
-      ? "{primaryName} + {partnerName} got {title} at {score}% in Cosmic Match. {hook} {sharePrompt}"
-      : templates[definition.shareTemplateKey] ?? "{primaryName} scored {score}%!";
+      ? hasPartner
+        ? "{primaryName} + {partnerName} got {title} at {score}% in Cosmic Match. {hook} {sharePrompt}"
+        : hasPrimary
+          ? "{primaryName} got {title} at {score}% in Cosmic Match. {hook} {sharePrompt}"
+          : "I got {title} at {score}% in {testLabel}. {hook} {sharePrompt}"
+      : hasPartner
+        ? templates[definition.shareTemplateKey] ?? "{primaryName} scored {score}%!"
+        : hasPrimary
+          ? "{primaryName} scored {score}%!"
+          : "{title} scored {score}%!";
   const flavor = getResultFlavor(definition, result, names);
   const title = copy?.[result.resultTitleKey] ?? result.resultTitleKey;
   const hook = copy?.[`result.hook.${flavor.variant.aura}`] ?? flavor.variant.aura;
@@ -28,6 +39,7 @@ export function buildSharePayload(
     .replace("{primaryName}", names.primaryName)
     .replace("{partnerName}", names.partnerName)
     .replace("{title}", title)
+    .replace("{testLabel}", testLabel)
     .replace("{score}", String(result.score))
     .replace("{aura}", flavor.variant.aura)
     .replace("{signature}", flavor.signature)

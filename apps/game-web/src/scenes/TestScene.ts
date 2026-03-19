@@ -18,6 +18,7 @@ export class TestScene extends Phaser.Scene {
   }
 
   create(): void {
+    runtime.recordSceneVisit("TestScene");
     this.revealComplete = false;
     clearHud();
     const width = this.scale.width;
@@ -165,11 +166,19 @@ export class TestScene extends Phaser.Scene {
     const testTitle = runtime.copy[selectedTest.titleKey] ?? selectedTest.id;
     const categoryLabel = this.getCategoryLabel(selectedTest.category);
     const symbolLabel = this.getSymbolLabel(selectedTest.art.symbol);
+    const hasPrimaryPrompt = selectedTest.prompts.some((prompt) => prompt.type === "name" && prompt.id === "primaryName");
+    const hasPartnerPrompt = selectedTest.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName");
 
     return [
       {
         title: runtime.copy["test.step.opening"].replace("{test}", testTitle),
-        detail: runtime.copy["test.step.openingDetail"]
+        detail: (
+          hasPartnerPrompt
+            ? runtime.copy["test.step.openingDetail"]
+            : hasPrimaryPrompt
+              ? runtime.copy["test.step.openingDetailSolo"]
+              : runtime.copy["test.step.openingDetailTouch"]
+        )
           .replace("{left}", names.primaryName)
           .replace("{right}", names.partnerName)
           .replace("{category}", categoryLabel),
@@ -177,14 +186,20 @@ export class TestScene extends Phaser.Scene {
       },
       {
         title: runtime.copy["test.step.tracing"].replace("{symbol}", symbolLabel),
-        detail: runtime.copy["test.step.tracingDetail"]
+        detail: (
+          hasPartnerPrompt
+            ? runtime.copy["test.step.tracingDetail"]
+            : hasPrimaryPrompt
+              ? runtime.copy["test.step.tracingDetailSolo"]
+              : runtime.copy["test.step.tracingDetailTouch"]
+        )
           .replace("{left}", names.primaryName)
           .replace("{right}", names.partnerName),
         duration: 850
       },
       {
         title: runtime.copy["test.step.energy"],
-        detail: runtime.copy["test.step.energyDetail"],
+        detail: runtime.copy[hasPartnerPrompt ? "test.step.energyDetail" : "test.step.energyDetailSolo"],
         duration: 850
       },
       {

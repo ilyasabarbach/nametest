@@ -298,5 +298,71 @@ export const homeFeedCards: HomeFeedCardDefinition[] = [
       ar: "هل سيرتفع مزيج اسميكما بهدوء ام يتحول الى طاقة عناوين كاملة بين ليلة وضحاها؟",
       pt: "Sua combinacao de nomes subiria em silencio ou viraria energia total de manchete da noite para o dia?"
     }
+  },
+  {
+    id: "feed-destiny-headline",
+    testId: "destiny-headline",
+    hot: true,
+    palette: ["#1d3557", "#fb8500"],
+    tag: {
+      en: "Future headline",
+      fr: "Titre du futur",
+      es: "Titular del futuro",
+      de: "Zukunfts-Headline",
+      ar: "عنوان من المستقبل",
+      pt: "Manchete do futuro"
+    },
+    title: {
+      en: "If your future had one headline tonight, what would your name make it say?",
+      fr: "Si votre futur avait un seul titre ce soir, que lui ferait dire votre nom ?",
+      es: "Si tu futuro tuviera un solo titular esta noche, que haria decir tu nombre?",
+      de: "Wenn deine Zukunft heute Nacht nur eine Headline hatte, was wurde dein Name daraus machen?",
+      ar: "لو كان لمستقبلك عنوان واحد الليلة، فماذا سيجعله اسمك يقول؟",
+      pt: "Se seu futuro tivesse uma unica manchete hoje a noite, o que seu nome faria ela dizer?"
+    }
+  },
+  {
+    id: "feed-past-life-echo",
+    testId: "past-life-echo",
+    hot: false,
+    palette: ["#25173f", "#c77dff"],
+    tag: {
+      en: "Past life story",
+      fr: "Histoire de vie passee",
+      es: "Historia de vida pasada",
+      de: "Frueheres-Leben-Story",
+      ar: "قصة حياة سابقة",
+      pt: "Historia de vida passada"
+    },
+    title: {
+      en: "What kind of past life still echoes every time people say your name?",
+      fr: "Quel genre de vie passee resonne encore chaque fois que les gens disent votre nom ?",
+      es: "Que tipo de vida pasada sigue resonando cada vez que la gente dice tu nombre?",
+      de: "Welche Art frueheres Leben klingt noch nach, jedes Mal wenn Menschen deinen Namen sagen?",
+      ar: "أي نوع من الحياة السابقة ما زال صداه يظهر كلما نطق الناس اسمك؟",
+      pt: "Que tipo de vida passada ainda ecoa toda vez que as pessoas dizem seu nome?"
+    }
+  },
+  {
+    id: "feed-hidden-gift",
+    testId: "hidden-gift",
+    hot: false,
+    palette: ["#161b38", "#ef476f"],
+    tag: {
+      en: "Gift decoder",
+      fr: "Decodeur de don",
+      es: "Decodificador de don",
+      de: "Talent-Decoder",
+      ar: "مفكك الموهبة",
+      pt: "Decodificador de dom"
+    },
+    title: {
+      en: "Your name hides a gift people feel before they can explain it",
+      fr: "Votre nom cache un don que les gens ressentent avant de pouvoir l'expliquer",
+      es: "Tu nombre esconde un don que la gente siente antes de poder explicarlo",
+      de: "Dein Name verbirgt ein Talent, das Menschen spueren bevor sie es erklaeren koennen",
+      ar: "اسمك يخفي موهبة يشعر بها الناس قبل أن يتمكنوا من شرحها",
+      pt: "Seu nome esconde um dom que as pessoas sentem antes mesmo de conseguir explicar"
+    }
   }
 ];

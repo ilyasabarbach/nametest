@@ -59,6 +59,12 @@ function findSubtitleKey(testId: string): string {
       return "test.aura.subtitle";
     case "fame-level":
       return "test.fame.subtitle";
+    case "destiny-headline":
+      return "test.destinyHeadline.subtitle";
+    case "past-life-echo":
+      return "test.pastLife.subtitle";
+    case "hidden-gift":
+      return "test.hiddenGift.subtitle";
     default:
       return "";
   }

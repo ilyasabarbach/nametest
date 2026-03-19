@@ -1,0 +1,31 @@
+{
+  "id": "past-life-echo",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 9,
+  "titleKey": "test.pastLife.title",
+  "subtitleKey": "test.pastLife.subtitle",
+  "prompts": [
+    { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
+  ],
+  "scoringFormula": "futureFormula",
+  "resultBands": [
+    { "key": "familiar", "minScore": 0, "maxScore": 35, "titleKey": "result.familiar.title", "descriptionKey": "result.familiar.body", "accent": "#90e0ef" },
+    { "key": "royal", "minScore": 36, "maxScore": 72, "titleKey": "result.royal.title", "descriptionKey": "result.royal.body", "accent": "#c77dff" },
+    { "key": "mythic", "minScore": 73, "maxScore": 100, "titleKey": "result.mythic.title", "descriptionKey": "result.mythic.body", "accent": "#ff9f1c" }
+  ],
+  "resultVariants": [
+    { "key": "familiar-soft", "insightKey": "insight.familiar.soft", "aura": "soft", "resultKeys": ["familiar"] },
+    { "key": "familiar-memory", "insightKey": "insight.familiar.memory", "aura": "soft", "resultKeys": ["familiar"] },
+    { "key": "royal-lucky", "insightKey": "insight.royal.lucky", "aura": "lucky", "resultKeys": ["royal"] },
+    { "key": "royal-crown", "insightKey": "insight.royal.crown", "aura": "bold", "resultKeys": ["royal"] },
+    { "key": "mythic-bold", "insightKey": "insight.mythic.bold", "aura": "bold", "resultKeys": ["mythic"] },
+    { "key": "mythic-legend", "insightKey": "insight.mythic.legend", "aura": "lucky", "resultKeys": ["mythic"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1b1b3a", "#6930c3"],
+    "symbol": "halo"
+  }
+}

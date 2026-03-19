@@ -54,6 +54,11 @@ export const capacitorPlatform: IPlatform = {
         return;
       }
 
+      if (hooks.canNavigateBack()) {
+        hooks.navigateBack();
+        return;
+      }
+
       if (hooks.canExitApp()) {
         void App.exitApp();
         return;

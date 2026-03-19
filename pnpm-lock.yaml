@@ -52,8 +52,20 @@ importers:
         specifier: 7.4.2
         version: 7.4.2
 
+  apps/discovery-feed-api:
+    dependencies:
+      '@nametests/backend-contracts':
+        specifier: workspace:*
+        version: link:../../packages/backend-contracts
+      '@nametests/content-packs':
+        specifier: workspace:*
+        version: link:../../packages/content-packs
+
   apps/game-web:
     dependencies:
+      '@nametests/backend-contracts':
+        specifier: workspace:*
+        version: link:../../packages/backend-contracts
       '@nametests/content-packs':
         specifier: workspace:*
         version: link:../../packages/content-packs
@@ -79,6 +91,9 @@ importers:
 
   packages/content-packs:
     dependencies:
+      '@nametests/backend-contracts':
+        specifier: workspace:*
+        version: link:../backend-contracts
       '@nametests/core':
         specifier: workspace:*
         version: link:../core

@@ -1,6 +1,8 @@
 export interface PlatformLifecycleHooks {
   pauseGame(): void;
   resumeGame(): void;
+  navigateBack(): void;
+  canNavigateBack(): boolean;
   navigateHome(): void;
   canExitApp(): boolean;
 }

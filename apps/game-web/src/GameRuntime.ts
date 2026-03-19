@@ -23,6 +23,7 @@ import {
   getUnlockedTests,
   selectDailyFeaturedTest,
   toDateKey,
+  type TestInputValue,
   type PlayerProgress,
   type SessionState,
   type TestDefinition
@@ -53,6 +54,24 @@ type RuntimeState = {
   activeEvent: ReturnType<typeof getLimitedEvent>;
   lastDailyRewardCoins: number;
   session: SessionState;
+  homeSelection: {
+    selectedTestId: string;
+    selectedFeedItemId: string;
+  };
+  homeDraftNames: {
+    primaryName: string;
+    partnerName: string;
+  };
+  resultDraftPartnerName: string;
+  sceneHistory: string[];
+};
+
+type PersistedAppState = {
+  session?: SessionState;
+  homeSelection?: RuntimeState["homeSelection"];
+  homeDraftNames?: RuntimeState["homeDraftNames"];
+  resultDraftPartnerName?: string;
+  sceneHistory?: string[];
 };
 
 async function loadRemoteConfig(remoteConfigService: IRemoteConfig): Promise<RemoteConfigPayload> {
@@ -103,6 +122,19 @@ async function loadStoredLocale(storage: IStorage): Promise<HomeFeedLocale> {
   }
 }
 
+async function loadStoredAppState(storage: IStorage): Promise<PersistedAppState | null> {
+  const raw = await storage.getItem(STORAGE_KEYS.session);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as PersistedAppState;
+  } catch {
+    return null;
+  }
+}
+
 function createInitialState(services: PlatformServices): RuntimeState {
   const flow = new GameFlow(defaultFeatureFlags);
   const dailyFeatured = defaultTests[0];
@@ -129,7 +161,17 @@ function createInitialState(services: PlatformServices): RuntimeState {
     dailyFeatured,
     activeEvent: getLimitedEvent(today),
     lastDailyRewardCoins: 0,
-    session: flow.createSession(dailyFeatured)
+    session: flow.createSession(dailyFeatured),
+    homeSelection: {
+      selectedTestId: "",
+      selectedFeedItemId: ""
+    },
+    homeDraftNames: {
+      primaryName: "",
+      partnerName: ""
+    },
+    resultDraftPartnerName: "",
+    sceneHistory: []
   };
 }
 
@@ -157,6 +199,22 @@ async function loadDiscoveryFeedPage(locale: HomeFeedLocale, cursor?: string) {
   return getFallbackDiscoveryFeedPage(locale, cursor);
 }
 
+function resolveFeedSelection(
+  items: DiscoveryFeedItemPayload[],
+  selectedTestId: string,
+  preferredFeedItemId?: string
+) {
+  const selectedFeedItem =
+    items.find((item) => item.id === preferredFeedItemId && item.testId === selectedTestId) ??
+    items.find((item) => item.testId === selectedTestId) ??
+    items[0];
+
+  return {
+    selectedTestId: selectedFeedItem?.testId ?? selectedTestId,
+    selectedFeedItemId: selectedFeedItem?.id ?? ""
+  };
+}
+
 export const runtime = {
   state: createInitialState(resolvePlatformServices()),
 
@@ -175,6 +233,7 @@ export const runtime = {
       loadStoredProgress(this.state.storage),
       loadStoredLocale(this.state.storage)
     ]);
+    const storedAppState = await loadStoredAppState(this.state.storage);
     this.state.remoteConfig = remoteConfig;
     this.state.progress = progress;
     this.state.locale = locale;
@@ -211,7 +270,59 @@ export const runtime = {
       playerProgress: effectiveProgress,
       dailyFeaturedTestId: dailyFeatured.id
     };
+    this.state.homeDraftNames = {
+      primaryName: this.state.session.names.primaryName,
+      partnerName: this.state.session.names.partnerName
+    };
+    this.state.homeSelection = {
+      selectedTestId: "",
+      selectedFeedItemId: ""
+    };
+    this.state.resultDraftPartnerName = this.state.session.names.partnerName;
+    this.state.sceneHistory = ["HomeScene"];
+
+    const persistedSession = storedAppState?.session;
+    const persistedTestId = persistedSession?.selectedTest?.id;
+    const persistedTest =
+      (persistedTestId && this.state.allTests.find((test) => test.id === persistedTestId)) ?? undefined;
+
+    if (persistedSession && persistedTest) {
+      this.state.session = {
+        ...persistedSession,
+        selectedTest: persistedTest,
+        inputValues: persistedSession.inputValues ?? {
+          primaryName: persistedSession.names.primaryName,
+          partnerName: persistedSession.names.partnerName
+        },
+        playerProgress: effectiveProgress,
+        dailyFeaturedTestId: dailyFeatured.id
+      };
+    }
+
+    if (storedAppState?.homeDraftNames) {
+      this.state.homeDraftNames = storedAppState.homeDraftNames;
+    }
+
+    if (storedAppState?.homeSelection) {
+      this.state.homeSelection = resolveFeedSelection(
+        firstFeedPage.items,
+        storedAppState.homeSelection.selectedTestId || this.state.session.selectedTest.id,
+        storedAppState.homeSelection.selectedFeedItemId
+      );
+    }
+
+    if (typeof storedAppState?.resultDraftPartnerName === "string") {
+      this.state.resultDraftPartnerName = storedAppState.resultDraftPartnerName;
+    }
+
+    if (storedAppState?.sceneHistory?.length) {
+      const relevantSceneKeys = new Set(["HomeScene", "TestScene", "ResultScene", "RewardScene"]);
+      const restoredHistory = storedAppState.sceneHistory.filter((sceneKey) => relevantSceneKeys.has(sceneKey));
+      this.state.sceneHistory = restoredHistory.length ? restoredHistory : ["HomeScene"];
+    }
+
     await this.persistProgress();
+    await this.persistAppState();
     this.state.initialized = true;
   },
 
@@ -275,10 +386,90 @@ export const runtime = {
     this.state.session = session;
     this.state.progress = session.playerProgress;
     void this.persistProgress();
+    void this.persistAppState();
   },
 
   getAvailableTests(): TestDefinition[] {
     return this.state.availableTests;
+  },
+
+  getHomeDraftNames() {
+    return this.state.homeDraftNames;
+  },
+
+  getHomeSelection() {
+    return this.state.homeSelection;
+  },
+
+  setHomeSelection(testId: string, feedItemId?: string): void {
+    this.state.homeSelection = resolveFeedSelection(this.state.discoveryFeedItems, testId, feedItemId);
+    void this.persistAppState();
+  },
+
+  setHomeDraftNames(primaryName: string, partnerName: string): void {
+    this.state.homeDraftNames = { primaryName, partnerName };
+    void this.persistAppState();
+  },
+
+  getResultDraftPartnerName(): string {
+    return this.state.resultDraftPartnerName;
+  },
+
+  setResultDraftPartnerName(partnerName: string): void {
+    this.state.resultDraftPartnerName = partnerName;
+    void this.persistAppState();
+  },
+
+  recordSceneVisit(sceneKey: string): void {
+    const relevantSceneKeys = new Set(["HomeScene", "TestScene", "ResultScene", "RewardScene"]);
+    if (!relevantSceneKeys.has(sceneKey)) {
+      return;
+    }
+
+    if (this.state.sceneHistory.at(-1) === sceneKey) {
+      return;
+    }
+
+    this.state.sceneHistory.push(sceneKey);
+    void this.persistAppState();
+  },
+
+  resetSceneHistory(sceneKey = "HomeScene"): void {
+    this.state.sceneHistory = [sceneKey];
+    void this.persistAppState();
+  },
+
+  canNavigateBackScene(): boolean {
+    return this.state.sceneHistory.length > 1;
+  },
+
+  popBackScene(): string | null {
+    if (!this.canNavigateBackScene()) {
+      return null;
+    }
+
+    this.state.sceneHistory.pop();
+    void this.persistAppState();
+    return this.state.sceneHistory.at(-1) ?? null;
+  },
+
+  getRestoreSceneKey(): string {
+    const currentSceneKey = this.state.sceneHistory.at(-1);
+    const hasPrimaryName = Boolean(this.state.session.names.primaryName.trim());
+    const hasLatestResult = Boolean(this.state.session.latestResult);
+    switch (currentSceneKey) {
+      case "TestScene":
+        if (!hasPrimaryName) {
+          return "HomeScene";
+        }
+        return hasLatestResult ? "ResultScene" : "TestScene";
+      case "ResultScene":
+        return hasLatestResult ? "ResultScene" : hasPrimaryName ? "TestScene" : "HomeScene";
+      case "RewardScene":
+        return "ResultScene";
+      default:
+        return "HomeScene";
+    }
   },
 
   getDailyFeatured(): TestDefinition {
@@ -293,7 +484,7 @@ export const runtime = {
     return this.state.lastDailyRewardCoins;
   },
 
-  selectTest(testId: string): void {
+  selectTest(testId: string, feedItemId?: string): void {
     const selected = this.state.availableTests.find((test) => test.id === testId) ?? this.state.availableTests[0];
     if (!selected) {
       return;
@@ -304,14 +495,20 @@ export const runtime = {
       playerProgress: this.state.progress,
       dailyFeaturedTestId: this.state.dailyFeatured.id
     };
+    this.state.homeSelection = resolveFeedSelection(this.state.discoveryFeedItems, selected.id, feedItemId);
+    this.state.resultDraftPartnerName = this.state.session.names.partnerName;
+    void this.persistAppState();
   },
 
-  startSession(primaryName: string, partnerName: string): void {
+  startSession(primaryName: string, partnerName: string, inputValues?: Record<string, TestInputValue>): void {
+    this.state.homeDraftNames = { primaryName, partnerName };
+    this.state.resultDraftPartnerName = partnerName;
     this.state.session = {
-      ...this.state.flow.createSession(this.state.session.selectedTest, primaryName, partnerName),
+      ...this.state.flow.createSession(this.state.session.selectedTest, primaryName, partnerName, inputValues),
       playerProgress: this.state.progress,
       dailyFeaturedTestId: this.state.dailyFeatured.id
     };
+    void this.persistAppState();
   },
 
   completeSession(): void {
@@ -319,7 +516,7 @@ export const runtime = {
       this.state.session,
       {
         testId: this.state.session.selectedTest.id,
-        values: this.state.session.names
+        values: this.state.session.inputValues
       },
       this.state.allTests
     );
@@ -348,13 +545,35 @@ export const runtime = {
     await this.state.storage.setItem(STORAGE_KEYS.progress, JSON.stringify(this.state.progress));
   },
 
+  async persistAppState(): Promise<void> {
+    const appState: PersistedAppState = {
+      session: this.state.session,
+      homeSelection: this.state.homeSelection,
+      homeDraftNames: this.state.homeDraftNames,
+      resultDraftPartnerName: this.state.resultDraftPartnerName,
+      sceneHistory: this.state.sceneHistory
+    };
+    await this.state.storage.setItem(STORAGE_KEYS.session, JSON.stringify(appState));
+  },
+
   async setLocale(locale: HomeFeedLocale): Promise<void> {
     this.state.locale = locale;
     this.state.copy = resolveCopyForLocale(locale);
     const firstFeedPage = await loadDiscoveryFeedPage(locale);
     this.state.discoveryFeedItems = firstFeedPage.items;
     this.state.discoveryFeedNextCursor = firstFeedPage.nextCursor;
+    this.state.homeSelection = this.state.homeSelection.selectedTestId
+      ? resolveFeedSelection(
+          firstFeedPage.items,
+          this.state.homeSelection.selectedTestId,
+          this.state.homeSelection.selectedFeedItemId
+        )
+      : {
+          selectedTestId: "",
+          selectedFeedItemId: ""
+        };
     await this.state.storage.setItem(STORAGE_KEYS.locale, locale);
+    await this.persistAppState();
   },
 
   async loadMoreDiscoveryFeed(): Promise<DiscoveryFeedItemPayload[]> {
