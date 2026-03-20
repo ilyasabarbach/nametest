@@ -64,6 +64,7 @@ This holds game content as data:
 
 - manifest
 - individual test JSON files
+- artifact recipe registry
 - English copy
 
 This is where you add new tests, update text, or change content pacing.
@@ -109,3 +110,9 @@ Builds JSON bundles from the content package into `services/content/published`.
 This folder should be treated as part of the product, not as an afterthought.
 
 Whenever architecture or gameplay direction changes, update docs in the same pass if possible.
+
+Important strategy docs now include:
+
+- `docs/technical/current-status.md`
+- `docs/technical/platform-strategy.md`
+- `docs/technical/viral-growth-plan.md`

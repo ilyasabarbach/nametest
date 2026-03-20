@@ -1,0 +1,43 @@
+{
+  "id": "group-chat-role",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 12,
+  "titleKey": "test.groupChatRole.title",
+  "subtitleKey": "test.groupChatRole.subtitle",
+  "inputMode": "single-name",
+  "artifactRecipeId": "duo-badge-reveal",
+  "styleFamily": "social-role",
+  "viralHook": {
+    "curiosity": "What role do you secretly become in every group chat?",
+    "egoAxis": "status",
+    "artifactType": "badge",
+    "shareAngle": "social role status reveal"
+  },
+  "seasonalTags": ["evergreen", "status", "single-name"],
+  "remixModes": ["badge", "headline"],
+  "safetyProfile": "general",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
+  ],
+  "scoringFormula": "compatibilityFormula",
+  "resultBands": [
+    { "key": "glue", "minScore": 0, "maxScore": 33, "titleKey": "result.glue.title", "descriptionKey": "result.glue.body", "accent": "#57cc99" },
+    { "key": "signal-role", "minScore": 34, "maxScore": 72, "titleKey": "result.signalRole.title", "descriptionKey": "result.signalRole.body", "accent": "#8ecae6" },
+    { "key": "icon-role", "minScore": 73, "maxScore": 100, "titleKey": "result.iconRole.title", "descriptionKey": "result.iconRole.body", "accent": "#fb8500" }
+  ],
+  "resultVariants": [
+    { "key": "glue-soft", "insightKey": "insight.glue.soft", "aura": "soft", "resultKeys": ["glue"] },
+    { "key": "glue-trusted", "insightKey": "insight.glue.trusted", "aura": "soft", "resultKeys": ["glue"] },
+    { "key": "signal-role-electric", "insightKey": "insight.signalRole.electric", "aura": "electric", "resultKeys": ["signal-role"] },
+    { "key": "signal-role-funny", "insightKey": "insight.signalRole.funny", "aura": "electric", "resultKeys": ["signal-role"] },
+    { "key": "icon-role-bold", "insightKey": "insight.iconRole.bold", "aura": "bold", "resultKeys": ["icon-role"] },
+    { "key": "icon-role-public", "insightKey": "insight.iconRole.public", "aura": "lucky", "resultKeys": ["icon-role"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#14213d", "#fca311"],
+    "symbol": "badge"
+  }
+}

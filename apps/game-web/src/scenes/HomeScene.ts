@@ -17,19 +17,13 @@ export class HomeScene extends Phaser.Scene {
     const locale = runtime.locale;
     const daily = runtime.getDailyFeatured();
     const activeEvent = runtime.getActiveEvent();
-    const nextUnlock = runtime.getNextUnlock();
     const feedItems = this.decorateFeedItems(runtime.getDiscoveryFeedItems());
     const homeDraftNames = runtime.getHomeDraftNames();
     const homeSelection = runtime.getHomeSelection();
-
     const selectedTestId = homeSelection.selectedTestId;
 
     showHomeOverlay({
       socialBrandLabel: runtime.copy["app.title"],
-      socialSectionLabel: homeFeedUiCopy.homeLabel[locale],
-      socialStatusLabel: homeFeedUiCopy.popularLabel[locale],
-      socialMetaLabel: `${homeFeedUiCopy.hotLabel[locale]} · ${runtime.copy[daily.titleKey]}`,
-      homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       homeLabel: homeFeedUiCopy.homeLabel[locale],
       heroTitle: homeFeedUiCopy.heroTitle[locale],
       heroBody: homeFeedUiCopy.heroBody[locale],
@@ -56,24 +50,7 @@ export class HomeScene extends Phaser.Scene {
       dailyRewardCoins: runtime.getDailyRewardCoins(),
       locales: runtime.getSupportedLocales(),
       currentLocale: locale,
-      nextUnlock: nextUnlock
-        ? {
-            label: nextUnlock.label,
-            title: runtime.copy["home.nextUnlock"],
-            remainingLabel:
-              nextUnlock.sessionsRemaining === 0
-                ? runtime.copy["home.nextUnlockReady"]
-                : runtime.copy[
-                    nextUnlock.sessionsRemaining === 1
-                      ? "home.nextUnlockRemaining"
-                      : "home.nextUnlockRemainingPlural"
-                  ].replace("{count}", String(nextUnlock.sessionsRemaining)),
-            progressLabel: runtime.copy["home.nextUnlockProgress"]
-              .replace("{current}", String(nextUnlock.sessionsPlayedTowardUnlock))
-              .replace("{target}", String(nextUnlock.unlockAtSessions)),
-            progressValue: nextUnlock.unlockAtSessions === 0 ? 1 : nextUnlock.sessionsPlayedTowardUnlock / nextUnlock.unlockAtSessions
-          }
-        : null,
+      nextUnlock: null,
       tests: runtime.state.allTests.map((test) => {
         const primaryPrompt = test.prompts.find(
           (prompt): prompt is Extract<(typeof test.prompts)[number], { type: "name" }> =>
@@ -84,6 +61,8 @@ export class HomeScene extends Phaser.Scene {
             prompt.type === "name" && prompt.id === "partnerName"
         );
         const hasNamePrompt = test.prompts.some((prompt) => prompt.type === "name");
+        const inputMode =
+          test.inputMode ?? (hasNamePrompt ? (partnerPrompt ? "pair-name" : "single-name") : "tap-photo");
 
         return {
           id: test.id,
@@ -95,8 +74,8 @@ export class HomeScene extends Phaser.Scene {
           primaryPromptPlaceholder: primaryPrompt?.placeholder ?? "",
           partnerPromptLabel: runtime.copy["home.partnerLabel"],
           partnerPromptPlaceholder: partnerPrompt?.placeholder,
-          requiresPartner: Boolean(partnerPrompt),
-          interactionMode: hasNamePrompt ? "form" : "tap",
+          requiresPartner: inputMode === "pair-name",
+          interactionMode: inputMode === "tap-photo" ? "tap" : "form",
           tapLabel: runtime.copy["home.tapPhotoCta"]
         };
       }),
@@ -109,11 +88,6 @@ export class HomeScene extends Phaser.Scene {
         if (selectedTest && !runtime.getUnlockLabel(selectedTest)) {
           runtime.selectTest(testId, feedItemId);
         }
-      },
-      onGoHome: () => {
-        runtime.clearHomeSelection();
-        runtime.resetSceneHistory("HomeScene");
-        this.scene.restart();
       },
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);
@@ -134,10 +108,10 @@ export class HomeScene extends Phaser.Scene {
       },
       onSubmit: (selectedTestId, selectedFeedItemId, primaryName, partnerName) => {
         const selectedTest = runtime.state.allTests.find((test) => test.id === selectedTestId);
-        const hasPrimaryPrompt = selectedTest?.prompts.some(
-          (prompt) => prompt.type === "name" && prompt.id === "primaryName"
-        ) ?? true;
-        const requiresPartner = selectedTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName") ?? true;
+        const hasPrimaryPrompt =
+          selectedTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "primaryName") ?? true;
+        const requiresPartner =
+          selectedTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName") ?? true;
         const left = sanitizeName(primaryName);
         const right = requiresPartner ? sanitizeName(partnerName) : "";
 
@@ -182,11 +156,13 @@ export class HomeScene extends Phaser.Scene {
     graphics.fillStyle(0xf0d7b7, 0.22);
     graphics.fillCircle(width * 0.78, height * 0.76, Math.min(180, width * 0.28));
 
-    this.add.text(26, 34, runtime.copy["home.brand"], {
-      fontFamily: "Georgia",
-      fontSize: "18px",
-      color: "#b8562d"
-    }).setAlpha(0.9);
+    this.add
+      .text(26, 34, runtime.copy["home.brand"], {
+        fontFamily: "Georgia",
+        fontSize: "18px",
+        color: "#b8562d"
+      })
+      .setAlpha(0.9);
   }
 
   private decorateFeedItems(items: DiscoveryFeedItemPayload[]) {

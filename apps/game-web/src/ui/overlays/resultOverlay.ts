@@ -1,4 +1,6 @@
 import { setHud } from "../components/hud";
+import type { ArtifactTemplate } from "../components/artifactPresentation";
+import type { HomeFeedLocale } from "@nametests/content-packs";
 
 type ResultStory = {
   id: string;
@@ -14,13 +16,8 @@ type ResultStory = {
   partnerLabel?: string;
 };
 
-import type { HomeFeedLocale } from "@nametests/content-packs";
-
 export function showResultOverlay(args: {
   socialBrandLabel: string;
-  socialSectionLabel: string;
-  socialStatusLabel: string;
-  socialMetaLabel: string;
   homeButtonLabel: string;
   languageLabel: string;
   locales: Array<{ id: HomeFeedLocale; label: string; nativeLabel: string }>;
@@ -35,7 +32,7 @@ export function showResultOverlay(args: {
   signatureLabel: string;
   shareHint: string;
   shareLabel: string;
-  progressTitle: string;
+  progressTitle?: string;
   partnerName: string;
   partnerLabel: string;
   retryPartnerVisible?: boolean;
@@ -61,7 +58,7 @@ export function showResultOverlay(args: {
   onReward: () => void;
   rewardVisible: boolean;
   accent: string;
-  template?: "cosmic" | "spotlight" | "tabloid";
+  template?: ArtifactTemplate;
 }): void {
   const panel = document.createElement("section");
   panel.className = "hud-panel hud-panel--result-feed hud-stack";
@@ -105,8 +102,10 @@ export function showResultOverlay(args: {
   panel.innerHTML = `
     <div class="hud-social-chrome hud-social-chrome--result">
       <div class="hud-social-chrome__left">
-        <button class="hud-nav-button" type="button" data-action="go-home">${args.homeButtonLabel}</button>
-        <button class="hud-settings-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
+        <button class="hud-nav-button hud-icon-button" type="button" data-action="go-home" title="${args.homeButtonLabel}" aria-label="${args.homeButtonLabel}">
+          &#8962;
+        </button>
+        <button class="hud-settings-button hud-icon-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
           &#9881;
         </button>
         <div class="hud-settings-menu hidden" data-settings-menu>
@@ -132,10 +131,7 @@ export function showResultOverlay(args: {
       <div class="hud-social-chrome__logo">
         <strong>${args.socialBrandLabel}</strong>
       </div>
-      <div class="hud-social-chrome__right">
-        <span class="hud-social-chrome__pill">${args.socialStatusLabel}</span>
-        <span class="hud-social-chrome__text">${args.socialMetaLabel}</span>
-      </div>
+      <div class="hud-social-chrome__right"></div>
     </div>
     <div class="hud-result-poster hud-result-poster--${template} hud-stack">
       <div class="hud-result-poster__glow" style="--result-accent:${args.accent};"></div>

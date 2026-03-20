@@ -1,0 +1,43 @@
+{
+  "id": "photo-archetype",
+  "category": "personality",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 14,
+  "titleKey": "test.photoArchetype.title",
+  "subtitleKey": "test.photoArchetype.subtitle",
+  "inputMode": "tap-photo",
+  "artifactRecipeId": "identity-aura-portrait",
+  "styleFamily": "photo-archetype",
+  "viralHook": {
+    "curiosity": "Tap the photo and reveal the archetype people feel instantly.",
+    "egoAxis": "identity",
+    "artifactType": "portrait",
+    "shareAngle": "tap-to-reveal archetype portrait"
+  },
+  "seasonalTags": ["evergreen", "tap-photo", "identity"],
+  "remixModes": ["portrait", "storybook"],
+  "safetyProfile": "photo",
+  "prompts": [
+    { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
+  ],
+  "scoringFormula": "spotlightFormula",
+  "resultBands": [
+    { "key": "muse", "minScore": 0, "maxScore": 32, "titleKey": "result.muse.title", "descriptionKey": "result.muse.body", "accent": "#8ecae6" },
+    { "key": "oracle", "minScore": 33, "maxScore": 72, "titleKey": "result.oracle.title", "descriptionKey": "result.oracle.body", "accent": "#c77dff" },
+    { "key": "siren", "minScore": 73, "maxScore": 100, "titleKey": "result.siren.title", "descriptionKey": "result.siren.body", "accent": "#ef476f" }
+  ],
+  "resultVariants": [
+    { "key": "muse-soft", "insightKey": "insight.muse.soft", "aura": "soft", "resultKeys": ["muse"] },
+    { "key": "muse-warm", "insightKey": "insight.muse.warm", "aura": "soft", "resultKeys": ["muse"] },
+    { "key": "oracle-electric", "insightKey": "insight.oracle.electric", "aura": "electric", "resultKeys": ["oracle"] },
+    { "key": "oracle-strange", "insightKey": "insight.oracle.strange", "aura": "electric", "resultKeys": ["oracle"] },
+    { "key": "siren-bold", "insightKey": "insight.siren.bold", "aura": "bold", "resultKeys": ["siren"] },
+    { "key": "siren-iconic", "insightKey": "insight.siren.iconic", "aura": "lucky", "resultKeys": ["siren"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1d2336", "#ef476f"],
+    "symbol": "spotlight"
+  }
+}

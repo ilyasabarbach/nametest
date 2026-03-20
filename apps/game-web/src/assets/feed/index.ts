@@ -18,5 +18,10 @@ export const homeFeedThumbs: Record<string, string> = {
   "fame-level": fameThumb,
   "destiny-headline": fameThumb,
   "past-life-echo": auraThumb,
-  "hidden-gift": futureThumb
+  "hidden-gift": futureThumb,
+  "aura-palette": auraThumb,
+  "group-chat-role": friendshipThumb,
+  "soul-story": auraThumb,
+  "photo-archetype": fameThumb,
+  "movie-poster": dramaThumb
 };

@@ -19,8 +19,6 @@ import {
   defaultFeatureFlags,
   generateResultCard,
   getLimitedEvent,
-  getNextUnlockTarget,
-  getUnlockedTests,
   selectDailyFeaturedTest,
   toDateKey,
   type TestInputValue,
@@ -249,7 +247,7 @@ export const runtime = {
     const dailyReward = claimDailyReward(progress, currentDate);
     const effectiveProgress = dailyReward.progress;
     const dailyFeatured = selectDailyFeaturedTest(manifest, defaultTests, dateKey);
-    const availableTests = getUnlockedTests(defaultTests, effectiveProgress, remoteConfig.featureFlags.hiddenTestsEnabled);
+    const availableTests = defaultTests;
     const activeTest =
       availableTests.find((test) => test.id === dailyFeatured.id) ??
       availableTests.find((test) => test.id === remoteConfig.featuredTestId) ??
@@ -490,8 +488,8 @@ export const runtime = {
   },
 
   selectTest(testId: string, feedItemId?: string, options?: { allowLocked?: boolean }): void {
-    const selectionPool = options?.allowLocked ? this.state.allTests : this.state.availableTests;
-    const fallbackPool = options?.allowLocked ? this.state.allTests : this.state.availableTests;
+    const selectionPool = this.state.allTests;
+    const fallbackPool = this.state.allTests;
     const selected = selectionPool.find((test) => test.id === testId) ?? fallbackPool[0];
     if (!selected) {
       return;
@@ -595,45 +593,16 @@ export const runtime = {
   },
 
   getUnlockLabel(test: TestDefinition): string | null {
-    if (this.state.availableTests.some((entry) => entry.id === test.id)) {
-      return null;
-    }
-
-    const unlockAt = test.unlockAfterSessions ?? 0;
-    return this.state.copy["home.unlock"].replace("{count}", String(unlockAt));
+    void test;
+    return null;
   },
 
   getNextUnlock() {
-    const target = getNextUnlockTarget(
-      this.state.allTests,
-      this.state.progress,
-      this.state.remoteConfig.featureFlags.hiddenTestsEnabled
-    );
-
-    if (!target) {
-      return null;
-    }
-
-    const test = this.state.allTests.find((entry) => entry.id === target.testId);
-    if (!test) {
-      return null;
-    }
-
-    return {
-      id: target.testId,
-      label: this.state.copy[test.titleKey] ?? target.testId,
-      unlockAtSessions: target.unlockAtSessions,
-      sessionsRemaining: target.sessionsRemaining,
-      sessionsPlayedTowardUnlock: Math.min(this.state.progress.sessionsPlayed, target.unlockAtSessions)
-    };
+    return null;
   },
 
   refreshAvailability(): void {
-    this.state.availableTests = getUnlockedTests(
-      this.state.allTests,
-      this.state.progress,
-      this.state.remoteConfig.featureFlags.hiddenTestsEnabled
-    );
+    this.state.availableTests = this.state.allTests;
     this.state.registry = new TestRegistry(this.state.availableTests);
   }
 };

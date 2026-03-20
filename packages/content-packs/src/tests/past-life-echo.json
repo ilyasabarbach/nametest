@@ -6,6 +6,18 @@
   "unlockAfterSessions": 9,
   "titleKey": "test.pastLife.title",
   "subtitleKey": "test.pastLife.subtitle",
+  "inputMode": "tap-photo",
+  "artifactRecipeId": "storybook-echo-cover",
+  "styleFamily": "past-life-story",
+  "viralHook": {
+    "curiosity": "What kind of past life still echoes every time people say your name?",
+    "egoAxis": "mystery",
+    "artifactType": "storybook-cover",
+    "shareAngle": "mythic identity reveal"
+  },
+  "seasonalTags": ["evergreen", "mystery", "tap-photo"],
+  "remixModes": ["storybook", "portrait"],
+  "safetyProfile": "photo",
   "prompts": [
     { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
   ],

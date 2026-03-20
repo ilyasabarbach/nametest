@@ -1,0 +1,43 @@
+{
+  "id": "soul-story",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 13,
+  "titleKey": "test.soulStory.title",
+  "subtitleKey": "test.soulStory.subtitle",
+  "inputMode": "single-name",
+  "artifactRecipeId": "storybook-echo-cover",
+  "styleFamily": "soul-story",
+  "viralHook": {
+    "curiosity": "What is the greatest story your soul still wants to tell?",
+    "egoAxis": "mystery",
+    "artifactType": "storybook-cover",
+    "shareAngle": "legendary biography reveal"
+  },
+  "seasonalTags": ["evergreen", "story", "single-name"],
+  "remixModes": ["storybook", "portrait"],
+  "safetyProfile": "identity",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
+  ],
+  "scoringFormula": "futureFormula",
+  "resultBands": [
+    { "key": "chapter", "minScore": 0, "maxScore": 39, "titleKey": "result.chapter.title", "descriptionKey": "result.chapter.body", "accent": "#90e0ef" },
+    { "key": "chronicle", "minScore": 40, "maxScore": 74, "titleKey": "result.chronicle.title", "descriptionKey": "result.chronicle.body", "accent": "#c77dff" },
+    { "key": "legend-book", "minScore": 75, "maxScore": 100, "titleKey": "result.legendBook.title", "descriptionKey": "result.legendBook.body", "accent": "#ff9f1c" }
+  ],
+  "resultVariants": [
+    { "key": "chapter-soft", "insightKey": "insight.chapter.soft", "aura": "soft", "resultKeys": ["chapter"] },
+    { "key": "chapter-gentle", "insightKey": "insight.chapter.gentle", "aura": "soft", "resultKeys": ["chapter"] },
+    { "key": "chronicle-electric", "insightKey": "insight.chronicle.electric", "aura": "electric", "resultKeys": ["chronicle"] },
+    { "key": "chronicle-deep", "insightKey": "insight.chronicle.deep", "aura": "electric", "resultKeys": ["chronicle"] },
+    { "key": "legend-book-bold", "insightKey": "insight.legendBook.bold", "aura": "bold", "resultKeys": ["legend-book"] },
+    { "key": "legend-book-mythic", "insightKey": "insight.legendBook.mythic", "aura": "lucky", "resultKeys": ["legend-book"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#301934", "#6d597a"],
+    "symbol": "halo"
+  }
+}

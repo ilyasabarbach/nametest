@@ -6,6 +6,18 @@
   "unlockAfterSessions": 0,
   "titleKey": "test.loveMatch.title",
   "subtitleKey": "test.loveMatch.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-cosmic-poster",
+  "styleFamily": "cosmic-romance",
+  "viralHook": {
+    "curiosity": "Do these two names have chemistry people would screenshot?",
+    "egoAxis": "chemistry",
+    "artifactType": "poster",
+    "shareAngle": "romantic chemistry reveal"
+  },
+  "seasonalTags": ["evergreen", "shareable", "duo"],
+  "remixModes": ["poster", "headline"],
+  "safetyProfile": "romance",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Their name", "placeholder": "Enter their name", "maxLength": 20 }

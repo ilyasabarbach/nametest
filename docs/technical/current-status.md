@@ -34,13 +34,14 @@ This is the quickest "where are we now?" document.
 - Home navigation now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of falling back to a generic story for the same test
 - The landing page now de-emphasizes streak/reward/collection framing on the first screenful and uses a simpler blue editorial CTA so the surface reads less like a game dashboard
 - Home and result surfaces now include a lightweight dark social-page chrome so the editorial white content feels more like a page inside a viral feed ecosystem instead of a bare game panel
-- Home and result surfaces now use a lighter navbar with Home and Settings on the left plus a centered game logo, which removes more of the old dark game-panel header feeling
+- Homepage now uses a minimal top navbar with only the Settings gear on the left and a centered game logo, while non-home result surfaces use Home plus Settings on the left with that same centered logo
 - The oversized home hero and inline locale chip row are now gone, and language switching now lives inside a lighter settings menu in the top chrome instead of taking over the top of the page
 - Short-height home and result layouts now keep the editorial feed/result surfaces readable instead of collapsing into overly narrow columns on landscape phones and cramped browser windows
 - The landing/test/result flow now supports both pair-name readings and single-name readings instead of hardcoding the entire experience around two-name inputs
 - The first touch-photo readings now exist, so some stories can start directly from tapping the promoted image instead of always opening the keyboard and waiting for manual text entry
 - The first single-name headline / past-life / hidden-gift batch now has locale-copy parity across all supported languages instead of staying partially English-only in practice
-- Player can select unlocked tests from the feed and start a reading
+- The next higher-contrast editorial batch now also exists in the catalog: aura, group-role, soul-story, photo-archetype, and movie-poster tests have been added on top of the first non-pair expansion
+- All tests are now available from the main feed by default, so the product behaves like an open viral catalog instead of a gated progression ladder
 - Test reveal flow uses a multi-step paced animation instead of a single static wait screen
 - Replay bug in the reveal flow was fixed so "try another name" correctly restarts the charging / reveal sequence
 - Result screen supports replay and a secret-reading flow
@@ -53,17 +54,21 @@ This is the quickest "where are we now?" document.
 - Result-page lower browsing now uses the full editorial test catalog instead of only the currently unlocked / currently loaded slice, so players can keep scrolling all story types from inside a result page
 - Result pages no longer foreground the old "unlocked this run" progression summary block, so the poster and browse flow stay primary
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
+- Result/share artifact selection is now starting to move onto an explicit recipe layer instead of relying only on hardcoded symbol-to-template guesses
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected
 - A rotating live event is shown
 - Progress is stored in browser local storage / native preferences through the platform layer
 - Daily rewards and reward coins exist
 - Result types are collected over time
-- Home screen teases the next unlock with visible progress to improve replay pressure
+- Progression data still exists in the background for session history and result collection, but hard unlock gating is no longer shaping the main browsing surface
 - Result flavoring now uses band-aware variants to reduce repetitive mismatched copy
 - Branded share-card image generation exists
 - Android native share path has been upgraded to cache a generated PNG and attempt native file sharing
 - Content is data-driven instead of hardcoded into scenes
+- Test definitions now carry first-pass viral/AI-ready metadata such as input mode, artifact recipe, style family, remix modes, and structured hook data
+- The content package now also has a shared artifact recipe registry, which is the first step toward optional AI remix work without stuffing raw prompt logic into every test JSON
+- The first larger viral-content batch now uses that metadata and recipe layer end to end, so the feed/result/share system can distinguish portrait, headline, storybook, and poster families more explicitly
 - Game web build now succeeds with explicit Vite workspace aliases
 - Screenshot comparison of the reference product clarified the next major structural gap, and the codebase has now started moving toward that dedicated landing-page style test flow
 
@@ -94,8 +99,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Android back button should now step through recent home -> test -> result -> reward flow before exiting from home
 - Hard background/restart should now restore into the current main flow more gracefully instead of always cold-starting the player at a fresh home state
 - Hard background/restart during the reveal -> result handoff should now restore to the correct side of that transition more reliably instead of falling back into the wrong scene
-- Locked and unlocked tests behave correctly
-- Playing sessions unlocks additional tests
+- Every test should be visible and playable from the home feed immediately
 - Daily reward appears only once per day
 - Test reveal pacing feels good across repeated plays
 - Tapping during reveal skips cleanly into the result screen
@@ -122,6 +126,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - `packages/core/src/progression/*`
 - `packages/backend-contracts/src/discoveryFeed.schema.ts`
 - `packages/content-packs/src/index.ts`
+- `packages/content-packs/src/artifacts/recipes.ts`
 - `packages/content-packs/src/discovery/*`
 - `packages/content-packs/src/copy/*`
 
@@ -130,10 +135,11 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - The game is feature-rich enough to test, but not yet polished enough to publish
 - Home/feed now fits the genre much better and both feed cards and result posters have started diversifying their templates, but the visual system still needs another polish pass plus stronger human-photo realism to fully reach the target product feel
 - The landing page now suppresses some of the more obvious game-dashboard feel and now carries a first lightweight social-page chrome, but the product still is not yet a true endless editorial test page with full platform-native content density
-- Content breadth has started expanding beyond pair-only romance tests with the first single-name headline / past-life / hidden-gift readings, but the catalog is still far from broad enough
+- Content breadth has moved beyond pair-only romance tests with headline, past-life, hidden-gift, aura, group-role, soul-story, photo-archetype, and movie-poster readings, and the whole catalog is now intentionally open from the start, but it is still not broad or trend-reactive enough yet
 - Supported locales exist, but translation quality still needs native-speaker review before release quality can be claimed
 - The discovery feed is now API-driven in local architecture, but it is not yet a true CMS/live-ops backend with remote editorial control
 - The landing-page style flow now extends further into the result page with an explicit browse-more layer, but it is still not yet a true standalone dedicated test page with full feed/result continuity
+- The viral/AI strategy is now documented, the schema foundation exists, and the first larger test batch is live, but the next real gap is still visible remix UI plus an optional AI artifact endpoint for a very small controlled subset
 - Real-device QA is now finding narrower polish issues, especially around short-height behavior, rather than basic structural layout failure
 - Persistence and back continuity are stronger now, but they still need real-device verification across Android pause/resume, process death, and share-return edge cases
 - Android-style back/home continuity is improving and now uses a lightweight scene-history path, but the full scene model still is not yet a true URL-like page stack
@@ -150,3 +156,4 @@ These are not forgotten. They are simply parked while local gameplay is being re
 If a future session needs the complete comparison against the NameTests-style target and the full list of remaining platform work, read:
 
 - `docs/technical/platform-strategy.md`
+- `docs/technical/viral-growth-plan.md`

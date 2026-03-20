@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { createReplayState, sanitizeName } from "@nametests/core";
 import { runtime } from "../GameRuntime";
 import { showResultOverlay } from "../ui/overlays/resultOverlay";
+import { resolveArtifactTemplate } from "../ui/components/artifactPresentation";
 import { buildShareCard } from "../ui/components/shareCard";
 
 export class RewardScene extends Phaser.Scene {
@@ -33,16 +34,13 @@ export class RewardScene extends Phaser.Scene {
     runtime.analytics.track({ name: "reward_granted", payload: { testId: runtime.session.selectedTest.id } });
 
     const card = runtime.latestCard();
-    const template = this.getPosterTemplate();
+    const template = resolveArtifactTemplate(runtime.session.selectedTest);
     const partnerDraft = runtime.getResultDraftPartnerName() || runtime.session.names.partnerName;
     const retryPartnerVisible = runtime.session.selectedTest.prompts.some(
       (prompt) => prompt.type === "name" && prompt.id === "partnerName"
     );
     showResultOverlay({
       socialBrandLabel: runtime.copy["app.title"],
-      socialSectionLabel: runtime.copy["result.moreStories"],
-      socialStatusLabel: runtime.copy["result.shareLabel"],
-      socialMetaLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
       homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       languageLabel: runtime.copy["home.languageLabel"] ?? "Language",
       locales: runtime.getSupportedLocales(),
@@ -115,18 +113,6 @@ export class RewardScene extends Phaser.Scene {
         }),
       onReward: () => undefined
     });
-  }
-
-  private getPosterTemplate(): "cosmic" | "spotlight" | "tabloid" {
-    const symbol = runtime.session.selectedTest.art.symbol;
-    switch (symbol) {
-      case "badge":
-        return "spotlight";
-      case "storm":
-        return "tabloid";
-      default:
-        return "cosmic";
-    }
   }
 
   private formatNamesForDisplay(primaryName: string, partnerName: string, fallbackLabel: string): string {

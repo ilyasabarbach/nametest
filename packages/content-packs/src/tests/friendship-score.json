@@ -6,6 +6,18 @@
   "unlockAfterSessions": 2,
   "titleKey": "test.friendship.title",
   "subtitleKey": "test.friendship.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-badge-reveal",
+  "styleFamily": "social-badge",
+  "viralHook": {
+    "curiosity": "Is your duo built on trust, chaos, or legendary timing?",
+    "egoAxis": "identity",
+    "artifactType": "badge",
+    "shareAngle": "best-friend status reveal"
+  },
+  "seasonalTags": ["evergreen", "duo", "friends"],
+  "remixModes": ["badge", "poster"],
+  "safetyProfile": "general",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Bestie name", "placeholder": "Enter their name", "maxLength": 20 }

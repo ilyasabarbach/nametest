@@ -6,6 +6,18 @@
   "unlockAfterSessions": 1,
   "titleKey": "test.wedding.title",
   "subtitleKey": "test.wedding.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-cosmic-poster",
+  "styleFamily": "future-romance",
+  "viralHook": {
+    "curiosity": "Do these names feel like quiet promise or full wedding fireworks?",
+    "egoAxis": "future",
+    "artifactType": "poster",
+    "shareAngle": "relationship future fantasy"
+  },
+  "seasonalTags": ["evergreen", "duo", "future"],
+  "remixModes": ["poster", "storybook"],
+  "safetyProfile": "romance",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Their name", "placeholder": "Enter their name", "maxLength": 20 }

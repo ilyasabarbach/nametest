@@ -364,5 +364,115 @@ export const homeFeedCards: HomeFeedCardDefinition[] = [
       ar: "اسمك يخفي موهبة يشعر بها الناس قبل أن يتمكنوا من شرحها",
       pt: "Seu nome esconde um dom que as pessoas sentem antes mesmo de conseguir explicar"
     }
+  },
+  {
+    id: "feed-aura-palette",
+    testId: "aura-palette",
+    hot: true,
+    palette: ["#25173f", "#ff9f1c"],
+    tag: {
+      en: "Aura palette",
+      fr: "Aura palette",
+      es: "Aura palette",
+      de: "Aura palette",
+      ar: "Aura palette",
+      pt: "Aura palette"
+    },
+    title: {
+      en: "Which personal aura color is following your name this season?",
+      fr: "Which personal aura color is following your name this season?",
+      es: "Which personal aura color is following your name this season?",
+      de: "Which personal aura color is following your name this season?",
+      ar: "Which personal aura color is following your name this season?",
+      pt: "Which personal aura color is following your name this season?"
+    }
+  },
+  {
+    id: "feed-group-chat-role",
+    testId: "group-chat-role",
+    hot: true,
+    palette: ["#10373b", "#57cc99"],
+    tag: {
+      en: "Social role",
+      fr: "Social role",
+      es: "Social role",
+      de: "Social role",
+      ar: "Social role",
+      pt: "Social role"
+    },
+    title: {
+      en: "What role do you secretly become in every group chat?",
+      fr: "What role do you secretly become in every group chat?",
+      es: "What role do you secretly become in every group chat?",
+      de: "What role do you secretly become in every group chat?",
+      ar: "What role do you secretly become in every group chat?",
+      pt: "What role do you secretly become in every group chat?"
+    }
+  },
+  {
+    id: "feed-soul-story",
+    testId: "soul-story",
+    hot: false,
+    palette: ["#301934", "#6d597a"],
+    tag: {
+      en: "Soul story",
+      fr: "Soul story",
+      es: "Soul story",
+      de: "Soul story",
+      ar: "Soul story",
+      pt: "Soul story"
+    },
+    title: {
+      en: "What is the greatest story your soul still wants to tell?",
+      fr: "What is the greatest story your soul still wants to tell?",
+      es: "What is the greatest story your soul still wants to tell?",
+      de: "What is the greatest story your soul still wants to tell?",
+      ar: "What is the greatest story your soul still wants to tell?",
+      pt: "What is the greatest story your soul still wants to tell?"
+    }
+  },
+  {
+    id: "feed-photo-archetype",
+    testId: "photo-archetype",
+    hot: true,
+    palette: ["#1d2336", "#ef476f"],
+    tag: {
+      en: "Tap reveal",
+      fr: "Tap reveal",
+      es: "Tap reveal",
+      de: "Tap reveal",
+      ar: "Tap reveal",
+      pt: "Tap reveal"
+    },
+    title: {
+      en: "Tap the photo and reveal the archetype people feel instantly",
+      fr: "Tap the photo and reveal the archetype people feel instantly",
+      es: "Tap the photo and reveal the archetype people feel instantly",
+      de: "Tap the photo and reveal the archetype people feel instantly",
+      ar: "Tap the photo and reveal the archetype people feel instantly",
+      pt: "Tap the photo and reveal the archetype people feel instantly"
+    }
+  },
+  {
+    id: "feed-movie-poster",
+    testId: "movie-poster",
+    hot: true,
+    palette: ["#17131f", "#59233c"],
+    tag: {
+      en: "Movie poster",
+      fr: "Movie poster",
+      es: "Movie poster",
+      de: "Movie poster",
+      ar: "Movie poster",
+      pt: "Movie poster"
+    },
+    title: {
+      en: "If your two names became a movie poster, what genre would it be?",
+      fr: "If your two names became a movie poster, what genre would it be?",
+      es: "If your two names became a movie poster, what genre would it be?",
+      de: "If your two names became a movie poster, what genre would it be?",
+      ar: "If your two names became a movie poster, what genre would it be?",
+      pt: "If your two names became a movie poster, what genre would it be?"
+    }
   }
 ];

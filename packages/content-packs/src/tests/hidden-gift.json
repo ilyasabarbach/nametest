@@ -6,6 +6,18 @@
   "unlockAfterSessions": 10,
   "titleKey": "test.hiddenGift.title",
   "subtitleKey": "test.hiddenGift.subtitle",
+  "inputMode": "tap-photo",
+  "artifactRecipeId": "identity-aura-portrait",
+  "styleFamily": "hidden-gift",
+  "viralHook": {
+    "curiosity": "What hidden gift do people feel around you before they can explain it?",
+    "egoAxis": "identity",
+    "artifactType": "portrait",
+    "shareAngle": "secret power reveal"
+  },
+  "seasonalTags": ["evergreen", "identity", "tap-photo"],
+  "remixModes": ["portrait", "badge"],
+  "safetyProfile": "photo",
   "prompts": [
     { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
   ],

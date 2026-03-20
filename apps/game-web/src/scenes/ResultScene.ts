@@ -3,6 +3,7 @@ import { runtime } from "../GameRuntime";
 import { createReplayState, isNameValid, sanitizeName } from "@nametests/core";
 import { showResultOverlay } from "../ui/overlays/resultOverlay";
 import { buildShareCard } from "../ui/components/shareCard";
+import { resolveArtifactTemplate } from "../ui/components/artifactPresentation";
 import { playToneSequence } from "../ui/transitions/playTone";
 import { homeFeedCards, homeFeedUiCopy } from "@nametests/content-packs";
 import { homeFeedThumbs } from "../assets/feed";
@@ -23,8 +24,6 @@ type NextStory = {
 
 type BrowseStory = NextStory;
 
-type ResultPosterTemplate = "cosmic" | "spotlight" | "tabloid";
-
 export class ResultScene extends Phaser.Scene {
   constructor() {
     super("ResultScene");
@@ -35,32 +34,14 @@ export class ResultScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
     const card = runtime.latestCard();
-    const template = this.getPosterTemplate();
+    const template = resolveArtifactTemplate(runtime.session.selectedTest);
     const progressionSummary = runtime.session.progressSummary;
-    const unlockCelebrated = Boolean(progressionSummary?.newlyUnlockedTestIds?.length);
     const nextStories = this.buildNextStories();
     const browseStories = this.buildBrowseStories(nextStories);
     const retryPartnerVisible = runtime.session.selectedTest.prompts.some(
       (prompt) => prompt.type === "name" && prompt.id === "partnerName"
     );
     const partnerDraft = runtime.getResultDraftPartnerName() || runtime.session.names.partnerName;
-    const progressionItems = [
-      ...(progressionSummary?.newlyCollectedResultKey
-        ? [
-            {
-              title: runtime.copy["result.progressCollected"],
-              detail: card.headline
-            }
-          ]
-        : []),
-      ...(progressionSummary?.newlyUnlockedTestIds ?? []).map((testId) => {
-        const unlockedTest = runtime.state.allTests.find((test) => test.id === testId);
-        return {
-          title: runtime.copy["result.progressUnlocked"],
-          detail: unlockedTest ? runtime.copy[unlockedTest.titleKey] : testId
-        };
-      })
-    ];
     this.add.rectangle(width / 2, height / 2, width, height, 0x101528);
     this.add.circle(width - 110, 164, Math.min(72, width * 0.16), Phaser.Display.Color.HexStringToColor(card.accent).color, 0.16);
     this.createParticles(card.accent);
@@ -83,9 +64,6 @@ export class ResultScene extends Phaser.Scene {
 
     showResultOverlay({
       socialBrandLabel: runtime.copy["app.title"],
-      socialSectionLabel: runtime.copy["result.moreStories"],
-      socialStatusLabel: runtime.copy["result.shareLabel"],
-      socialMetaLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
       homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       languageLabel: runtime.copy["home.languageLabel"] ?? "Language",
       locales: runtime.getSupportedLocales(),
@@ -100,7 +78,6 @@ export class ResultScene extends Phaser.Scene {
       signatureLabel: runtime.copy["result.signatureLabel"],
       shareHint: card.sharePrompt,
       shareLabel: runtime.copy["result.shareLabel"],
-      progressTitle: runtime.copy[unlockCelebrated ? "result.progressUnlockTitle" : "result.progressTitle"],
       partnerName: partnerDraft,
       partnerLabel: runtime.copy["home.partnerLabel"],
       retryPartnerVisible,
@@ -116,7 +93,7 @@ export class ResultScene extends Phaser.Scene {
         { value: String(runtime.progress.rewardCoins), label: runtime.copy["home.rewards"] },
         { value: String(runtime.progress.collectedResultKeys.length), label: runtime.copy["home.collection"] }
       ],
-      progressionItems,
+      progressionItems: [],
       nextStories,
       browseStories,
       onPartnerDraftChange: (partnerName) => {
@@ -146,12 +123,16 @@ export class ResultScene extends Phaser.Scene {
       },
       onStartNext: (testId, storyId, partnerName) => {
         const nextTest = runtime.state.allTests.find((test) => test.id === testId);
-        const nextRequiresPartner = nextTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName") ?? true;
+        const nextRequiresPartner =
+          nextTest?.inputMode === "single-name" || nextTest?.inputMode === "tap-photo"
+            ? false
+            : nextTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName") ?? true;
         const nextPartnerName = nextRequiresPartner ? sanitizeName(partnerName) : "";
         const primaryName = runtime.session.names.primaryName;
-        const nextRequiresPrimary = nextTest?.prompts.some(
-          (prompt) => prompt.type === "name" && prompt.id === "primaryName"
-        ) ?? true;
+        const nextRequiresPrimary =
+          nextTest?.inputMode === "tap-photo"
+            ? false
+            : nextTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "primaryName") ?? true;
         if (nextRequiresPrimary && !isNameValid(primaryName)) {
           window.alert(runtime.copy["home.validationPrimaryName"] ?? runtime.copy["home.validationNames"]);
           return;
@@ -240,18 +221,6 @@ export class ResultScene extends Phaser.Scene {
     }
   }
 
-  private getPosterTemplate(): ResultPosterTemplate {
-    const symbol = runtime.session.selectedTest.art.symbol;
-    switch (symbol) {
-      case "badge":
-        return "spotlight";
-      case "storm":
-        return "tabloid";
-      default:
-        return "cosmic";
-    }
-  }
-
   private buildNextStories(): NextStory[] {
     const currentTestId = runtime.session.selectedTest.id;
     return this.buildCatalogStories()
@@ -288,7 +257,10 @@ export class ResultScene extends Phaser.Scene {
             `${homeFeedUiCopy.popularLabel[locale]} · ${runtime.copy[test.titleKey] ?? card.testId}`,
           testLabel: runtime.copy[test.titleKey] ?? card.testId,
           testSubtitle: runtime.copy[test.subtitleKey] ?? (feedItem?.teaser ?? card.title[locale]),
-          requiresPartner: test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName"),
+          requiresPartner:
+            test.inputMode === "single-name" || test.inputMode === "tap-photo"
+              ? false
+              : test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName"),
           partnerLabel:
             test.prompts.find((prompt) => prompt.type === "name" && prompt.id === "partnerName")?.label ??
             runtime.copy["home.partnerLabel"]

@@ -11,11 +11,17 @@ import weddingBells from "./tests/wedding-bells.json";
 import destinyHeadline from "./tests/destiny-headline.json";
 import pastLifeEcho from "./tests/past-life-echo.json";
 import hiddenGift from "./tests/hidden-gift.json";
+import auraPalette from "./tests/aura-palette.json";
+import groupChatRole from "./tests/group-chat-role.json";
+import soulStory from "./tests/soul-story.json";
+import photoArchetype from "./tests/photo-archetype.json";
+import moviePoster from "./tests/movie-poster.json";
 import common from "./copy/en/common.json";
 import tests from "./copy/en/tests.json";
 import results from "./copy/en/results.json";
 export * from "./discovery/homeFeed";
 export * from "./discovery/feedFallback";
+export * from "./artifacts/recipes";
 export * from "./copy";
 
 export const defaultManifest = manifest as ContentManifest;
@@ -30,7 +36,12 @@ export const defaultTests = [
   fameLevel,
   destinyHeadline,
   pastLifeEcho,
-  hiddenGift
+  hiddenGift,
+  auraPalette,
+  groupChatRole,
+  soulStory,
+  photoArchetype,
+  moviePoster
 ] as TestDefinition[];
 export const enCopy: Record<string, string> = {
   ...common,

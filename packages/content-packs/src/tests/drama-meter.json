@@ -6,6 +6,18 @@
   "unlockAfterSessions": 5,
   "titleKey": "test.drama.title",
   "subtitleKey": "test.drama.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-tabloid-poster",
+  "styleFamily": "drama-tabloid",
+  "viralHook": {
+    "curiosity": "Does this pairing feel safe, stormy, or pure cinema?",
+    "egoAxis": "chemistry",
+    "artifactType": "poster",
+    "shareAngle": "chaos score reveal"
+  },
+  "seasonalTags": ["evergreen", "duo", "drama"],
+  "remixModes": ["poster", "headline"],
+  "safetyProfile": "general",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Other name", "placeholder": "Enter their name", "maxLength": 20 }

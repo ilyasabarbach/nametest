@@ -31,10 +31,6 @@ type FeedItem = {
 
 export function showHomeOverlay(args: {
   socialBrandLabel: string;
-  socialSectionLabel: string;
-  socialStatusLabel: string;
-  socialMetaLabel: string;
-  homeButtonLabel: string;
   homeLabel: string;
   heroTitle: string;
   heroBody: string;
@@ -73,7 +69,6 @@ export function showHomeOverlay(args: {
     progressValue: number;
   } | null;
   onSelectTest: (testId: string, feedItemId?: string) => void;
-  onGoHome: () => void;
   onChangeLocale: (locale: HomeFeedLocale) => Promise<void> | void;
   onLoadMore: () => Promise<{ items: FeedItem[]; hasMore: boolean }>;
   hasMoreFeed: boolean;
@@ -173,8 +168,7 @@ export function showHomeOverlay(args: {
   panel.innerHTML = `
     <div class="hud-social-chrome hud-social-chrome--home">
       <div class="hud-social-chrome__left">
-        <button class="hud-nav-button" type="button" data-action="go-home">${args.homeButtonLabel}</button>
-        <button class="hud-settings-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
+        <button class="hud-settings-button hud-icon-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
           &#9881;
         </button>
         <div class="hud-settings-menu hidden" data-settings-menu>
@@ -200,10 +194,7 @@ export function showHomeOverlay(args: {
       <div class="hud-social-chrome__logo">
         <strong>${args.socialBrandLabel}</strong>
       </div>
-      <div class="hud-social-chrome__right">
-        <span class="hud-social-chrome__pill">${args.socialStatusLabel}</span>
-        <span class="hud-social-chrome__text">${args.socialMetaLabel}</span>
-      </div>
+      <div class="hud-social-chrome__right"></div>
     </div>
     <div class="hud-landing-story hud-stack ${hasSelection() ? "" : "hidden"}" data-landing-story>
       <div class="hud-landing-story__copy">
@@ -411,9 +402,6 @@ export function showHomeOverlay(args: {
 
   panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
     settingsMenu?.classList.toggle("hidden");
-  });
-  panel.querySelector<HTMLButtonElement>('[data-action="go-home"]')?.addEventListener("click", () => {
-    args.onGoHome();
   });
   panel.addEventListener("click", (event) => {
     const target = event.target as HTMLElement | null;

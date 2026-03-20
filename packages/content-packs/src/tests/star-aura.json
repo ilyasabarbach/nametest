@@ -6,6 +6,18 @@
   "unlockAfterSessions": 6,
   "titleKey": "test.aura.title",
   "subtitleKey": "test.aura.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "identity-aura-portrait",
+  "styleFamily": "aura-portrait",
+  "viralHook": {
+    "curiosity": "How rare is the glow your name leaves behind?",
+    "egoAxis": "identity",
+    "artifactType": "portrait",
+    "shareAngle": "aura status reveal"
+  },
+  "seasonalTags": ["evergreen", "single-name", "aura"],
+  "remixModes": ["portrait", "poster"],
+  "safetyProfile": "identity",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Star sign name", "placeholder": "Enter any name", "maxLength": 20 }

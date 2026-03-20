@@ -6,6 +6,18 @@
   "unlockAfterSessions": 4,
   "titleKey": "test.future.title",
   "subtitleKey": "test.future.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "future-headline-card",
+  "styleFamily": "future-id",
+  "viralHook": {
+    "curiosity": "What kind of future is your name already calling you toward?",
+    "egoAxis": "future",
+    "artifactType": "headline-card",
+    "shareAngle": "career destiny reveal"
+  },
+  "seasonalTags": ["evergreen", "future", "single-name"],
+  "remixModes": ["headline", "badge"],
+  "safetyProfile": "identity",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Dream role", "placeholder": "Enter a dream title", "maxLength": 20 }

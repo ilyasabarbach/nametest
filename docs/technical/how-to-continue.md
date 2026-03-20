@@ -14,6 +14,8 @@ The smartest next phase is:
 
 Before doing deeper platform work, reread `docs/technical/platform-strategy.md`.
 
+For content, virality, catalog shape, and AI-artifact direction, also reread `docs/technical/viral-growth-plan.md`.
+
 ## If The Goal Is "Better Game First"
 
 Focus here:
@@ -22,7 +24,6 @@ Focus here:
 - keep result / retry / related-content flow feeling like one continuous page
 - run full on-device gameplay QA now that the white discovery feed is in place
 - refine copy quality and native-speaker localization quality
-- tune unlock thresholds
 - tune event rotation
 - add more result variants where repetition is obvious
 - add stronger editorial feed ranking and freshness
@@ -44,16 +45,18 @@ Recent progress already made:
 - tapping another story from lower in the same feed now replaces the promoted top test box in-page instead of acting like a separate home reload
 - thread taps no longer auto-focus the input fields on mobile, so the promoted surface opens without forcing the keyboard immediately
 - the promoted top test box is now simpler and only keeps the selected test title plus the actual test content instead of repeating feed thumbnail and hot/popular card chrome
+- the home feed is now intentionally fully open, with all tests playable from the start and no next-unlock gating in the main browse surface
 - in-progress name entry on the home surface now survives locale switches and other scene refreshes, which removes one of the more obvious continuity breaks
 - the runtime now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of only remembering the selected test id
 - the landing page now pushes streak/reward/collection and unlock framing lower on the page and switches the primary action to a simpler blue editorial CTA so the first impression feels less game-like
 - the home and result surfaces now have a lightweight dark social-page chrome so the editorial content reads more like a page inside a viral feed environment and less like a bare game overlay
-- the home and result surfaces now have a lighter shared navbar with Home and Settings on the left and a centered logo, which keeps the top of the page cleaner and less game-like
+- the top navbar is now more minimal: homepage keeps only the Settings gear plus the centered logo, while non-home result surfaces add Home beside Settings on the left and leave the rest of the bar empty
 - the oversized home hero and inline locale chips are now removed, and locale switching now sits behind a small settings control in the social chrome instead of occupying the full top section
 - short-height and small-window home/result layouts now preserve wider editorial grids where possible and only collapse fully when the screen is truly narrow
 - the flow now supports single-name readings end to end, and the catalog now includes a first batch of headline / past-life / hidden-gift style tests instead of staying almost entirely pair-based
 - the first touch-photo readings now exist for the editorial flow, so not every promoted story depends on typed input before reveal
 - the first single-name content batch now has locale parity across the supported languages, so the next work should shift back toward QA and broader editorial depth
+- the next broader editorial batch now also exists in the catalog, adding aura, group-role, soul-story, photo-archetype, and movie-poster readings with distinct hook/artifact families
 - screenshot comparison of the reference product clarified that the next structural gap is dedicated landing pages, not more popup polish
 - the result surface now looks more like a poster artifact and can continue straight into another story without forcing the player back through a dead-end state
 - the result surface now also keeps a dedicated "more popular stories" layer below the main continuation block so the page feels less terminal and more browseable after the poster/actions flow
@@ -61,6 +64,9 @@ Recent progress already made:
 - result-page lower story taps now route into the selected story's landing page instead of only changing the smaller continuation area lower on the result screen
 - the lower result-page browse layer now draws from the full editorial catalog instead of only the currently unlocked / already loaded feed slice, so result pages keep behaving like a broader browse surface
 - the older progression summary callout has been removed from the main result surface so results behave more like poster-plus-feed pages than reward dashboards
+- the test schema now includes first-pass viral/AI-ready metadata, and the content package now has an artifact recipe registry instead of leaving that strategy only in docs
+- result/share template selection has started moving onto that recipe layer, so future sessions should keep extending recipe-driven artifact families instead of hardcoding new poster logic in scenes
+- the newer editorial batch now uses that recipe layer in practice, so portrait / headline / storybook / poster presentation is no longer only a theoretical plan
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector
@@ -103,6 +109,7 @@ Focus here:
 - `packages/core/src/game/GameFlow.ts`
 - `packages/core/src/progression/*`
 - `packages/content-packs/src/discovery/*`
+- `packages/content-packs/src/artifacts/recipes.ts`
 - `packages/content-packs/src/copy/*`
 - `packages/content-packs/src/tests/*`
 
@@ -145,4 +152,4 @@ The next session should:
 1. run the full gameplay loop on-device with special attention to feed continuity, result continuity, retry flow, locale switching, and the new social-page chrome on small screens
 2. note every remaining issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, locale switching, selected-story continuity, short-height device layouts, the new settings menu, and the first touch-photo readings
 3. fix the concrete QA issues that shake out of that pass before shifting platform effort deeper into Android
-4. after QA stabilizes, tackle bundle splitting, translation quality review, more human-photo-led feed art direction, deeper live-content control, and the next larger batch of non-pair editorial tests
+4. after QA stabilizes, tackle bundle splitting, translation quality review, more human-photo-led feed art direction, deeper live-content control, visible remix UI, and the first optional AI remix endpoint on top of the new recipe layer

@@ -9,6 +9,8 @@ This document is the durable answer to:
 
 If a future session needs to know "what is still missing?", start here.
 
+For the separate content/virality/AI-artifact plan that sits on top of this platform strategy, also read `docs/technical/viral-growth-plan.md`.
+
 ## Executive Verdict
 
 The project is a strong local prototype, not yet a professional publishable product.

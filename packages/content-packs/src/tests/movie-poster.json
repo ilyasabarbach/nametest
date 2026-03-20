@@ -1,0 +1,44 @@
+{
+  "id": "movie-poster",
+  "category": "compatibility",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 15,
+  "titleKey": "test.moviePoster.title",
+  "subtitleKey": "test.moviePoster.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-tabloid-poster",
+  "styleFamily": "movie-poster",
+  "viralHook": {
+    "curiosity": "If your two names became a movie poster, what genre would it be?",
+    "egoAxis": "chemistry",
+    "artifactType": "poster",
+    "shareAngle": "duo movie-poster fantasy"
+  },
+  "seasonalTags": ["evergreen", "duo", "cinema"],
+  "remixModes": ["poster", "headline"],
+  "safetyProfile": "general",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
+    { "type": "name", "id": "partnerName", "label": "Their name", "placeholder": "Enter their name", "maxLength": 20 }
+  ],
+  "scoringFormula": "chaosFormula",
+  "resultBands": [
+    { "key": "indie", "minScore": 0, "maxScore": 34, "titleKey": "result.indie.title", "descriptionKey": "result.indie.body", "accent": "#8ecae6" },
+    { "key": "blockbuster", "minScore": 35, "maxScore": 74, "titleKey": "result.blockbuster.title", "descriptionKey": "result.blockbuster.body", "accent": "#ffb703" },
+    { "key": "cult", "minScore": 75, "maxScore": 100, "titleKey": "result.cult.title", "descriptionKey": "result.cult.body", "accent": "#ef476f" }
+  ],
+  "resultVariants": [
+    { "key": "indie-soft", "insightKey": "insight.indie.soft", "aura": "soft", "resultKeys": ["indie"] },
+    { "key": "indie-quiet", "insightKey": "insight.indie.quiet", "aura": "soft", "resultKeys": ["indie"] },
+    { "key": "blockbuster-electric", "insightKey": "insight.blockbuster.electric", "aura": "electric", "resultKeys": ["blockbuster"] },
+    { "key": "blockbuster-loud", "insightKey": "insight.blockbuster.loud", "aura": "electric", "resultKeys": ["blockbuster"] },
+    { "key": "cult-bold", "insightKey": "insight.cult.bold", "aura": "bold", "resultKeys": ["cult"] },
+    { "key": "cult-iconic", "insightKey": "insight.cult.iconic", "aura": "lucky", "resultKeys": ["cult"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#17131f", "#59233c"],
+    "symbol": "storm"
+  }
+}

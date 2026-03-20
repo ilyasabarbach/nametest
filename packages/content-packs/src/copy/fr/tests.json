@@ -20,5 +20,15 @@
   "test.pastLife.title": "Past Life Echo",
   "test.pastLife.subtitle": "Find out what kind of old legend still lingers around your name.",
   "test.hiddenGift.title": "Hidden Gift Decoder",
-  "test.hiddenGift.subtitle": "Reveal the quiet power people notice in you before they can explain it."
+  "test.hiddenGift.subtitle": "Reveal the quiet power people notice in you before they can explain it.",
+  "test.auraPalette.title": "Aura Palette Reveal",
+  "test.auraPalette.subtitle": "See which color is quietly following your name right now.",
+  "test.groupChatRole.title": "Group Chat Role",
+  "test.groupChatRole.subtitle": "Find out the role you secretly become in every conversation.",
+  "test.soulStory.title": "Soul Story Cover",
+  "test.soulStory.subtitle": "Reveal the kind of story your soul still wants to tell.",
+  "test.photoArchetype.title": "Photo Archetype Reveal",
+  "test.photoArchetype.subtitle": "Tap the photo and uncover the archetype people feel instantly.",
+  "test.moviePoster.title": "Movie Poster Reading",
+  "test.moviePoster.subtitle": "See what genre your two names turn into when they hit the screen."
 }

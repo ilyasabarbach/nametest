@@ -6,6 +6,18 @@
   "unlockAfterSessions": 7,
   "titleKey": "test.fame.title",
   "subtitleKey": "test.fame.subtitle",
+  "inputMode": "pair-name",
+  "artifactRecipeId": "duo-tabloid-poster",
+  "styleFamily": "headline-energy",
+  "viralHook": {
+    "curiosity": "Would this name combo rise quietly or turn into full headline energy?",
+    "egoAxis": "status",
+    "artifactType": "headline-card",
+    "shareAngle": "viral headline fantasy"
+  },
+  "seasonalTags": ["evergreen", "status", "duo"],
+  "remixModes": ["headline", "poster"],
+  "safetyProfile": "general",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 },
     { "type": "name", "id": "partnerName", "label": "Stage name", "placeholder": "Enter a name", "maxLength": 20 }

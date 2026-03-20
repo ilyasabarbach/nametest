@@ -1,0 +1,43 @@
+{
+  "id": "aura-palette",
+  "category": "future",
+  "enabled": false,
+  "featured": false,
+  "unlockAfterSessions": 11,
+  "titleKey": "test.auraPalette.title",
+  "subtitleKey": "test.auraPalette.subtitle",
+  "inputMode": "single-name",
+  "artifactRecipeId": "identity-aura-portrait",
+  "styleFamily": "aura-palette",
+  "viralHook": {
+    "curiosity": "What personal aura color is following your name right now?",
+    "egoAxis": "identity",
+    "artifactType": "portrait",
+    "shareAngle": "personal aura palette reveal"
+  },
+  "seasonalTags": ["evergreen", "identity", "single-name"],
+  "remixModes": ["portrait", "poster"],
+  "safetyProfile": "identity",
+  "prompts": [
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
+  ],
+  "scoringFormula": "spotlightFormula",
+  "resultBands": [
+    { "key": "mist", "minScore": 0, "maxScore": 35, "titleKey": "result.mist.title", "descriptionKey": "result.mist.body", "accent": "#9ad1d4" },
+    { "key": "velvet", "minScore": 36, "maxScore": 74, "titleKey": "result.velvet.title", "descriptionKey": "result.velvet.body", "accent": "#c77dff" },
+    { "key": "solar", "minScore": 75, "maxScore": 100, "titleKey": "result.solar.title", "descriptionKey": "result.solar.body", "accent": "#ffb703" }
+  ],
+  "resultVariants": [
+    { "key": "mist-soft", "insightKey": "insight.mist.soft", "aura": "soft", "resultKeys": ["mist"] },
+    { "key": "mist-calm", "insightKey": "insight.mist.calm", "aura": "soft", "resultKeys": ["mist"] },
+    { "key": "velvet-electric", "insightKey": "insight.velvet.electric", "aura": "electric", "resultKeys": ["velvet"] },
+    { "key": "velvet-social", "insightKey": "insight.velvet.social", "aura": "electric", "resultKeys": ["velvet"] },
+    { "key": "solar-bold", "insightKey": "insight.solar.bold", "aura": "bold", "resultKeys": ["solar"] },
+    { "key": "solar-iconic", "insightKey": "insight.solar.iconic", "aura": "lucky", "resultKeys": ["solar"] }
+  ],
+  "shareTemplateKey": "share.compatibility.default",
+  "art": {
+    "cardGradient": ["#1f2347", "#9b5de5"],
+    "symbol": "halo"
+  }
+}

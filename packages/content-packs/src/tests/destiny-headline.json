@@ -6,6 +6,18 @@
   "unlockAfterSessions": 8,
   "titleKey": "test.destinyHeadline.title",
   "subtitleKey": "test.destinyHeadline.subtitle",
+  "inputMode": "single-name",
+  "artifactRecipeId": "future-headline-card",
+  "styleFamily": "destiny-headline",
+  "viralHook": {
+    "curiosity": "If your future had one headline tonight, what would it say?",
+    "egoAxis": "future",
+    "artifactType": "headline-card",
+    "shareAngle": "future headline reveal"
+  },
+  "seasonalTags": ["evergreen", "future", "single-name"],
+  "remixModes": ["headline", "storybook"],
+  "safetyProfile": "identity",
   "prompts": [
     { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
   ],

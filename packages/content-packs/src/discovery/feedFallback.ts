@@ -65,6 +65,16 @@ function findSubtitleKey(testId: string): string {
       return "test.pastLife.subtitle";
     case "hidden-gift":
       return "test.hiddenGift.subtitle";
+    case "aura-palette":
+      return "test.auraPalette.subtitle";
+    case "group-chat-role":
+      return "test.groupChatRole.subtitle";
+    case "soul-story":
+      return "test.soulStory.subtitle";
+    case "photo-archetype":
+      return "test.photoArchetype.subtitle";
+    case "movie-poster":
+      return "test.moviePoster.subtitle";
     default:
       return "";
   }

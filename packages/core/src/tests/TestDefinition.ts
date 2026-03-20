@@ -2,6 +2,17 @@ export type PromptInput =
   | { type: "name"; id: string; label: string; placeholder: string; maxLength: number }
   | { type: "choice"; id: string; label: string; options: string[] };
 
+export type TestInputMode = "single-name" | "pair-name" | "tap-photo" | "selfie-optional";
+
+export type RemixMode = "poster" | "portrait" | "headline" | "storybook" | "badge";
+
+export type ViralHook = {
+  curiosity: string;
+  egoAxis: "identity" | "status" | "chemistry" | "future" | "mystery";
+  artifactType: "poster" | "portrait" | "headline-card" | "storybook-cover" | "badge";
+  shareAngle: string;
+};
+
 export type ResultBand = {
   key: string;
   minScore: number;
@@ -26,6 +37,13 @@ export type TestDefinition = {
   unlockAfterSessions?: number;
   titleKey: string;
   subtitleKey: string;
+  inputMode?: TestInputMode;
+  artifactRecipeId?: string;
+  styleFamily?: string;
+  viralHook?: ViralHook;
+  seasonalTags?: string[];
+  remixModes?: RemixMode[];
+  safetyProfile?: "general" | "romance" | "identity" | "photo";
   prompts: PromptInput[];
   scoringFormula: string;
   resultBands: ResultBand[];
