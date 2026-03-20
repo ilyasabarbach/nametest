@@ -63,6 +63,7 @@ Recent progress already made:
 - the lower result-page browse layer now pulls from a broader follow-up story pool instead of just repeating the short quick-pick set, which improves endless-feed continuity
 - result-page lower story taps now route into the selected story's landing page instead of only changing the smaller continuation area lower on the result screen
 - the lower result-page browse layer now draws from the full editorial catalog instead of only the currently unlocked / already loaded feed slice, so result pages keep behaving like a broader browse surface
+- the lower result-page feed is now back to a pure card grid without an embedded second test composer, so only the promoted top-of-page surface shows test inputs/buttons after a story click
 - the secret-reading reward path now uses the same continuation/browse model as the normal result page instead of dropping the player into a reduced dead-end overlay
 - reward-state persistence in the runtime is now fixed, so the older stuck "unlocking secret reading" behavior should no longer bleed into later runs
 - the older progression summary callout has been removed from the main result surface so results behave more like poster-plus-feed pages than reward dashboards
