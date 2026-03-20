@@ -12,6 +12,7 @@ This is the quickest "where are we now?" document.
 - Android back-button behavior now follows a lightweight scene history across home, reading, result, and reward flow instead of dumping the player straight to home from every non-home screen
 - Runtime now persists the active reading flow itself, including session, selected story, name drafts, and scene history, so preload can restore players closer to where they left off after a hard background/restart
 - Lifecycle pause/unload now also forces an app-state snapshot, and restore now prefers the right main scene defensively when a reveal/result transition is interrupted by backgrounding
+- Fresh app reopen now intentionally returns to the browse-first home feed instead of restoring the last promoted home test box at the top
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout
@@ -26,7 +27,9 @@ This is the quickest "where are we now?" document.
 - Fresh home loads now stay browse-first instead of auto-opening a default story, so the promoted landing surface appears only after a real thread tap
 - The selected landing surface now preserves the specific feed story that was tapped, including its artwork and editorial framing, instead of collapsing immediately into test-only state
 - Tapping a feed thread while scrolled deep in the feed now scrolls the panel back to the top and recenters the landing surface cleanly
+- Tapping another thread lower in the feed now keeps the player on the same infinite page and swaps the promoted test box at the top instead of feeling like a separate home reload
 - Thread taps no longer auto-focus the text inputs on mobile, so selecting a story does not immediately pop the keyboard before the player chooses to type
+- The promoted test box itself is now simplified to the selected test title and the real test content instead of repeating feed thumbnail, hot/popular chrome, and other card framing inside the top module
 - In-progress home name entry now survives locale switching and landing-surface refreshes instead of forcing the player to retype
 - Home navigation now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of falling back to a generic story for the same test
 - The landing page now de-emphasizes streak/reward/collection framing on the first screenful and uses a simpler blue editorial CTA so the surface reads less like a game dashboard
@@ -45,6 +48,7 @@ This is the quickest "where are we now?" document.
 - Result page now continues with more playable stories and a direct "read this next" path so the session feels less terminal
 - Result page now also carries a dedicated "more popular stories" browse layer underneath the poster/actions flow so it feels closer to an endless editorial page instead of a terminal result state
 - Result-page continuation now reaches into a broader follow-up story set instead of only echoing the short quick-pick list, so the lower browse layer feels more like a real feed continuation
+- Clicking a lower story on the result page now opens that story as the next landing page instead of only updating a smaller continuation widget lower on the same result screen
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected

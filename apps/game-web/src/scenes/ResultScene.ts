@@ -120,6 +120,11 @@ export class ResultScene extends Phaser.Scene {
       accent: card.accent,
       template,
       rewardVisible: runtime.canShowReward(),
+      onSelectStory: (testId, storyId) => {
+        runtime.setHomeSelection(testId, storyId);
+        runtime.selectTest(testId, storyId);
+        this.scene.start("HomeScene");
+      },
       onRetry: (partnerName) => {
         const nextName = sanitizeName(partnerName) || runtime.session.names.partnerName;
         runtime.session = createReplayState(runtime.session, nextName);

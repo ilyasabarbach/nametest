@@ -102,8 +102,6 @@ export function showHomeOverlay(args: {
         feedItems.find((item) => item.testId === currentSelectedId))
       : undefined;
 
-  const getStoriesForSelectedTest = () => (hasSelection() ? feedItems.filter((item) => item.testId === currentSelectedId) : []);
-
   const selectedFeedItem = getSelectedFeedItem();
   const getSelectedTest = () => testsById.get(currentSelectedId);
   const isTouchSelection = () => getSelectedTest()?.interactionMode === "tap";
@@ -204,47 +202,14 @@ export function showHomeOverlay(args: {
       </div>
     </div>
     <div class="hud-landing-story hud-stack ${hasSelection() ? "" : "hidden"}" data-landing-story>
-      <div class="hud-landing-story__media ${isTouchSelection() ? "is-touch" : ""}" data-selected-media>
-        <img class="hud-landing-story__image" data-selected-image src="${selectedFeedItem?.imageUrl ?? ""}" alt="${selectedFeedItem?.title ?? ""}" />
-        <span class="hud-feed-card__hot ${selectedFeedItem?.hot ? "" : "hidden"}" data-selected-hot>${args.hotLabel}</span>
-        <span class="hud-feed-card__tag" data-selected-tag>${selectedFeedItem?.tag ?? ""}</span>
-        <button class="hud-landing-story__tap ${isTouchSelection() ? "" : "hidden"}" type="button" data-action="tap-photo">
-          ${getSelectedTest()?.tapLabel ?? ""}
-        </button>
-      </div>
       <div class="hud-landing-story__copy">
-        <span class="hud-label">${args.selectedLabel}</span>
         <h2 data-selected-headline>${selectedFeedItem?.title ?? testsById.get(currentSelectedId)?.label ?? ""}</h2>
         <p class="hud-label" data-selected-teaser>${selectedFeedItem?.teaser ?? testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
-        <div class="hud-landing-story__meta">
-          <span class="hud-feed-card__tag hud-feed-card__tag--inline" data-selected-inline-tag>${selectedFeedItem?.tag ?? ""}</span>
-          <span class="hud-landing-story__proof" data-selected-proof>${selectedFeedItem?.socialProof ?? ""}</span>
-        </div>
-        <div class="hud-landing-story__related" data-related-strip>
-          ${getStoriesForSelectedTest()
-            .slice(0, 4)
-            .map(
-              (item) => `
-                <button
-                  class="hud-related-story ${item.id === currentSelectedFeedItemId ? "selected" : ""}"
-                  type="button"
-                  data-test-id="${item.testId}"
-                  data-feed-item-id="${item.id}"
-                >
-                  <strong>${item.title}</strong>
-                  <span>${item.socialProof}</span>
-                </button>
-              `
-            )
-            .join("")}
-        </div>
       </div>
-      <div class="hud-landing-story__prompt" data-selected-prompt>${isTouchSelection() ? getSelectedTest()?.tapLabel ?? "" : args.composerLabel}</div>
       <div class="hud-home-composer hud-stack ${isTouchSelection() ? "hidden" : ""}" data-home-composer>
         <div class="hud-home-composer__copy">
           <strong data-selected-title>${testsById.get(currentSelectedId)?.label ?? ""}</strong>
           <p class="hud-label" data-selected-subtitle>${testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
-          <p class="hud-home-composer__meta">${selectedFeedItem?.socialProof ?? args.selectedLabel}</p>
         </div>
         <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
         <label class="hud-stack hud-home-composer__field">
@@ -272,6 +237,9 @@ export function showHomeOverlay(args: {
         <button class="hud-button hud-button--editorial" type="submit">${args.startLabel}</button>
         <p class="hud-home-privacy">${args.privacyLabel}</p>
       </div>
+      <button class="hud-landing-story__tap hud-landing-story__tap--standalone ${isTouchSelection() ? "" : "hidden"}" type="button" data-action="tap-photo">
+        ${getSelectedTest()?.tapLabel ?? ""}
+      </button>
     </div>
     <div class="hud-home-section hud-stack">
       <div class="hud-home-section__title">
@@ -325,14 +293,7 @@ export function showHomeOverlay(args: {
   const selectedSubtitle = panel.querySelector<HTMLElement>("[data-selected-subtitle]");
   const selectedHeadline = panel.querySelector<HTMLElement>("[data-selected-headline]");
   const selectedTeaser = panel.querySelector<HTMLElement>("[data-selected-teaser]");
-  const selectedTag = panel.querySelector<HTMLElement>("[data-selected-tag]");
-  const selectedInlineTag = panel.querySelector<HTMLElement>("[data-selected-inline-tag]");
-  const selectedHot = panel.querySelector<HTMLElement>("[data-selected-hot]");
-  const selectedImage = panel.querySelector<HTMLImageElement>("[data-selected-image]");
-  const selectedProof = panel.querySelector<HTMLElement>("[data-selected-proof]");
-  const selectedPrompt = panel.querySelector<HTMLElement>("[data-selected-prompt]");
   const selectedInput = panel.querySelector<HTMLInputElement>('input[name="selectedTestId"]');
-  const selectedMeta = panel.querySelector<HTMLElement>(".hud-home-composer__meta");
   const submitButton = panel.querySelector<HTMLButtonElement>('button[type="submit"]');
   const primaryInput = panel.querySelector<HTMLInputElement>('input[name="primaryName"]');
   const partnerInput = panel.querySelector<HTMLInputElement>('input[name="partnerName"]');
@@ -342,11 +303,9 @@ export function showHomeOverlay(args: {
   const hotStrip = panel.querySelector<HTMLElement>("[data-hot-strip]");
   const feedGrid = panel.querySelector<HTMLElement>("[data-feed-grid]");
   const sentinel = panel.querySelector<HTMLElement>("[data-feed-sentinel]");
-  const relatedStrip = panel.querySelector<HTMLElement>("[data-related-strip]");
   const landingStory = panel.querySelector<HTMLElement>("[data-landing-story]");
   const composer = panel.querySelector<HTMLElement>("[data-home-composer]");
   const settingsMenu = panel.querySelector<HTMLElement>("[data-settings-menu]");
-  const selectedMedia = panel.querySelector<HTMLElement>("[data-selected-media]");
   const tapPhotoButton = panel.querySelector<HTMLButtonElement>('[data-action="tap-photo"]');
 
   const syncDraft = () => {
@@ -369,25 +328,6 @@ export function showHomeOverlay(args: {
     syncDraft();
     args.onSubmit(currentSelectedId, currentSelectedFeedItemId, primaryInput?.value ?? "", partnerInput?.value ?? "");
   };
-
-  const renderRelatedStories = () =>
-    getStoriesForSelectedTest()
-      .slice(0, 4)
-      .map((item) => {
-        const selected = item.id === currentSelectedFeedItemId;
-        return `
-          <button
-            class="hud-related-story ${selected ? "selected" : ""}"
-            type="button"
-            data-test-id="${item.testId}"
-            data-feed-item-id="${item.id}"
-          >
-            <strong>${item.title}</strong>
-            <span>${item.socialProof}</span>
-          </button>
-        `;
-      })
-      .join("");
 
   const updateSelection = (testId: string, feedItemId?: string) => {
     const nextTest = testsById.get(testId);
@@ -435,46 +375,19 @@ export function showHomeOverlay(args: {
     if (selectedTeaser) {
       selectedTeaser.textContent = nextFeedItem?.teaser ?? nextTest.subtitle;
     }
-    if (selectedTag) {
-      selectedTag.textContent = nextFeedItem?.tag ?? "";
-    }
-    if (selectedInlineTag) {
-      selectedInlineTag.textContent = nextFeedItem?.tag ?? "";
-    }
-    if (selectedHot) {
-      selectedHot.classList.toggle("hidden", !nextFeedItem?.hot);
-    }
-    if (selectedImage && nextFeedItem) {
-      selectedImage.src = nextFeedItem.imageUrl;
-      selectedImage.alt = nextFeedItem.title;
-    }
-    if (selectedProof) {
-      selectedProof.textContent = nextFeedItem?.socialProof ?? "";
-    }
-    if (selectedMeta) {
-      selectedMeta.textContent = nextTest.lockedLabel ?? nextFeedItem?.socialProof ?? args.selectedLabel;
-    }
-    if (selectedPrompt) {
-      selectedPrompt.textContent = nextTest.interactionMode === "tap" ? nextTest.tapLabel : args.composerLabel;
-    }
     if (submitButton) {
       submitButton.disabled = Boolean(nextTest.lockedLabel);
       submitButton.textContent = nextTest.lockedLabel ?? args.startLabel;
     }
     composer?.classList.toggle("hidden", nextTest.interactionMode === "tap");
-    selectedMedia?.classList.toggle("is-touch", nextTest.interactionMode === "tap");
     tapPhotoButton?.classList.toggle("hidden", nextTest.interactionMode !== "tap");
     if (tapPhotoButton) {
       tapPhotoButton.textContent = nextTest.tapLabel;
       tapPhotoButton.disabled = Boolean(nextTest.lockedLabel);
     }
-    if (relatedStrip) {
-      relatedStrip.innerHTML = renderRelatedStories();
-      attachCardListeners();
-    }
 
     panel.querySelectorAll<HTMLElement>("[data-test-id]").forEach((button) => {
-      if (button.classList.contains("hud-feed-card") || button.classList.contains("hud-related-story")) {
+      if (button.classList.contains("hud-feed-card")) {
         button.classList.toggle("selected", button.dataset.feedItemId === currentSelectedFeedItemId);
       }
     });
@@ -527,19 +440,6 @@ export function showHomeOverlay(args: {
   }
 
   tapPhotoButton?.addEventListener("click", submitCurrentSelection);
-  selectedMedia?.addEventListener("click", (event) => {
-    if (!isTouchSelection()) {
-      return;
-    }
-
-    const target = event.target as HTMLElement | null;
-    if (target?.closest("[data-action='tap-photo']")) {
-      return;
-    }
-
-    submitCurrentSelection();
-  });
-
   primaryInput?.addEventListener("input", syncDraft);
   partnerInput?.addEventListener("input", syncDraft);
 

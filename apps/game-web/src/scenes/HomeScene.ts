@@ -103,7 +103,11 @@ export class HomeScene extends Phaser.Scene {
       feedLoadingLabel: runtime.copy["feed.loadingMore"],
       initialSelectedFeedItemId: homeSelection.selectedFeedItemId,
       onSelectTest: (testId, feedItemId) => {
-        runtime.selectTest(testId, feedItemId);
+        runtime.setHomeSelection(testId, feedItemId);
+        const selectedTest = runtime.state.allTests.find((test) => test.id === testId);
+        if (selectedTest && !runtime.getUnlockLabel(selectedTest)) {
+          runtime.selectTest(testId, feedItemId);
+        }
       },
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);

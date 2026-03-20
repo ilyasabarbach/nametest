@@ -47,6 +47,7 @@ export function showResultOverlay(args: {
   browseStories?: ResultStory[];
   onPartnerDraftChange?: (partnerName: string) => void;
   onRetry: (partnerName: string) => void;
+  onSelectStory?: (testId: string, storyId: string) => void;
   onStartNext?: (testId: string, storyId: string, partnerName: string) => void;
   onShare: () => void;
   onReward: () => void;
@@ -293,14 +294,18 @@ export function showResultOverlay(args: {
   panel.querySelectorAll<HTMLButtonElement>("[data-next-story-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const storyId = button.dataset.nextStoryId;
+      const testId = button.dataset.nextTestId;
       if (!storyId) {
         return;
       }
 
       updateSelectedNextStory(storyId);
-      if (button.classList.contains("hud-result-popular-card")) {
-        continuationSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (testId && args.onSelectStory) {
+        args.onSelectStory(testId, storyId);
+        return;
       }
+
+      continuationSection?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 

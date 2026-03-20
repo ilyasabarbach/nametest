@@ -41,7 +41,9 @@ Recent progress already made:
 - fresh home loads now stay browse-first instead of auto-opening a default story, so the promoted landing surface only appears after a real tap
 - the selected landing surface now preserves the tapped story variant instead of flattening immediately into test-only selection
 - tapping a thread deep in the feed now scrolls the panel back to the top before refreshing the landing surface
+- tapping another story from lower in the same feed now replaces the promoted top test box in-page instead of acting like a separate home reload
 - thread taps no longer auto-focus the input fields on mobile, so the promoted surface opens without forcing the keyboard immediately
+- the promoted top test box is now simpler and only keeps the selected test title plus the actual test content instead of repeating feed thumbnail and hot/popular card chrome
 - in-progress name entry on the home surface now survives locale switches and other scene refreshes, which removes one of the more obvious continuity breaks
 - the runtime now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of only remembering the selected test id
 - the landing page now pushes streak/reward/collection and unlock framing lower on the page and switches the primary action to a simpler blue editorial CTA so the first impression feels less game-like
@@ -55,6 +57,7 @@ Recent progress already made:
 - the result surface now looks more like a poster artifact and can continue straight into another story without forcing the player back through a dead-end state
 - the result surface now also keeps a dedicated "more popular stories" layer below the main continuation block so the page feels less terminal and more browseable after the poster/actions flow
 - the lower result-page browse layer now pulls from a broader follow-up story pool instead of just repeating the short quick-pick set, which improves endless-feed continuity
+- result-page lower story taps now route into the selected story's landing page instead of only changing the smaller continuation area lower on the result screen
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector
@@ -68,6 +71,7 @@ Recent progress already made:
 - Android back-button handling now walks a lightweight in-app scene history for home, reading, result, and reward instead of always hard-jumping to home
 - the active reading flow is now also persisted through runtime storage and restored after preload, so hard background/restart continuity is better than a simple cold reset
 - pause/unload now explicitly snapshots the app-flow state, and restore logic now resolves interrupted reveal/result transitions more defensively
+- fresh app reopen now intentionally drops back to browse-first home instead of restoring the last opened home test selection
 - `apps/android-shell/android/app/src/main/res` now contains first-pass native app resources and launch theming instead of an empty shell
 - Android Studio can now sync and launch the app on a real phone after completing the missing Gradle project files and running `cap sync`
 

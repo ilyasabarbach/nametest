@@ -303,13 +303,10 @@ export const runtime = {
       this.state.homeDraftNames = storedAppState.homeDraftNames;
     }
 
-    if (storedAppState?.homeSelection) {
-      this.state.homeSelection = resolveFeedSelection(
-        firstFeedPage.items,
-        storedAppState.homeSelection.selectedTestId || this.state.session.selectedTest.id,
-        storedAppState.homeSelection.selectedFeedItemId
-      );
-    }
+    this.state.homeSelection = {
+      selectedTestId: "",
+      selectedFeedItemId: ""
+    };
 
     if (typeof storedAppState?.resultDraftPartnerName === "string") {
       this.state.resultDraftPartnerName = storedAppState.resultDraftPartnerName;
