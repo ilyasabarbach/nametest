@@ -89,7 +89,7 @@ export class HomeScene extends Phaser.Scene {
           label: runtime.copy[test.titleKey],
           subtitle: runtime.copy[test.subtitleKey],
           selected: test.id === selectedTestId,
-          lockedLabel: runtime.getUnlockLabel(test),
+          lockedLabel: test.id === selectedTestId ? null : runtime.getUnlockLabel(test),
           primaryPromptLabel: runtime.copy["home.primaryLabel"],
           primaryPromptPlaceholder: primaryPrompt?.placeholder ?? "",
           partnerPromptLabel: runtime.copy["home.partnerLabel"],

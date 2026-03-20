@@ -4,6 +4,7 @@ import { createReplayState, isNameValid, sanitizeName } from "@nametests/core";
 import { showResultOverlay } from "../ui/overlays/resultOverlay";
 import { buildShareCard } from "../ui/components/shareCard";
 import { playToneSequence } from "../ui/transitions/playTone";
+import { homeFeedCards, homeFeedUiCopy } from "@nametests/content-packs";
 import { homeFeedThumbs } from "../assets/feed";
 
 type NextStory = {
@@ -122,7 +123,7 @@ export class ResultScene extends Phaser.Scene {
       rewardVisible: runtime.canShowReward(),
       onSelectStory: (testId, storyId) => {
         runtime.setHomeSelection(testId, storyId);
-        runtime.selectTest(testId, storyId);
+        runtime.selectTest(testId, storyId, { allowLocked: true });
         this.scene.start("HomeScene");
       },
       onRetry: (partnerName) => {
@@ -147,7 +148,7 @@ export class ResultScene extends Phaser.Scene {
           return;
         }
 
-        runtime.selectTest(testId, storyId);
+        runtime.selectTest(testId, storyId, { allowLocked: true });
         runtime.startSession(primaryName, nextPartnerName);
         runtime.analytics.track({
           name: "test_started",
@@ -239,84 +240,48 @@ export class ResultScene extends Phaser.Scene {
   }
 
   private buildNextStories(): NextStory[] {
-    const availableTestIds = new Set(runtime.getAvailableTests().map((test) => test.id));
     const currentTestId = runtime.session.selectedTest.id;
-    const testsById = new Map(runtime.state.allTests.map((test) => [test.id, test]));
-    const uniqueStories = new Map<string, NextStory>();
-
-    for (const item of runtime.getDiscoveryFeedItems()) {
-      if (!availableTestIds.has(item.testId) || item.testId === currentTestId) {
-        continue;
-      }
-
-      if (uniqueStories.has(item.testId)) {
-        continue;
-      }
-
-      const test = testsById.get(item.testId);
-      if (!test) {
-        continue;
-      }
-
-      uniqueStories.set(item.testId, {
-        id: item.id,
-        testId: item.testId,
-        imageUrl: homeFeedThumbs[item.imageKey] ?? homeFeedThumbs[item.testId],
-        tag: item.tag,
-        title: item.title,
-        teaser: item.teaser,
-        socialProof: item.socialProof,
-        testLabel: runtime.copy[test.titleKey] ?? item.testId,
-        testSubtitle: runtime.copy[test.subtitleKey] ?? item.teaser,
-        requiresPartner: test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName"),
-        partnerLabel:
-          test.prompts.find((prompt) => prompt.type === "name" && prompt.id === "partnerName")?.label ??
-          runtime.copy["home.partnerLabel"]
-      });
-    }
-
-    return [...uniqueStories.values()].slice(0, 4);
+    return this.buildCatalogStories()
+      .filter((story) => story.testId !== currentTestId)
+      .slice(0, 4);
   }
 
   private buildBrowseStories(nextStories: NextStory[]): BrowseStory[] {
-    const availableTestIds = new Set(runtime.getAvailableTests().map((test) => test.id));
-    const currentTestId = runtime.session.selectedTest.id;
-    const testsById = new Map(runtime.state.allTests.map((test) => [test.id, test]));
     const quickStoryIds = new Set(nextStories.map((story) => story.id));
-    const browseStories: BrowseStory[] = [];
+    return this.buildCatalogStories().filter((story) => !quickStoryIds.has(story.id));
+  }
 
-    for (const item of runtime.getDiscoveryFeedItems()) {
-      if (!availableTestIds.has(item.testId) || item.testId === currentTestId || quickStoryIds.has(item.id)) {
-        continue;
-      }
+  private buildCatalogStories(): NextStory[] {
+    const locale = runtime.locale;
+    const feedItemsByTestId = new Map(runtime.getDiscoveryFeedItems().map((item) => [item.testId, item]));
 
-      const test = testsById.get(item.testId);
+    return homeFeedCards.flatMap((card) => {
+      const test = runtime.state.allTests.find((entry) => entry.id === card.testId);
       if (!test) {
-        continue;
+        return [];
       }
 
-      browseStories.push({
-        id: item.id,
-        testId: item.testId,
-        imageUrl: homeFeedThumbs[item.imageKey] ?? homeFeedThumbs[item.testId],
-        tag: item.tag,
-        title: item.title,
-        teaser: item.teaser,
-        socialProof: item.socialProof,
-        testLabel: runtime.copy[test.titleKey] ?? item.testId,
-        testSubtitle: runtime.copy[test.subtitleKey] ?? item.teaser,
-        requiresPartner: test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName"),
-        partnerLabel:
-          test.prompts.find((prompt) => prompt.type === "name" && prompt.id === "partnerName")?.label ??
-          runtime.copy["home.partnerLabel"]
-      });
-
-      if (browseStories.length >= 6) {
-        break;
-      }
-    }
-
-    return browseStories;
+      const feedItem = feedItemsByTestId.get(card.testId);
+      return [
+        {
+          id: feedItem?.id ?? `${card.id}-catalog`,
+          testId: card.testId,
+          imageUrl: homeFeedThumbs[feedItem?.imageKey ?? card.testId] ?? homeFeedThumbs[card.testId],
+          tag: feedItem?.tag ?? card.tag[locale],
+          title: feedItem?.title ?? card.title[locale],
+          teaser: feedItem?.teaser ?? runtime.copy[test.subtitleKey] ?? card.title[locale],
+          socialProof:
+            feedItem?.socialProof ??
+            `${homeFeedUiCopy.popularLabel[locale]} · ${runtime.copy[test.titleKey] ?? card.testId}`,
+          testLabel: runtime.copy[test.titleKey] ?? card.testId,
+          testSubtitle: runtime.copy[test.subtitleKey] ?? (feedItem?.teaser ?? card.title[locale]),
+          requiresPartner: test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName"),
+          partnerLabel:
+            test.prompts.find((prompt) => prompt.type === "name" && prompt.id === "partnerName")?.label ??
+            runtime.copy["home.partnerLabel"]
+        }
+      ];
+    });
   }
 
   private formatNamesForDisplay(primaryName: string, partnerName: string, fallbackLabel: string): string {

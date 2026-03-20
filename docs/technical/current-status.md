@@ -49,6 +49,7 @@ This is the quickest "where are we now?" document.
 - Result page now also carries a dedicated "more popular stories" browse layer underneath the poster/actions flow so it feels closer to an endless editorial page instead of a terminal result state
 - Result-page continuation now reaches into a broader follow-up story set instead of only echoing the short quick-pick list, so the lower browse layer feels more like a real feed continuation
 - Clicking a lower story on the result page now opens that story as the next landing page instead of only updating a smaller continuation widget lower on the same result screen
+- Result-page lower browsing now uses the full editorial test catalog instead of only the currently unlocked / currently loaded slice, so players can keep scrolling all story types from inside a result page
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected
@@ -99,7 +100,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Result cards show score, title, body, insight, and signature
 - Result page keeps share, retry, reward, and next-story continuation working together without dead-ending the player
 - Result page keeps the additional "more popular stories" browse layer working as a continuation surface instead of feeling like a final screen
-- Result page uses the lower browse layer to select from a wider story pool without breaking the main continuation composer
+- Result page uses the lower browse layer to select from the full editorial catalog without breaking the main continuation composer
 - Editing the partner name on the result page carries cleanly through retry, next-story continuation, and reward flow
 - Single-name readings hide the extra partner input where appropriate and keep share/retry copy from rendering awkward empty-name combinations
 - Share action generates a card image

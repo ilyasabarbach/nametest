@@ -58,6 +58,7 @@ Recent progress already made:
 - the result surface now also keeps a dedicated "more popular stories" layer below the main continuation block so the page feels less terminal and more browseable after the poster/actions flow
 - the lower result-page browse layer now pulls from a broader follow-up story pool instead of just repeating the short quick-pick set, which improves endless-feed continuity
 - result-page lower story taps now route into the selected story's landing page instead of only changing the smaller continuation area lower on the result screen
+- the lower result-page browse layer now draws from the full editorial catalog instead of only the currently unlocked / already loaded feed slice, so result pages keep behaving like a broader browse surface
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector

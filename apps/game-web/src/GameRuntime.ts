@@ -481,8 +481,10 @@ export const runtime = {
     return this.state.lastDailyRewardCoins;
   },
 
-  selectTest(testId: string, feedItemId?: string): void {
-    const selected = this.state.availableTests.find((test) => test.id === testId) ?? this.state.availableTests[0];
+  selectTest(testId: string, feedItemId?: string, options?: { allowLocked?: boolean }): void {
+    const selectionPool = options?.allowLocked ? this.state.allTests : this.state.availableTests;
+    const fallbackPool = options?.allowLocked ? this.state.allTests : this.state.availableTests;
+    const selected = selectionPool.find((test) => test.id === testId) ?? fallbackPool[0];
     if (!selected) {
       return;
     }
