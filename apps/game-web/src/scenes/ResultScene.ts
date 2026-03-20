@@ -86,6 +86,10 @@ export class ResultScene extends Phaser.Scene {
       socialSectionLabel: runtime.copy["result.moreStories"],
       socialStatusLabel: runtime.copy["result.shareLabel"],
       socialMetaLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
+      homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
+      languageLabel: runtime.copy["home.languageLabel"] ?? "Language",
+      locales: runtime.getSupportedLocales(),
+      currentLocale: runtime.locale,
       hook: card.hook,
       testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
       title: card.headline,
@@ -121,6 +125,15 @@ export class ResultScene extends Phaser.Scene {
       accent: card.accent,
       template,
       rewardVisible: runtime.canShowReward(),
+      onGoHome: () => {
+        runtime.clearHomeSelection();
+        runtime.resetSceneHistory("HomeScene");
+        this.scene.start("HomeScene");
+      },
+      onChangeLocale: async (nextLocale) => {
+        await runtime.setLocale(nextLocale);
+        this.scene.restart();
+      },
       onSelectStory: (testId, storyId) => {
         runtime.setHomeSelection(testId, storyId);
         runtime.selectTest(testId, storyId, { allowLocked: true });

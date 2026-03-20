@@ -29,6 +29,7 @@ export class HomeScene extends Phaser.Scene {
       socialSectionLabel: homeFeedUiCopy.homeLabel[locale],
       socialStatusLabel: homeFeedUiCopy.popularLabel[locale],
       socialMetaLabel: `${homeFeedUiCopy.hotLabel[locale]} · ${runtime.copy[daily.titleKey]}`,
+      homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       homeLabel: homeFeedUiCopy.homeLabel[locale],
       heroTitle: homeFeedUiCopy.heroTitle[locale],
       heroBody: homeFeedUiCopy.heroBody[locale],
@@ -108,6 +109,11 @@ export class HomeScene extends Phaser.Scene {
         if (selectedTest && !runtime.getUnlockLabel(selectedTest)) {
           runtime.selectTest(testId, feedItemId);
         }
+      },
+      onGoHome: () => {
+        runtime.clearHomeSelection();
+        runtime.resetSceneHistory("HomeScene");
+        this.scene.restart();
       },
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);

@@ -14,11 +14,17 @@ type ResultStory = {
   partnerLabel?: string;
 };
 
+import type { HomeFeedLocale } from "@nametests/content-packs";
+
 export function showResultOverlay(args: {
   socialBrandLabel: string;
   socialSectionLabel: string;
   socialStatusLabel: string;
   socialMetaLabel: string;
+  homeButtonLabel: string;
+  languageLabel: string;
+  locales: Array<{ id: HomeFeedLocale; label: string; nativeLabel: string }>;
+  currentLocale: HomeFeedLocale;
   hook: string;
   testLabel: string;
   title: string;
@@ -47,6 +53,8 @@ export function showResultOverlay(args: {
   browseStories?: ResultStory[];
   onPartnerDraftChange?: (partnerName: string) => void;
   onRetry: (partnerName: string) => void;
+  onGoHome: () => void;
+  onChangeLocale: (locale: HomeFeedLocale) => Promise<void> | void;
   onSelectStory?: (testId: string, storyId: string) => void;
   onStartNext?: (testId: string, storyId: string, partnerName: string) => void;
   onShare: () => void;
@@ -96,11 +104,35 @@ export function showResultOverlay(args: {
 
   panel.innerHTML = `
     <div class="hud-social-chrome hud-social-chrome--result">
-      <div class="hud-social-chrome__brand">
-        <strong>${args.socialBrandLabel}</strong>
-        <span>${args.socialSectionLabel}</span>
+      <div class="hud-social-chrome__left">
+        <button class="hud-nav-button" type="button" data-action="go-home">${args.homeButtonLabel}</button>
+        <button class="hud-settings-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
+          &#9881;
+        </button>
+        <div class="hud-settings-menu hidden" data-settings-menu>
+          <strong>${args.languageLabel}</strong>
+          <div class="hud-settings-menu__list">
+            ${args.locales
+              .map(
+                (locale) => `
+                  <button
+                    class="hud-locale-chip ${locale.id === args.currentLocale ? "selected" : ""}"
+                    type="button"
+                    data-locale-id="${locale.id}"
+                    title="${locale.nativeLabel}"
+                  >
+                    ${locale.label}
+                  </button>
+                `
+              )
+              .join("")}
+          </div>
+        </div>
       </div>
-      <div class="hud-social-chrome__meta">
+      <div class="hud-social-chrome__logo">
+        <strong>${args.socialBrandLabel}</strong>
+      </div>
+      <div class="hud-social-chrome__right">
         <span class="hud-social-chrome__pill">${args.socialStatusLabel}</span>
         <span class="hud-social-chrome__text">${args.socialMetaLabel}</span>
       </div>
@@ -130,27 +162,6 @@ export function showResultOverlay(args: {
         )
         .join("")}
     </div>
-    ${
-      args.progressionItems.length
-        ? `
-          <div class="hud-stack hud-progress-summary">
-            <p class="hud-label">${args.progressTitle}</p>
-            <div class="hud-stack hud-progress-list">
-              ${args.progressionItems
-                .map(
-                  (item) => `
-                    <div class="hud-progress-item">
-                      <strong>${item.title}</strong>
-                      <span>${item.detail}</span>
-                    </div>
-                  `
-                )
-                .join("")}
-            </div>
-          </div>
-        `
-        : ""
-    }
     <div class="hud-result-actions hud-stack">
       <label class="hud-stack ${retryPartnerVisible ? "" : "hidden"}" data-retry-partner-field>
         <span class="hud-label">${args.partnerLabel}</span>
@@ -243,6 +254,7 @@ export function showResultOverlay(args: {
   const retryInput = panel.querySelector<HTMLInputElement>('input[name="retryPartnerName"]');
   const nextPartnerInput = panel.querySelector<HTMLInputElement>('input[name="nextPartnerName"]');
   const continuationSection = panel.querySelector<HTMLElement>(".hud-result-continuation");
+  const settingsMenu = panel.querySelector<HTMLElement>("[data-settings-menu]");
 
   const syncPartnerDraft = (value: string, source: "retry" | "next") => {
     if (source !== "retry" && retryInput && retryInput.value !== value) {
@@ -290,6 +302,30 @@ export function showResultOverlay(args: {
       button.classList.toggle("selected", button.dataset.nextStoryId === storyId);
     });
   };
+
+  panel.querySelectorAll<HTMLButtonElement>("[data-locale-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const localeId = button.dataset.localeId as HomeFeedLocale | undefined;
+      if (!localeId || localeId === args.currentLocale) {
+        return;
+      }
+
+      void args.onChangeLocale(localeId);
+    });
+  });
+
+  panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
+    settingsMenu?.classList.toggle("hidden");
+  });
+  panel.querySelector<HTMLButtonElement>('[data-action="go-home"]')?.addEventListener("click", () => {
+    args.onGoHome();
+  });
+  panel.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest("[data-action='toggle-settings']") && !target?.closest("[data-settings-menu]")) {
+      settingsMenu?.classList.add("hidden");
+    }
+  });
 
   panel.querySelectorAll<HTMLButtonElement>("[data-next-story-id]").forEach((button) => {
     button.addEventListener("click", () => {

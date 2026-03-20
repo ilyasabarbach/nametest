@@ -48,6 +48,7 @@ Recent progress already made:
 - the runtime now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of only remembering the selected test id
 - the landing page now pushes streak/reward/collection and unlock framing lower on the page and switches the primary action to a simpler blue editorial CTA so the first impression feels less game-like
 - the home and result surfaces now have a lightweight dark social-page chrome so the editorial content reads more like a page inside a viral feed environment and less like a bare game overlay
+- the home and result surfaces now have a lighter shared navbar with Home and Settings on the left and a centered logo, which keeps the top of the page cleaner and less game-like
 - the oversized home hero and inline locale chips are now removed, and locale switching now sits behind a small settings control in the social chrome instead of occupying the full top section
 - short-height and small-window home/result layouts now preserve wider editorial grids where possible and only collapse fully when the screen is truly narrow
 - the flow now supports single-name readings end to end, and the catalog now includes a first batch of headline / past-life / hidden-gift style tests instead of staying almost entirely pair-based
@@ -59,6 +60,7 @@ Recent progress already made:
 - the lower result-page browse layer now pulls from a broader follow-up story pool instead of just repeating the short quick-pick set, which improves endless-feed continuity
 - result-page lower story taps now route into the selected story's landing page instead of only changing the smaller continuation area lower on the result screen
 - the lower result-page browse layer now draws from the full editorial catalog instead of only the currently unlocked / already loaded feed slice, so result pages keep behaving like a broader browse surface
+- the older progression summary callout has been removed from the main result surface so results behave more like poster-plus-feed pages than reward dashboards
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector

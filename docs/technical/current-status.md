@@ -34,6 +34,7 @@ This is the quickest "where are we now?" document.
 - Home navigation now preserves the exact selected feed-story variant across locale refreshes, scene restarts, and return-to-home flow instead of falling back to a generic story for the same test
 - The landing page now de-emphasizes streak/reward/collection framing on the first screenful and uses a simpler blue editorial CTA so the surface reads less like a game dashboard
 - Home and result surfaces now include a lightweight dark social-page chrome so the editorial white content feels more like a page inside a viral feed ecosystem instead of a bare game panel
+- Home and result surfaces now use a lighter navbar with Home and Settings on the left plus a centered game logo, which removes more of the old dark game-panel header feeling
 - The oversized home hero and inline locale chip row are now gone, and language switching now lives inside a lighter settings menu in the top chrome instead of taking over the top of the page
 - Short-height home and result layouts now keep the editorial feed/result surfaces readable instead of collapsing into overly narrow columns on landscape phones and cramped browser windows
 - The landing/test/result flow now supports both pair-name readings and single-name readings instead of hardcoding the entire experience around two-name inputs
@@ -50,6 +51,7 @@ This is the quickest "where are we now?" document.
 - Result-page continuation now reaches into a broader follow-up story set instead of only echoing the short quick-pick list, so the lower browse layer feels more like a real feed continuation
 - Clicking a lower story on the result page now opens that story as the next landing page instead of only updating a smaller continuation widget lower on the same result screen
 - Result-page lower browsing now uses the full editorial test catalog instead of only the currently unlocked / currently loaded slice, so players can keep scrolling all story types from inside a result page
+- Result pages no longer foreground the old "unlocked this run" progression summary block, so the poster and browse flow stay primary
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected

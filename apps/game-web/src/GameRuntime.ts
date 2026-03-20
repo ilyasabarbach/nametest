@@ -403,6 +403,14 @@ export const runtime = {
     void this.persistAppState();
   },
 
+  clearHomeSelection(): void {
+    this.state.homeSelection = {
+      selectedTestId: "",
+      selectedFeedItemId: ""
+    };
+    void this.persistAppState();
+  },
+
   setHomeDraftNames(primaryName: string, partnerName: string): void {
     this.state.homeDraftNames = { primaryName, partnerName };
     void this.persistAppState();
