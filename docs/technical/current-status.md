@@ -52,6 +52,8 @@ This is the quickest "where are we now?" document.
 - Result-page continuation now reaches into a broader follow-up story set instead of only echoing the short quick-pick list, so the lower browse layer feels more like a real feed continuation
 - Clicking a lower story on the result page now opens that story as the next landing page instead of only updating a smaller continuation widget lower on the same result screen
 - Result-page lower browsing now uses the full editorial test catalog instead of only the currently unlocked / currently loaded slice, so players can keep scrolling all story types from inside a result page
+- The secret-reading reward path now preserves the same lower browse/feed continuity as the normal result page instead of collapsing into a stripped-down dead-end variant
+- Reward-state updates now persist through the runtime session setter, which fixes the broken secret-reading loop and removes the stale reward-loading behavior from later runs
 - Result pages no longer foreground the old "unlocked this run" progression summary block, so the poster and browse flow stay primary
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result/share artifact selection is now starting to move onto an explicit recipe layer instead of relying only on hardcoded symbol-to-template guesses
