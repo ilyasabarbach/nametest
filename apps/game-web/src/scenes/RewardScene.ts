@@ -3,7 +3,11 @@ import { createReplayState, sanitizeName } from "@nametests/core";
 import { homeFeedCards, homeFeedUiCopy } from "@nametests/content-packs";
 import { runtime } from "../GameRuntime";
 import { showResultOverlay } from "../ui/overlays/resultOverlay";
-import { resolveArtifactTemplate } from "../ui/components/artifactPresentation";
+import {
+  resolveArtifactTemplate,
+  resolveRemixTemplates,
+  type ArtifactTemplate
+} from "../ui/components/artifactPresentation";
 import { buildShareCard } from "../ui/components/shareCard";
 import { homeFeedThumbs } from "../assets/feed";
 
@@ -51,6 +55,10 @@ export class RewardScene extends Phaser.Scene {
 
     const card = runtime.latestCard();
     const template = resolveArtifactTemplate(runtime.session.selectedTest);
+    const remixOptions = resolveRemixTemplates(runtime.session.selectedTest).map((entry) => ({
+      template: entry,
+      label: this.getRemixLabel(entry)
+    }));
     const partnerDraft = runtime.getResultDraftPartnerName() || runtime.session.names.partnerName;
     const retryPartnerVisible = runtime.session.selectedTest.prompts.some(
       (prompt) => prompt.type === "name" && prompt.id === "partnerName"
@@ -74,6 +82,9 @@ export class RewardScene extends Phaser.Scene {
       signatureLabel: runtime.copy["result.signatureLabel"],
       shareHint: card.sharePrompt,
       shareLabel: runtime.copy["result.shareLabel"],
+      remixTitle: runtime.copy["result.remixTitle"] ?? "Remix this result",
+      remixBody: runtime.copy["result.remixBody"] ?? "Try another visual version before you share it.",
+      remixOptions,
       partnerName: partnerDraft,
       partnerLabel: runtime.copy["home.partnerLabel"],
       retryPartnerVisible,
@@ -135,28 +146,28 @@ export class RewardScene extends Phaser.Scene {
         });
         this.scene.start("TestScene");
       },
-      onShare: async () =>
+      onShare: async (selectedTemplate, artifact) =>
         runtime.share.share({
           title: runtime.copy["result.secretTitle"],
           text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
           imageDataUrl: await buildShareCard({
             brandLabel: runtime.copy["app.title"],
-            hook: card.hook,
+            hook: artifact.hook,
             testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
-            title: runtime.copy["result.secretTitle"],
+            title: artifact.title,
             score: card.score,
-            body: `${card.body} ${runtime.copy["result.secretUnlockedShort"]}`,
-            insight: `${card.insight} ${runtime.copy["result.secretUnlockedShort"]}`,
-            signature: `${card.signature}-PLUS`,
+            body: artifact.body,
+            insight: artifact.insight,
+            signature: artifact.signature,
             signatureLabel: runtime.copy["result.signatureLabel"],
-            sharePrompt: card.sharePrompt,
+            sharePrompt: artifact.shareHint,
             names: this.formatNamesForDisplay(
               runtime.session.names.primaryName,
               runtime.session.names.partnerName,
               runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
             ),
-            accent: "#ffd166",
-            template
+            accent: artifact.accent,
+            template: selectedTemplate
           }),
           filename: `${runtime.session.selectedTest.id}-secret.png`
         }),
@@ -174,6 +185,24 @@ export class RewardScene extends Phaser.Scene {
     }
 
     return fallbackLabel;
+  }
+
+  private getRemixLabel(template: ArtifactTemplate): string {
+    switch (template) {
+      case "portrait":
+        return runtime.copy["result.remixPortrait"] ?? "Portrait";
+      case "headline":
+        return runtime.copy["result.remixHeadline"] ?? "Headline";
+      case "storybook":
+        return runtime.copy["result.remixStorybook"] ?? "Storybook";
+      case "spotlight":
+        return runtime.copy["result.remixBadge"] ?? "Badge";
+      case "tabloid":
+        return runtime.copy["result.remixMagazine"] ?? "Magazine";
+      case "cosmic":
+      default:
+        return runtime.copy["result.remixPoster"] ?? "Poster";
+    }
   }
 
   private buildNextStories(): NextStory[] {

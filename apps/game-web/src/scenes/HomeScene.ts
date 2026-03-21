@@ -169,7 +169,7 @@ export class HomeScene extends Phaser.Scene {
     return items.map((item) => ({
       ...item,
       imageUrl: homeFeedThumbs[item.imageKey] ?? homeFeedThumbs[item.testId],
-      lockedLabel: runtime.getUnlockLabel(runtime.state.allTests.find((test) => test.id === item.testId)!)
+      lockedLabel: runtime.getUnlockLabel(runtime.state.allTests.find((entry) => entry.id === item.testId)!)
     }));
   }
 }

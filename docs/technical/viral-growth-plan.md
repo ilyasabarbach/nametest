@@ -188,6 +188,8 @@ Tests should carry structured metadata such as:
 
 - `inputMode`
 - `artifactRecipeId`
+- `imageRecipeId`
+- `thumbnailRecipeId`
 - `styleFamily`
 - `viralHook`
 - `seasonalTags`
@@ -264,7 +266,8 @@ Status:
 Status:
 
 - result/share presentation has already started resolving from `artifactRecipeId`
-- the remaining product work in this phase is visible remix UI, not the basic template-selection foundation
+- visible remix UI is now live on result pages, so players can switch between recipe-backed artifact families before sharing
+- the remaining product work in this phase is polish and tuning, not the basic template-selection foundation
 
 ### Phase 4: AI MVP
 
@@ -272,6 +275,15 @@ Status:
 - support optional AI artifact remix for a very small number of tests first
 - cache outputs aggressively
 - degrade back to template posters when unavailable
+- keep feed thumbnails on a separate offline-or-generated recipe path instead of trying to generate them live per scroll
+
+Status:
+
+- a minimal optional AI-remix seam now exists through shared backend contracts, a local `/api/artifact-remix` endpoint, and a runtime synthetic fallback
+- recipe-driven generated thumbnails now also exist as the first replacement path for the older static feed art, so human-photo-led editorial cards can scale through structured recipes instead of one-off SVGs
+- the first real poster-image AI path now exists for `past-life-echo`, using `imageRecipeId` and a poster-image field in the remix contract so result/share can move toward true image artifacts instead of text-only remixes
+- the local API now also has a Cloudflare Workers AI seam for image generation when credentials are configured, while still falling back to deterministic generated poster art locally
+- the remaining question is product tuning: whether the first image-backed poster family feels strong enough on-device to justify expanding this path to aura, archetype, and movie-poster families next
 
 ### Phase 5: Growth Loop
 
@@ -300,8 +312,8 @@ It is the next layer on top of the current architecture.
 When a future session asks "what should we build next for virality?", use this order:
 
 1. tune the richer catalog on-device and note which hooks / artifact families actually feel strongest
-2. add visible remix UI on top of the existing recipe layer
-3. add optional AI remix for a tiny, controlled subset
+2. tune the visible remix UI on-device and note which artifact families actually get chosen
+3. tune the optional AI-remix seam on-device and note whether portrait/storybook upgrades feel meaningfully stronger than template remix alone
 4. tune the share/remix loop on-device
 5. expand the catalog again based on what replays and shares best
 

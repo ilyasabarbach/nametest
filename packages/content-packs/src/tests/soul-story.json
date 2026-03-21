@@ -8,6 +8,7 @@
   "subtitleKey": "test.soulStory.subtitle",
   "inputMode": "single-name",
   "artifactRecipeId": "storybook-echo-cover",
+  "thumbnailRecipeId": "storybook-cover-thumb",
   "styleFamily": "soul-story",
   "viralHook": {
     "curiosity": "What is the greatest story your soul still wants to tell?",

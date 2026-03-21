@@ -8,6 +8,7 @@
   "subtitleKey": "test.groupChatRole.subtitle",
   "inputMode": "single-name",
   "artifactRecipeId": "duo-badge-reveal",
+  "thumbnailRecipeId": "group-badge-thumb",
   "styleFamily": "social-role",
   "viralHook": {
     "curiosity": "What role do you secretly become in every group chat?",

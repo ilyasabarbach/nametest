@@ -8,6 +8,7 @@
   "subtitleKey": "test.auraPalette.subtitle",
   "inputMode": "single-name",
   "artifactRecipeId": "identity-aura-portrait",
+  "thumbnailRecipeId": "aura-portrait-thumb",
   "styleFamily": "aura-palette",
   "viralHook": {
     "curiosity": "What personal aura color is following your name right now?",

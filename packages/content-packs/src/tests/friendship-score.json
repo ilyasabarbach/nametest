@@ -8,6 +8,7 @@
   "subtitleKey": "test.friendship.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-badge-reveal",
+  "thumbnailRecipeId": "touch-reveal-thumb",
   "styleFamily": "social-badge",
   "viralHook": {
     "curiosity": "Is your duo built on trust, chaos, or legendary timing?",

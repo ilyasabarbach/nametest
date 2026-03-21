@@ -8,6 +8,7 @@
   "subtitleKey": "test.drama.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-tabloid-poster",
+  "thumbnailRecipeId": "headline-tabloid-thumb",
   "styleFamily": "drama-tabloid",
   "viralHook": {
     "curiosity": "Does this pairing feel safe, stormy, or pure cinema?",

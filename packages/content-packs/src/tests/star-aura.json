@@ -8,6 +8,7 @@
   "subtitleKey": "test.aura.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "identity-aura-portrait",
+  "thumbnailRecipeId": "aura-portrait-thumb",
   "styleFamily": "aura-portrait",
   "viralHook": {
     "curiosity": "How rare is the glow your name leaves behind?",

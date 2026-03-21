@@ -8,6 +8,7 @@
   "subtitleKey": "test.future.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "future-headline-card",
+  "thumbnailRecipeId": "future-oracle-thumb",
   "styleFamily": "future-id",
   "viralHook": {
     "curiosity": "What kind of future is your name already calling you toward?",

@@ -39,6 +39,8 @@ export type TestDefinition = {
   subtitleKey: string;
   inputMode?: TestInputMode;
   artifactRecipeId?: string;
+  imageRecipeId?: string;
+  thumbnailRecipeId?: string;
   styleFamily?: string;
   viralHook?: ViralHook;
   seasonalTags?: string[];

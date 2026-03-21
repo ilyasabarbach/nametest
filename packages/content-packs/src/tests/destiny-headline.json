@@ -8,6 +8,7 @@
   "subtitleKey": "test.destinyHeadline.subtitle",
   "inputMode": "single-name",
   "artifactRecipeId": "future-headline-card",
+  "thumbnailRecipeId": "headline-tabloid-thumb",
   "styleFamily": "destiny-headline",
   "viralHook": {
     "curiosity": "If your future had one headline tonight, what would it say?",

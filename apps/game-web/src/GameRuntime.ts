@@ -1,5 +1,14 @@
-import { isDiscoveryFeedPagePayload, type DiscoveryFeedItemPayload, type RemoteConfigPayload } from "@nametests/backend-contracts";
 import {
+  isArtifactRemixResponse,
+  isDiscoveryFeedPagePayload,
+  type ArtifactRemixRequest,
+  type ArtifactRemixResponse,
+  type DiscoveryFeedItemPayload,
+  type RemoteConfigPayload
+} from "@nametests/backend-contracts";
+import {
+  buildGeneratedPosterDataUrl,
+  derivePastLifeEchoName,
   defaultManifest,
   defaultTests,
   enCopy,
@@ -195,6 +204,221 @@ async function loadDiscoveryFeedPage(locale: HomeFeedLocale, cursor?: string) {
   }
 
   return getFallbackDiscoveryFeedPage(locale, cursor);
+}
+
+function resolveArtifactRemixUrl(): string | null {
+  const configuredPath = import.meta.env.VITE_ARTIFACT_REMIX_URL as string | undefined;
+  if (configuredPath) {
+    return new URL(configuredPath, window.location.href).toString();
+  }
+
+  const discoveryFeedPath = import.meta.env.VITE_DISCOVERY_FEED_URL as string | undefined;
+  if (discoveryFeedPath) {
+    const discoveryUrl = new URL(discoveryFeedPath, window.location.href);
+    discoveryUrl.pathname = discoveryUrl.pathname.replace(/\/?(api\/)?discovery-feed$/, "/api/artifact-remix");
+    discoveryUrl.search = "";
+    return discoveryUrl.toString();
+  }
+
+  return null;
+}
+
+function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixResponse {
+  const seed = `${payload.testId}|${payload.template}|${payload.names.primaryName}|${payload.names.partnerName}|${payload.result.resultKey}`;
+  const scoreSeed = Array.from(seed).reduce((total, character) => total + character.charCodeAt(0), 0);
+  const name = payload.names.primaryName || payload.result.title;
+  const pair = payload.names.partnerName ? `${payload.names.primaryName} + ${payload.names.partnerName}` : name;
+  const derivedName = derivePastLifeEchoName(name);
+  const accentPalettes = {
+    cosmic: ["#7c5cff", "#2bc0ff", "#ff87b5"],
+    spotlight: ["#ffd166", "#72ddf7", "#ff8fab"],
+    tabloid: ["#ff5d73", "#f0a202", "#6c63ff"],
+    headline: ["#00a6fb", "#fb5607", "#8338ec"],
+    portrait: ["#d5a6ff", "#8fd6ff", "#f3c78d"],
+    storybook: ["#f0be6b", "#c98fa9", "#90b4f8"]
+  } satisfies Record<ArtifactRemixRequest["template"], string[]>;
+  const pickAccent = (template: ArtifactRemixRequest["template"]) =>
+    accentPalettes[template][scoreSeed % accentPalettes[template].length];
+
+  if (payload.template === "portrait") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "AI portrait glow" : "Rare portrait pull",
+        title: scoreSeed % 3 === 0 ? "Velvet Portrait" : "Aura Portrait",
+        body:
+          scoreSeed % 2 === 0
+            ? `${name} now reads like a portrait with richer light, calmer confidence, and instant screenshot energy.`
+            : `${name} feels remixed into a more personal portrait artifact, with a finish that looks made for one person.`,
+        insight:
+          "Portrait remixes feel strongest when they stay flattering, specific, and visually collectible.",
+        signature: `PORTRAIT-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the portrait version and let someone else make theirs.",
+        accent: pickAccent("portrait"),
+        badgeLabel: "AI portrait preview",
+        posterImageDataUrl:
+          payload.imageRecipeId === "past-life-vintage-poster"
+            ? buildGeneratedPosterDataUrl({
+                recipeId: payload.imageRecipeId,
+                headline: payload.result.title,
+                primaryName: name,
+                derivedName,
+                body: payload.result.body,
+                insight: "Heart of gold",
+                accent: pickAccent("portrait")
+              })
+            : undefined
+      }
+    };
+  }
+
+  if (payload.template === "storybook") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "Story remix ready" : "Legend-cover pull",
+        title: scoreSeed % 3 === 0 ? "Golden Chapter Cover" : "Mythic Echo Cover",
+        body:
+          scoreSeed % 2 === 0
+            ? `${pair} now sounds like a cover line from a story people would tap just to see the next chapter.`
+            : `${pair} has been reframed into a richer story artifact, with more atmosphere and a stronger sense of mystery.`,
+        insight:
+          "Storybook remixes win when they feel like a cover first, and a summary second.",
+        signature: `STORY-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the cover version and invite someone else to open their story.",
+        accent: pickAccent("storybook"),
+        badgeLabel: "AI story preview",
+        posterImageDataUrl:
+          payload.imageRecipeId === "past-life-vintage-poster"
+            ? buildGeneratedPosterDataUrl({
+                recipeId: payload.imageRecipeId,
+                headline: "No one is born without a past life",
+                primaryName: name,
+                derivedName,
+                body: payload.result.body,
+                insight: "Gentle side",
+                accent: pickAccent("storybook")
+              })
+            : undefined
+      }
+    };
+  }
+
+  if (payload.template === "headline") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "AI headline drop" : "Future headline pull",
+        title: scoreSeed % 3 === 0 ? "Main Character Headline" : "Breaking Future Headline",
+        body:
+          scoreSeed % 2 === 0
+            ? `${name} now lands like a sharper social headline, with more status, momentum, and screenshot pull.`
+            : `${name} has been reframed into a cleaner headline artifact that feels more immediate and public-facing.`,
+        insight: "Headline remixes win when they feel punchy enough to post without explanation.",
+        signature: `HEADLINE-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the headline version and see who wants theirs next.",
+        accent: pickAccent("headline"),
+        badgeLabel: "AI headline preview"
+      }
+    };
+  }
+
+  if (payload.template === "tabloid") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "Magazine remix ready" : "Tabloid energy pull",
+        title: scoreSeed % 3 === 0 ? "Front Page Chemistry" : "Cover Story Energy",
+        body:
+          scoreSeed % 2 === 0
+            ? `${pair} now reads like a louder magazine cover, with bigger emotion and a more share-first finish.`
+            : `${pair} has been remixed into a tabloid-style artifact that feels bolder, hotter, and more attention-grabbing.`,
+        insight: "Magazine remixes work best when the emotion gets bigger before the copy gets longer.",
+        signature: `TABLOID-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the cover-story version and let someone else make their headline.",
+        accent: pickAccent("tabloid"),
+        badgeLabel: "AI magazine preview"
+      }
+    };
+  }
+
+  if (payload.template === "spotlight") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "Badge remix ready" : "Spotlight aura pull",
+        title: scoreSeed % 3 === 0 ? "Spotlight Badge" : "Rare Energy Badge",
+        body:
+          scoreSeed % 2 === 0
+            ? `${name} now carries a cleaner badge-style identity, with brighter confidence and more social-flex energy.`
+            : `${name} has been upgraded into a sharper spotlight artifact that feels more collectible and status-driven.`,
+        insight: "Badge remixes win when they feel like a label people want to claim publicly.",
+        signature: `SPOTLIGHT-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the badge version and invite someone else to claim theirs.",
+        accent: pickAccent("spotlight"),
+        badgeLabel: "AI badge preview"
+      }
+    };
+  }
+
+  if (payload.template === "cosmic") {
+    return {
+      status: "ok",
+      mode: "synthetic-preview",
+      template: payload.template,
+      artifact: {
+        hook: scoreSeed % 2 === 0 ? "AI aura surge" : "Cosmic remix ready",
+        title: scoreSeed % 3 === 0 ? "Luminous Match Poster" : "Destiny Poster Remix",
+        body:
+          scoreSeed % 2 === 0
+            ? `${pair} now feels turned into a brighter cosmic poster with more aura, more glow, and stronger share energy.`
+            : `${pair} has been remixed into a richer destiny-style artifact that feels more personal and more dramatic.`,
+        insight: "Cosmic remixes land best when they feel flattering, vivid, and instantly postable.",
+        signature: `COSMIC-${String(scoreSeed % 1000).padStart(3, "0")}`,
+        sharePrompt: "Share the cosmic version and let someone else reveal theirs.",
+        accent: pickAccent("cosmic"),
+        badgeLabel: "AI aura preview"
+      }
+    };
+  }
+
+  return {
+    status: "ok",
+    mode: "synthetic-preview",
+    template: payload.template,
+    artifact: {
+      hook: payload.result.hook,
+      title: `${payload.result.title} Remix`,
+      body: `${payload.result.body} This upgraded version is tuned to feel more personal and more share-ready.`,
+      insight: payload.result.insight,
+      signature: `${payload.result.signature}-AI`,
+      sharePrompt: "Share the upgraded version and invite someone else to make theirs.",
+      accent: pickAccent("cosmic"),
+      badgeLabel: "AI preview",
+      posterImageDataUrl:
+        payload.imageRecipeId === "past-life-vintage-poster"
+          ? buildGeneratedPosterDataUrl({
+              recipeId: payload.imageRecipeId,
+              headline: "No one is born without a past life",
+              primaryName: name,
+              derivedName,
+              body: payload.result.body,
+              insight: "Hidden memory",
+              accent: pickAccent("cosmic")
+            })
+          : undefined
+    }
+  };
 }
 
 function resolveFeedSelection(
@@ -590,6 +814,31 @@ export const runtime = {
     this.state.discoveryFeedItems = [...this.state.discoveryFeedItems, ...nextPage.items];
     this.state.discoveryFeedNextCursor = nextPage.nextCursor;
     return nextPage.items;
+  },
+
+  async requestArtifactRemix(payload: ArtifactRemixRequest): Promise<ArtifactRemixResponse | null> {
+    const endpoint = resolveArtifactRemixUrl();
+    if (!endpoint) {
+      return synthesizeArtifactRemix(payload);
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        return synthesizeArtifactRemix(payload);
+      }
+
+      const data = (await response.json()) as unknown;
+      return isArtifactRemixResponse(data) ? data : synthesizeArtifactRemix(payload);
+    } catch {
+      return synthesizeArtifactRemix(payload);
+    }
   },
 
   getUnlockLabel(test: TestDefinition): string | null {

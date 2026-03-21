@@ -8,6 +8,7 @@
   "subtitleKey": "test.hiddenGift.subtitle",
   "inputMode": "tap-photo",
   "artifactRecipeId": "identity-aura-portrait",
+  "thumbnailRecipeId": "touch-reveal-thumb",
   "styleFamily": "hidden-gift",
   "viralHook": {
     "curiosity": "What hidden gift do people feel around you before they can explain it?",

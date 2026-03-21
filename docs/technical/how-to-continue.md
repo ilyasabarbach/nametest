@@ -68,8 +68,11 @@ Recent progress already made:
 - reward-state persistence in the runtime is now fixed, so the older stuck "unlocking secret reading" behavior should no longer bleed into later runs
 - the older progression summary callout has been removed from the main result surface so results behave more like poster-plus-feed pages than reward dashboards
 - the test schema now includes first-pass viral/AI-ready metadata, and the content package now has an artifact recipe registry instead of leaving that strategy only in docs
+- the schema now also includes `imageRecipeId` and `thumbnailRecipeId`, and the content package now has a generated-image recipe layer so feed/result art direction can scale without hardcoding each new family inside scenes
 - result/share template selection has started moving onto that recipe layer, so future sessions should keep extending recipe-driven artifact families instead of hardcoding new poster logic in scenes
 - the newer editorial batch now uses that recipe layer in practice, so portrait / headline / storybook / poster presentation is no longer only a theoretical plan
+- result pages now expose visible remix choices so the player can switch between recipe-backed artifact families before sharing, which lands the next real step from the viral-growth plan without requiring AI yet
+- the deeper AI/image-generation groundwork now exists in schema and backend seams, but the live product has intentionally gone back to normal remix-only result pages and manual/static thumbnails because the current free/fallback image quality was not strong enough
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector
@@ -155,4 +158,4 @@ The next session should:
 1. run the full gameplay loop on-device with special attention to feed continuity, result continuity, retry flow, locale switching, and the new social-page chrome on small screens
 2. note every remaining issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, locale switching, selected-story continuity, short-height device layouts, the new settings menu, and the first touch-photo readings
 3. fix the concrete QA issues that shake out of that pass before shifting platform effort deeper into Android
-4. after QA stabilizes, tackle bundle splitting, translation quality review, more human-photo-led feed art direction, deeper live-content control, visible remix UI, and the first optional AI remix endpoint on top of the new recipe layer
+4. after QA stabilizes, tackle bundle splitting, translation quality review, stronger human-photo-led thumbnail curation, deeper live-content control, and only then revisit AI image generation if it can clearly beat manual art quality

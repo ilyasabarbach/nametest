@@ -58,6 +58,9 @@ This is the quickest "where are we now?" document.
 - Result pages no longer foreground the old "unlocked this run" progression summary block, so the poster and browse flow stay primary
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result/share artifact selection is now starting to move onto an explicit recipe layer instead of relying only on hardcoded symbol-to-template guesses
+- Result pages now expose visible remix UI on top of that recipe layer, so players can switch the poster family in-place before sharing instead of only seeing the default artifact treatment
+- The deeper viral/AI groundwork now exists in schema and backend seams, but the user-facing `Make AI version` button is intentionally removed again for now because the free/fallback image quality did not yet clear the product bar
+- Tests now also carry first-pass `imageRecipeId` and `thumbnailRecipeId` metadata, but live feed art is intentionally back on manual/static thumbnails for now until curated test-by-test artwork is ready
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected
 - A rotating live event is shown
@@ -110,6 +113,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Result page keeps share, retry, reward, and next-story continuation working together without dead-ending the player
 - Result page keeps the additional "more popular stories" browse layer working as a continuation surface instead of feeling like a final screen
 - Result page uses the lower browse layer to select from the full editorial catalog without breaking the main continuation composer
+- Result pages should currently expose only the normal remix choices again, with no `Make AI version` button in the live product
 - Editing the partner name on the result page carries cleanly through retry, next-story continuation, and reward flow
 - Single-name readings hide the extra partner input where appropriate and keep share/retry copy from rendering awkward empty-name combinations
 - Share action generates a card image
@@ -142,7 +146,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Supported locales exist, but translation quality still needs native-speaker review before release quality can be claimed
 - The discovery feed is now API-driven in local architecture, but it is not yet a true CMS/live-ops backend with remote editorial control
 - The landing-page style flow now extends further into the result page with an explicit browse-more layer, but it is still not yet a true standalone dedicated test page with full feed/result continuity
-- The viral/AI strategy is now documented, the schema foundation exists, and the first larger test batch is live, but the next real gap is still visible remix UI plus an optional AI artifact endpoint for a very small controlled subset
+- The viral/AI strategy is now documented and the deeper schema/backend groundwork exists, but user-facing AI image generation is intentionally parked again until curated manual thumbnails exist and a clearly better image-generation path is ready
 - Real-device QA is now finding narrower polish issues, especially around short-height behavior, rather than basic structural layout failure
 - Persistence and back continuity are stronger now, but they still need real-device verification across Android pause/resume, process death, and share-return edge cases
 - Android-style back/home continuity is improving and now uses a lightweight scene-history path, but the full scene model still is not yet a true URL-like page stack

@@ -8,6 +8,8 @@
   "subtitleKey": "test.pastLife.subtitle",
   "inputMode": "tap-photo",
   "artifactRecipeId": "storybook-echo-cover",
+  "imageRecipeId": "past-life-vintage-poster",
+  "thumbnailRecipeId": "vintage-portrait-thumb",
   "styleFamily": "past-life-story",
   "viralHook": {
     "curiosity": "What kind of past life still echoes every time people say your name?",

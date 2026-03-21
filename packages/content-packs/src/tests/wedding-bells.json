@@ -8,6 +8,7 @@
   "subtitleKey": "test.wedding.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-cosmic-poster",
+  "thumbnailRecipeId": "duo-romance-thumb",
   "styleFamily": "future-romance",
   "viralHook": {
     "curiosity": "Do these names feel like quiet promise or full wedding fireworks?",

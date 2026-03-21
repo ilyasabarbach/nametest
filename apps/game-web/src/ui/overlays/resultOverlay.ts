@@ -16,6 +16,18 @@ type ResultStory = {
   partnerLabel?: string;
 };
 
+type ResultArtifactState = {
+  hook: string;
+  title: string;
+  body: string;
+  insight: string;
+  signature: string;
+  shareHint: string;
+  accent: string;
+  badgeLabel?: string;
+  posterImageDataUrl?: string;
+};
+
 export function showResultOverlay(args: {
   socialBrandLabel: string;
   homeButtonLabel: string;
@@ -32,6 +44,10 @@ export function showResultOverlay(args: {
   signatureLabel: string;
   shareHint: string;
   shareLabel: string;
+  remixTitle?: string;
+  remixBody?: string;
+  remixOptions?: Array<{ template: ArtifactTemplate; label: string }>;
+  aiRemixLabel?: string;
   progressTitle?: string;
   partnerName: string;
   partnerLabel: string;
@@ -54,7 +70,8 @@ export function showResultOverlay(args: {
   onChangeLocale: (locale: HomeFeedLocale) => Promise<void> | void;
   onSelectStory?: (testId: string, storyId: string) => void;
   onStartNext?: (testId: string, storyId: string, partnerName: string) => void;
-  onShare: () => void;
+  onRequestAiRemix?: (template: ArtifactTemplate) => Promise<Partial<ResultArtifactState> | null>;
+  onShare: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
   onReward: () => void;
   rewardVisible: boolean;
   accent: string;
@@ -63,6 +80,18 @@ export function showResultOverlay(args: {
   const panel = document.createElement("section");
   panel.className = "hud-panel hud-panel--result-feed hud-stack";
   const template = args.template ?? "cosmic";
+  let currentTemplate = template;
+  let currentArtifact: ResultArtifactState = {
+    hook: args.hook,
+    title: args.title,
+    body: args.body,
+    insight: args.insight,
+    signature: args.signature,
+    shareHint: args.shareHint,
+    accent: args.accent,
+    badgeLabel: "",
+    posterImageDataUrl: ""
+  };
   const stories = [...(args.nextStories ?? []), ...(args.browseStories ?? [])];
   const retryPartnerVisible = args.retryPartnerVisible ?? true;
 
@@ -100,18 +129,20 @@ export function showResultOverlay(args: {
       </div>
       <div class="hud-social-chrome__right"></div>
     </div>
-    <div class="hud-result-poster hud-result-poster--${template} hud-stack">
+    <div class="hud-result-poster hud-result-poster--${template} hud-stack" data-result-poster>
       <div class="hud-result-poster__glow" style="--result-accent:${args.accent};"></div>
+      <img class="hud-result-poster__image hidden" data-artifact-poster-image alt="${args.testLabel}" />
       <div class="hud-result-poster__content hud-stack">
         <span class="hud-result-kicker">${args.testLabel}</span>
-        <p class="hud-result-hook" style="color:${args.accent}">${args.hook}</p>
-        <h2>${args.title}</h2>
+        <span class="hud-result-ai-badge hidden" data-artifact-badge></span>
+        <p class="hud-result-hook" style="color:${args.accent}" data-artifact-hook>${args.hook}</p>
+        <h2 data-artifact-title>${args.title}</h2>
         <div class="hud-score" style="color:${args.accent}">${args.score}</div>
-        <p>${args.body}</p>
-        <p class="hud-label">${args.insight}</p>
-        <p class="hud-label">${args.signatureLabel}: ${args.signature}</p>
+        <p data-artifact-body>${args.body}</p>
+        <p class="hud-label" data-artifact-insight>${args.insight}</p>
+        <p class="hud-label" data-artifact-signature>${args.signatureLabel}: ${args.signature}</p>
       </div>
-      <p class="hud-result-share-hint">${args.shareHint}</p>
+      <p class="hud-result-share-hint" data-artifact-share-hint>${args.shareHint}</p>
     </div>
     <div class="hud-pill-row hud-pill-row-wide">
       ${args.meta
@@ -136,6 +167,38 @@ export function showResultOverlay(args: {
         ${args.rewardVisible ? `<button class="hud-button secondary" type="button" data-action="reward">${args.rewardLabel}</button>` : ""}
       </div>
     </div>
+    ${
+      args.remixOptions?.length
+        ? `
+          <div class="hud-result-remix hud-stack">
+            <div class="hud-result-remix__copy">
+              <span class="hud-label">${args.remixTitle ?? ""}</span>
+              <strong>${args.remixBody ?? ""}</strong>
+            </div>
+            <div class="hud-result-remix__buttons">
+              ${args.remixOptions
+                .map(
+                  (option) => `
+                    <button
+                      class="hud-remix-chip ${option.template === template ? "selected" : ""}"
+                      type="button"
+                      data-remix-template="${option.template}"
+                    >
+                      ${option.label}
+                    </button>
+                  `
+                )
+                .join("")}
+              ${
+                args.onRequestAiRemix
+                  ? `<button class="hud-remix-chip hud-remix-chip--ai" type="button" data-action="ai-remix">${args.aiRemixLabel ?? "Make AI version"}</button>`
+                  : ""
+              }
+            </div>
+          </div>
+        `
+        : ""
+    }
     ${
       stories.length
         ? `
@@ -177,9 +240,109 @@ export function showResultOverlay(args: {
 
   const retryInput = panel.querySelector<HTMLInputElement>('input[name="retryPartnerName"]');
   const settingsMenu = panel.querySelector<HTMLElement>("[data-settings-menu]");
+  const resultPoster = panel.querySelector<HTMLElement>("[data-result-poster]");
+  const glowEl = panel.querySelector<HTMLElement>(".hud-result-poster__glow");
+  const hookEl = panel.querySelector<HTMLElement>("[data-artifact-hook]");
+  const titleEl = panel.querySelector<HTMLElement>("[data-artifact-title]");
+  const bodyEl = panel.querySelector<HTMLElement>("[data-artifact-body]");
+  const insightEl = panel.querySelector<HTMLElement>("[data-artifact-insight]");
+  const signatureEl = panel.querySelector<HTMLElement>("[data-artifact-signature]");
+  const shareHintEl = panel.querySelector<HTMLElement>("[data-artifact-share-hint]");
+  const badgeEl = panel.querySelector<HTMLElement>("[data-artifact-badge]");
+  const posterImageEl = panel.querySelector<HTMLImageElement>("[data-artifact-poster-image]");
+  const aiRemixButton = panel.querySelector<HTMLButtonElement>('[data-action="ai-remix"]');
 
   retryInput?.addEventListener("input", () => {
     args.onPartnerDraftChange?.(retryInput.value);
+  });
+
+  panel.querySelectorAll<HTMLButtonElement>("[data-remix-template]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const nextTemplate = button.dataset.remixTemplate as ArtifactTemplate | undefined;
+      if (!nextTemplate || nextTemplate === currentTemplate) {
+        return;
+      }
+
+      resultPoster?.classList.remove(`hud-result-poster--${currentTemplate}`);
+      resultPoster?.classList.add(`hud-result-poster--${nextTemplate}`);
+      currentTemplate = nextTemplate;
+
+      panel.querySelectorAll<HTMLElement>("[data-remix-template]").forEach((chip) => {
+        chip.classList.toggle("selected", chip.getAttribute("data-remix-template") === nextTemplate);
+      });
+    });
+  });
+
+  const applyArtifact = (nextArtifact: Partial<ResultArtifactState>) => {
+    currentArtifact = {
+      ...currentArtifact,
+      ...nextArtifact
+    };
+    if (hookEl) {
+      hookEl.textContent = currentArtifact.hook;
+      hookEl.style.color = currentArtifact.accent;
+    }
+    if (titleEl) {
+      titleEl.textContent = currentArtifact.title;
+    }
+    if (bodyEl) {
+      bodyEl.textContent = currentArtifact.body;
+    }
+    if (insightEl) {
+      insightEl.textContent = currentArtifact.insight;
+    }
+    if (signatureEl) {
+      signatureEl.textContent = `${args.signatureLabel}: ${currentArtifact.signature}`;
+    }
+    if (shareHintEl) {
+      shareHintEl.textContent = currentArtifact.shareHint;
+    }
+    if (currentArtifact.posterImageDataUrl) {
+      posterImageEl?.classList.remove("hidden");
+      if (posterImageEl) {
+        posterImageEl.src = currentArtifact.posterImageDataUrl;
+      }
+      resultPoster?.classList.add("hud-result-poster--image-mode");
+    } else {
+      posterImageEl?.classList.add("hidden");
+      resultPoster?.classList.remove("hud-result-poster--image-mode");
+      if (posterImageEl) {
+        posterImageEl.removeAttribute("src");
+      }
+    }
+    resultPoster?.style.setProperty("--result-accent", currentArtifact.accent);
+    glowEl?.style.setProperty("--result-accent", currentArtifact.accent);
+    if (currentArtifact.badgeLabel) {
+      badgeEl?.classList.remove("hidden");
+      if (badgeEl) {
+        badgeEl.textContent = currentArtifact.badgeLabel;
+      }
+      resultPoster?.classList.add("hud-result-poster--ai");
+      aiRemixButton?.classList.add("selected");
+    } else {
+      badgeEl?.classList.add("hidden");
+      resultPoster?.classList.remove("hud-result-poster--ai");
+      aiRemixButton?.classList.remove("selected");
+    }
+  };
+
+  aiRemixButton?.addEventListener("click", async () => {
+    if (!args.onRequestAiRemix || aiRemixButton.disabled) {
+      return;
+    }
+
+    const idleLabel = aiRemixButton.textContent ?? (args.aiRemixLabel ?? "Make AI version");
+    aiRemixButton.disabled = true;
+    aiRemixButton.textContent = `${idleLabel}...`;
+    try {
+      const remixed = await args.onRequestAiRemix(currentTemplate);
+      if (remixed) {
+        applyArtifact(remixed);
+      }
+    } finally {
+      aiRemixButton.textContent = idleLabel;
+      aiRemixButton.disabled = false;
+    }
   });
 
   panel.querySelectorAll<HTMLButtonElement>("[data-locale-id]").forEach((button) => {
@@ -218,7 +381,7 @@ export function showResultOverlay(args: {
     });
   });
 
-  panel.querySelector('[data-action="share"]')?.addEventListener("click", args.onShare);
+  panel.querySelector('[data-action="share"]')?.addEventListener("click", () => args.onShare(currentTemplate, currentArtifact));
   panel.querySelector('[data-action="retry"]')?.addEventListener("click", () => {
     const partnerName = retryInput?.value ?? args.partnerName;
     args.onPartnerDraftChange?.(partnerName);

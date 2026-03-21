@@ -8,6 +8,7 @@
   "subtitleKey": "test.moviePoster.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-tabloid-poster",
+  "thumbnailRecipeId": "movie-poster-thumb",
   "styleFamily": "movie-poster",
   "viralHook": {
     "curiosity": "If your two names became a movie poster, what genre would it be?",

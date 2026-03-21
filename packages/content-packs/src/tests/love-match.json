@@ -8,6 +8,7 @@
   "subtitleKey": "test.loveMatch.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-cosmic-poster",
+  "thumbnailRecipeId": "duo-romance-thumb",
   "styleFamily": "cosmic-romance",
   "viralHook": {
     "curiosity": "Do these two names have chemistry people would screenshot?",

@@ -1,4 +1,4 @@
-import { artifactRecipesById, defaultManifest, defaultTests } from "../../packages/content-packs/src/index";
+import { artifactRecipesById, defaultManifest, defaultTests, generatedImageRecipesById } from "../../packages/content-packs/src/index";
 import { isContentManifest } from "../../packages/backend-contracts/src/contentManifest.schema";
 
 if (!isContentManifest(defaultManifest)) {
@@ -16,6 +16,14 @@ for (const test of defaultTests) {
 
   if (test.artifactRecipeId && !artifactRecipesById.has(test.artifactRecipeId)) {
     throw new Error(`Test ${test.id} references unknown artifact recipe ${test.artifactRecipeId}.`);
+  }
+
+  if (test.imageRecipeId && !generatedImageRecipesById.has(test.imageRecipeId)) {
+    throw new Error(`Test ${test.id} references unknown image recipe ${test.imageRecipeId}.`);
+  }
+
+  if (test.thumbnailRecipeId && !generatedImageRecipesById.has(test.thumbnailRecipeId)) {
+    throw new Error(`Test ${test.id} references unknown thumbnail recipe ${test.thumbnailRecipeId}.`);
   }
 
   if (test.inputMode === "pair-name" && !test.prompts.some((prompt) => prompt.type === "name" && prompt.id === "partnerName")) {

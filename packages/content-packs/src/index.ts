@@ -22,6 +22,8 @@ import results from "./copy/en/results.json";
 export * from "./discovery/homeFeed";
 export * from "./discovery/feedFallback";
 export * from "./artifacts/recipes";
+export * from "./artifacts/imageRecipes";
+export * from "./artifacts/generatedArt";
 export * from "./copy";
 
 export const defaultManifest = manifest as ContentManifest;

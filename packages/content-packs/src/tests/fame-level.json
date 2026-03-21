@@ -8,6 +8,7 @@
   "subtitleKey": "test.fame.subtitle",
   "inputMode": "pair-name",
   "artifactRecipeId": "duo-tabloid-poster",
+  "thumbnailRecipeId": "headline-tabloid-thumb",
   "styleFamily": "headline-energy",
   "viralHook": {
     "curiosity": "Would this name combo rise quietly or turn into full headline energy?",

@@ -14,9 +14,14 @@ type ShareCardOptions = {
   names: string;
   accent: string;
   template?: ArtifactTemplate;
+  posterImageDataUrl?: string;
 };
 
 export async function buildShareCard(options: ShareCardOptions): Promise<string> {
+  if (options.posterImageDataUrl) {
+    return rasterizePosterDataUrl(options.posterImageDataUrl);
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1920;
@@ -136,6 +141,29 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
   wrapText(context, options.sharePrompt, 110, 1640, 840, 46);
 
   return canvas.toDataURL("image/png");
+}
+
+async function rasterizePosterDataUrl(source: string): Promise<string> {
+  const image = await loadImage(source);
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth || image.width || 1080;
+  canvas.height = image.naturalHeight || image.height || 1500;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return source;
+  }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL("image/png");
+}
+
+function loadImage(source: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("image_load_failed"));
+    image.src = source;
+  });
 }
 
 function wrapText(

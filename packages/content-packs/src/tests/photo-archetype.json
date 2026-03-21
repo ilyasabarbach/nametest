@@ -8,6 +8,7 @@
   "subtitleKey": "test.photoArchetype.subtitle",
   "inputMode": "tap-photo",
   "artifactRecipeId": "identity-aura-portrait",
+  "thumbnailRecipeId": "aura-portrait-thumb",
   "styleFamily": "photo-archetype",
   "viralHook": {
     "curiosity": "Tap the photo and reveal the archetype people feel instantly.",
