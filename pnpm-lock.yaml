@@ -120,6 +120,9 @@ importers:
       '@capacitor/share':
         specifier: ^7.0.0
         version: 7.0.0(@capacitor/core@7.6.0)
+      '@capgo/capacitor-social-login':
+        specifier: 7.20.0
+        version: 7.20.0(@capacitor/core@7.6.0)
       '@nametests/core':
         specifier: workspace:*
         version: link:../core
