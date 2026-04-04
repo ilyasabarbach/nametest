@@ -112,6 +112,28 @@ type PersistedAppState = {
 
 const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
 const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
+const TELEGRAM_LAUNCH_TEST_IDS = [
+  "love-match",
+  "wedding-bells",
+  "friendship-score",
+  "secret-crush",
+  "destiny-headline",
+  "past-life-echo",
+  "hidden-gift",
+  "aura-palette",
+  "group-chat-role",
+  "movie-poster"
+] as const;
+
+function resolveAvailableTestsForPlatform(allTests: TestDefinition[], platformId: string): TestDefinition[] {
+  if (platformId !== "telegram") {
+    return allTests;
+  }
+
+  const allowedIds = new Set<string>(TELEGRAM_LAUNCH_TEST_IDS);
+  const filtered = allTests.filter((test) => allowedIds.has(test.id));
+  return filtered.length ? filtered : allTests;
+}
 
 async function loadRemoteConfig(remoteConfigService: IRemoteConfig): Promise<RemoteConfigPayload> {
   const configuredPath = import.meta.env.VITE_REMOTE_CONFIG_URL as string | undefined;
@@ -766,7 +788,7 @@ export const runtime = {
     const dailyReward = claimDailyReward(progress, currentDate);
     const effectiveProgress = dailyReward.progress;
     const dailyFeatured = selectDailyFeaturedTest(manifest, defaultTests, dateKey);
-    const availableTests = defaultTests;
+    const availableTests = resolveAvailableTestsForPlatform(defaultTests, this.state.platform.id);
     const activeTest =
       availableTests.find((test) => test.id === dailyFeatured.id) ??
       availableTests.find((test) => test.id === remoteConfig.featuredTestId) ??
@@ -1207,6 +1229,48 @@ export const runtime = {
     };
   },
 
+  privateBuildLocalTelegramShare(payload: {
+    text: string;
+    title?: string;
+    imageDataUrl?: string;
+    filename?: string;
+    template?: ArtifactRemixRequest["template"];
+  }): TelegramPrepareShareResponse | null {
+    if (this.state.platform.id !== "telegram") {
+      return null;
+    }
+
+    const botUsername =
+      normalizeBotUsername(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) ??
+      DEFAULT_TELEGRAM_BOT_USERNAME;
+    if (!botUsername) {
+      return null;
+    }
+
+    const state = this.privateBuildTelegramStartState(payload.template);
+    const encodedState = btoa(JSON.stringify(state))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+    const miniAppShortName =
+      (import.meta.env.VITE_TELEGRAM_MINI_APP_SHORT_NAME as string | undefined)?.trim() ||
+      DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
+    const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
+    const deepLinkUrl = `https://t.me${basePath}?startapp=${encodedState}`;
+    const shareUrl = new URL("https://t.me/share/url");
+    shareUrl.searchParams.set("url", deepLinkUrl);
+    shareUrl.searchParams.set("text", payload.text);
+
+    return {
+      status: "ok",
+      deepLinkUrl,
+      shareUrl: shareUrl.toString(),
+      shareText: payload.text,
+      storyWidgetLinkUrl: deepLinkUrl,
+      storyWidgetLinkName: this.state.copy["result.makeYours"] ?? "Make yours"
+    };
+  },
+
   async prepareTelegramShare(payload: {
     text: string;
     title?: string;
@@ -1247,34 +1311,7 @@ export const runtime = {
       }
     }
 
-    const botUsername =
-      normalizeBotUsername(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) ??
-      DEFAULT_TELEGRAM_BOT_USERNAME;
-    if (!botUsername) {
-      return null;
-    }
-
-    const encodedState = btoa(JSON.stringify(request.state))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "");
-    const miniAppShortName =
-      (import.meta.env.VITE_TELEGRAM_MINI_APP_SHORT_NAME as string | undefined)?.trim() ||
-      DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
-    const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
-    const deepLinkUrl = `https://t.me${basePath}?startapp=${encodedState}`;
-    const shareUrl = new URL("https://t.me/share/url");
-    shareUrl.searchParams.set("url", deepLinkUrl);
-    shareUrl.searchParams.set("text", payload.text);
-
-    return {
-      status: "ok",
-      deepLinkUrl,
-      shareUrl: shareUrl.toString(),
-      shareText: payload.text,
-      storyWidgetLinkUrl: deepLinkUrl,
-      storyWidgetLinkName: this.state.copy["result.makeYours"] ?? "Make yours"
-    };
+    return this.privateBuildLocalTelegramShare(payload);
   },
 
   async shareResultArtifact(payload: {
@@ -1284,6 +1321,18 @@ export const runtime = {
     filename?: string;
     template?: ArtifactRemixRequest["template"];
   }): Promise<void> {
+    if (this.state.platform.id === "telegram") {
+      const localTelegramShare = this.privateBuildLocalTelegramShare(payload);
+      await this.state.share.share({
+        title: payload.title,
+        text: localTelegramShare?.shareText ?? payload.text,
+        linkUrl: localTelegramShare?.deepLinkUrl,
+        telegramShareUrl: localTelegramShare?.shareUrl,
+        telegramMessageId: localTelegramShare?.messageId
+      });
+      return;
+    }
+
     const telegramShare = await this.prepareTelegramShare(payload);
     await this.state.share.share({
       title: payload.title,
@@ -1413,7 +1462,7 @@ export const runtime = {
   },
 
   refreshAvailability(): void {
-    this.state.availableTests = this.state.allTests;
+    this.state.availableTests = resolveAvailableTestsForPlatform(this.state.allTests, this.state.platform.id);
     this.state.registry = new TestRegistry(this.state.availableTests);
   }
 };

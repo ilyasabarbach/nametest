@@ -127,6 +127,9 @@ Recent Telegram-specific progress already made:
 - `apps/discovery-feed-api/src/index.ts` now has local endpoints for Telegram init verification, `startapp` resolution, prepared share payloads, and optional story-media hosting
 - result pages now support Telegram-style `Share to chat` and optional `Share to story` actions when the deployed environment supports them
 - platform profile handling is now generic enough that Telegram user data and `photo_url` can feed the same poster pipeline as other optional profile-image flows
+- Telegram chat-share now uses a fast local deeplink path instead of waiting on share-card rendering first, which fixes the earlier "tap share and nothing happens" behavior on Telegram clients
+- the Telegram branch now also exposes a tighter curated launch catalog and hides the louder reward/collection stat pills on Telegram home/result surfaces
+- Telegram resume after a share handoff now records a lightweight `share_returned` analytics event so re-entry can be measured during launch QA
 
 ## Files Most Likely To Need Changes Next
 
@@ -192,5 +195,5 @@ The next session should:
 1. run the full gameplay loop on-device with special attention to feed continuity, result continuity, retry flow, locale switching, and the new social-page chrome on small screens
 2. note every remaining issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, locale switching, selected-story continuity, short-height device layouts, the new settings menu, and the first touch-photo readings
 3. finish the Telegram operational checklist: bot setup, public HTTPS hosting, `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` / `TELEGRAM_PUBLIC_BASE_URL` configuration, and live `startapp` verification
-4. verify Telegram `Share to chat` and `Share to story` behavior on actual Telegram clients and fix any concrete re-entry or share-return bugs
+4. verify Telegram `Share to chat` and `Share to story` behavior on actual Telegram clients and confirm the new fast chat-share path plus `share_returned` telemetry behave correctly
 5. after QA stabilizes across Android and Telegram, keep tuning the narrow `past-life-echo` poster path, especially the new Google-photo + AI layering, until it clearly beats the previous mock result on-device, then tackle bundle splitting, translation quality review, stronger human-photo-led thumbnail curation, deeper live-content control, and only then expand AI image generation beyond that first family

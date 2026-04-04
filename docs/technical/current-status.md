@@ -20,6 +20,9 @@ This is the quickest "where are we now?" document.
 - Telegram result flow can now swap to platform-native share behavior, including `Share to chat`, optional `Share to story`, and exact-test re-entry via prepared `startapp` links
 - Telegram `Share to chat` now has a hardened open path (native Telegram link, then Telegram openLink, then browser fallback) so button taps do not silently no-op on stricter Telegram clients
 - Telegram deep links now normalize usernames with or without `@` and prefer the Mini App short-name path (`/bot/short_name?startapp=...`) for better re-entry consistency
+- Telegram chat-share now skips slow share-card generation and uses an immediate local deeplink/share URL path so the share surface still opens within the original tap gesture on Telegram clients
+- Telegram launch mode now uses a tighter curated catalog instead of the full experimental set, and Telegram home/result surfaces now de-emphasize reward/collection stats so the app reads more like a social object than a game dashboard
+- Telegram lifecycle now records a lightweight `share_returned` signal when the app resumes after a share handoff, which closes one of the minimum telemetry gaps from the launch plan
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout
@@ -124,6 +127,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Telegram native settings/back buttons should mirror the same settings menu and scene-navigation behavior the web/app UI already exposes
 - Telegram share-to-chat should now prepare a result-specific deep link that re-enters the exact test/remix state instead of dropping recipients into generic home
 - Telegram share button should now always trigger a visible share navigation path even when one Telegram WebApp API method is unavailable in a specific client build
+- Telegram chat-share should now open without waiting on share-card image rendering, so tapping the button inside Telegram should feel immediate
 - Telegram story-share should only appear when `VITE_TELEGRAM_PUBLIC_BASE_URL` is configured and the API can serve a public result poster URL
 - Daily reward appears only once per day
 - Test reveal pacing feels good across repeated plays

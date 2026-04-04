@@ -17,7 +17,9 @@ export class HomeScene extends Phaser.Scene {
     const locale = runtime.locale;
     const daily = runtime.getDailyFeatured();
     const activeEvent = runtime.getActiveEvent();
-    const feedItems = this.decorateFeedItems(runtime.getDiscoveryFeedItems());
+    const availableTests = runtime.getAvailableTests();
+    const allowedTestIds = new Set(availableTests.map((test) => test.id));
+    const feedItems = this.decorateFeedItems(runtime.getDiscoveryFeedItems().filter((item) => allowedTestIds.has(item.testId)));
     const homeDraftNames = runtime.getHomeDraftNames();
     const homeSelection = runtime.getHomeSelection();
     const selectedTestId = homeSelection.selectedTestId;
@@ -51,7 +53,8 @@ export class HomeScene extends Phaser.Scene {
       locales: runtime.getSupportedLocales(),
       currentLocale: locale,
       nextUnlock: null,
-      tests: runtime.state.allTests.map((test) => {
+      showStats: runtime.platform.id !== "telegram",
+      tests: availableTests.map((test) => {
         const primaryPrompt = test.prompts.find(
           (prompt): prompt is Extract<(typeof test.prompts)[number], { type: "name" }> =>
             prompt.type === "name" && prompt.id === "primaryName"
@@ -84,7 +87,7 @@ export class HomeScene extends Phaser.Scene {
       initialSelectedFeedItemId: homeSelection.selectedFeedItemId,
       onSelectTest: (testId, feedItemId) => {
         runtime.setHomeSelection(testId, feedItemId);
-        const selectedTest = runtime.state.allTests.find((test) => test.id === testId);
+        const selectedTest = availableTests.find((test) => test.id === testId);
         if (selectedTest && !runtime.getUnlockLabel(selectedTest)) {
           runtime.selectTest(testId, feedItemId);
         }
@@ -107,7 +110,7 @@ export class HomeScene extends Phaser.Scene {
         runtime.setHomeDraftNames(primaryName, partnerName);
       },
       onSubmit: (selectedTestId, selectedFeedItemId, primaryName, partnerName) => {
-        const selectedTest = runtime.state.allTests.find((test) => test.id === selectedTestId);
+        const selectedTest = availableTests.find((test) => test.id === selectedTestId);
         const hasPrimaryPrompt =
           selectedTest?.prompts.some((prompt) => prompt.type === "name" && prompt.id === "primaryName") ?? true;
         const requiresPartner =
@@ -166,10 +169,11 @@ export class HomeScene extends Phaser.Scene {
   }
 
   private decorateFeedItems(items: DiscoveryFeedItemPayload[]) {
+    const availableTests = runtime.getAvailableTests();
     return items.map((item) => ({
       ...item,
       imageUrl: homeFeedThumbs[item.imageKey] ?? homeFeedThumbs[item.testId],
-      lockedLabel: runtime.getUnlockLabel(runtime.state.allTests.find((entry) => entry.id === item.testId)!)
+      lockedLabel: runtime.getUnlockLabel(availableTests.find((entry) => entry.id === item.testId)!)
     }));
   }
 }

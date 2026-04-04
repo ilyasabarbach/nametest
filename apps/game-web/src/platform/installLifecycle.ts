@@ -1,6 +1,8 @@
 import type Phaser from "phaser";
 import { runtime } from "../GameRuntime";
 
+const SHARE_RETURN_KEY = "telegram-pending-share-return";
+
 function getActiveSceneKeys(game: Phaser.Game): string[] {
   return game.scene.getScenes(true).map((scene) => scene.scene.key);
 }
@@ -26,6 +28,29 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
       });
     },
     resumeGame() {
+      const pendingShareReturn = window.sessionStorage.getItem(SHARE_RETURN_KEY);
+      if (pendingShareReturn) {
+        window.sessionStorage.removeItem(SHARE_RETURN_KEY);
+        try {
+          const payload = JSON.parse(pendingShareReturn) as {
+            surface: string;
+            testId: string;
+            resultKey: string;
+          };
+          runtime.analytics.track({
+            name: "share_returned",
+            payload: {
+              platform: runtime.platform.id,
+              surface: payload.surface,
+              testId: payload.testId,
+              resultKey: payload.resultKey
+            }
+          });
+        } catch {
+          // Ignore malformed share-return markers.
+        }
+      }
+
       if (activeSceneKeys.size === 0) {
         return;
       }

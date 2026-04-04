@@ -7,4 +7,5 @@ export type AnalyticsEvent =
   | { name: "reward_granted"; payload: { testId: string } }
   | { name: "result_shared"; payload: { testId: string; resultKey: string } }
   | { name: "share_started"; payload: { platform: string; surface: string; testId: string; resultKey: string } }
-  | { name: "share_sent"; payload: { platform: string; surface: string; testId: string; resultKey: string } };
+  | { name: "share_sent"; payload: { platform: string; surface: string; testId: string; resultKey: string } }
+  | { name: "share_returned"; payload: { platform: string; surface: string; testId: string; resultKey: string } };

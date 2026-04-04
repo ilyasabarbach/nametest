@@ -207,6 +207,9 @@ The closest Telegram equivalent to old Facebook Instant virality is not "being l
 - the runtime can now request a generic platform profile and reuse Telegram `photo_url` in the same poster/share path used by other optional profile-image flows
 - `apps/discovery-feed-api/src/index.ts` now exposes local backend endpoints for Telegram init verification, `startapp` resolution, prepared share payloads, and optional story-media hosting
 - the result UI now supports Telegram-style `Share to chat` and optional `Share to story` actions instead of only the generic browser/app share language
+- Telegram chat-share now uses an immediate local deeplink/share-url path rather than waiting on share-card generation first, which makes the share surface much more reliable inside Telegram clients
+- the Telegram branch now also uses a tighter launch catalog and lower-profile result/home stats so the product reads more like a share-first Telegram social object than a progression-heavy game shell
+- Telegram resume after share now emits a lightweight `share_returned` event so the minimum launch telemetry loop is represented in code
 
 ### What Is Still Missing Before Telegram Release
 
@@ -233,6 +236,7 @@ The closest Telegram equivalent to old Facebook Instant virality is not "being l
 - result sharing should always route back into the same test/remix state through `startapp`
 - visible progression systems should stay lower-profile on Telegram surfaces so the product reads like a social object first
 - Telegram profile photo should be opportunistic, never mandatory; the result must still work when only names are available
+- chat-share reliability matters more than attaching an image to every Telegram chat share; story-share can stay the richer media path while normal chat share stays fast and deterministic
 
 ### Recommended Telegram Launch Catalog
 

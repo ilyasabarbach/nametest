@@ -55,6 +55,7 @@ export function showHomeOverlay(args: {
   rewardValue: number;
   collectionValue: number;
   dailyRewardCoins: number;
+  showStats?: boolean;
   locales: Array<{ id: HomeFeedLocale; label: string; nativeLabel: string }>;
   currentLocale: HomeFeedLocale;
   tests: HomeTest[];
@@ -86,6 +87,7 @@ export function showHomeOverlay(args: {
   let feedItems = [...args.feedItems];
   let hasMoreFeed = args.hasMoreFeed;
   let loadingMore = false;
+  const showStats = args.showStats ?? true;
 
   const panel = document.createElement("form");
   panel.className = "hud-panel hud-panel--home-feed hud-stack";
@@ -275,12 +277,18 @@ export function showHomeOverlay(args: {
           `
           : ""
       }
-      <div class="hud-pill-row hud-pill-row-wide hud-home-stats">
-        <div class="hud-pill"><strong>${args.streakValue}</strong><span>${args.streakLabel}</span></div>
-        <div class="hud-pill"><strong>${args.sessionsValue}</strong><span>${args.sessionsLabel}</span></div>
-        <div class="hud-pill"><strong>${args.rewardValue}</strong><span>${args.rewardsLabel}</span></div>
-        <div class="hud-pill"><strong>${args.collectionValue}</strong><span>${args.collectionLabel}</span></div>
-      </div>
+      ${
+        showStats
+          ? `
+            <div class="hud-pill-row hud-pill-row-wide hud-home-stats">
+              <div class="hud-pill"><strong>${args.streakValue}</strong><span>${args.streakLabel}</span></div>
+              <div class="hud-pill"><strong>${args.sessionsValue}</strong><span>${args.sessionsLabel}</span></div>
+              <div class="hud-pill"><strong>${args.rewardValue}</strong><span>${args.rewardsLabel}</span></div>
+              <div class="hud-pill"><strong>${args.collectionValue}</strong><span>${args.collectionLabel}</span></div>
+            </div>
+          `
+          : ""
+      }
     </div>
   `;
 

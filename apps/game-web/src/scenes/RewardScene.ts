@@ -79,6 +79,7 @@ export class RewardScene extends Phaser.Scene {
     );
     const nextStories = this.buildNextStories();
     const browseStories = this.buildBrowseStories(nextStories);
+    const showTelegramMeta = runtime.platform.id !== "telegram";
 
     showResultOverlay({
       socialBrandLabel: runtime.copy["app.title"],
@@ -116,10 +117,12 @@ export class RewardScene extends Phaser.Scene {
       nextStoryStartLabel: runtime.copy["result.playNext"],
       keepNameLabel: runtime.copy["result.keepName"],
       primaryName: runtime.session.names.primaryName,
-      meta: [
-        { value: String(runtime.progress.rewardCoins), label: runtime.copy["home.rewards"] },
-        { value: String(runtime.progress.collectedResultKeys.length), label: runtime.copy["home.collection"] }
-      ],
+      meta: showTelegramMeta
+        ? [
+            { value: String(runtime.progress.rewardCoins), label: runtime.copy["home.rewards"] },
+            { value: String(runtime.progress.collectedResultKeys.length), label: runtime.copy["home.collection"] }
+          ]
+        : [],
       progressionItems: [],
       nextStories,
       browseStories,
@@ -214,7 +217,7 @@ export class RewardScene extends Phaser.Scene {
         this.scene.start("TestScene");
       },
       onStartNext: (testId, storyId, partnerName) => {
-        const nextTest = runtime.state.allTests.find((test) => test.id === testId);
+        const nextTest = runtime.getAvailableTests().find((test) => test.id === testId);
         const nextRequiresPartner =
           nextTest?.inputMode === "single-name" || nextTest?.inputMode === "tap-photo"
             ? false
@@ -232,26 +235,29 @@ export class RewardScene extends Phaser.Scene {
         this.scene.start("TestScene");
       },
       onShare: async (selectedTemplate, artifact) => {
-        const imageDataUrl = await buildShareCard({
-            brandLabel: runtime.copy["app.title"],
-            hook: artifact.hook,
-            testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
-            title: artifact.title,
-            score: card.score,
-            body: artifact.body,
-            insight: artifact.insight,
-            signature: artifact.signature,
-            signatureLabel: runtime.copy["result.signatureLabel"],
-            sharePrompt: artifact.shareHint,
-            names: this.formatNamesForDisplay(
-              runtime.session.names.primaryName,
-              runtime.session.names.partnerName,
-              runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
-            ),
-            accent: artifact.accent,
-            template: selectedTemplate,
-            posterImageDataUrl: artifact.posterImageDataUrl
-          });
+        const imageDataUrl =
+          runtime.platform.id === "telegram"
+            ? undefined
+            : await buildShareCard({
+                brandLabel: runtime.copy["app.title"],
+                hook: artifact.hook,
+                testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
+                title: artifact.title,
+                score: card.score,
+                body: artifact.body,
+                insight: artifact.insight,
+                signature: artifact.signature,
+                signatureLabel: runtime.copy["result.signatureLabel"],
+                sharePrompt: artifact.shareHint,
+                names: this.formatNamesForDisplay(
+                  runtime.session.names.primaryName,
+                  runtime.session.names.partnerName,
+                  runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
+                ),
+                accent: artifact.accent,
+                template: selectedTemplate,
+                posterImageDataUrl: artifact.posterImageDataUrl
+              });
         runtime.analytics.track({
           name: "share_started",
           payload: {
@@ -261,6 +267,16 @@ export class RewardScene extends Phaser.Scene {
             resultKey: runtime.session.latestResult!.resultKey
           }
         });
+        if (runtime.platform.id === "telegram") {
+          window.sessionStorage.setItem(
+            "telegram-pending-share-return",
+            JSON.stringify({
+              surface: "chat",
+              testId: runtime.session.selectedTest.id,
+              resultKey: runtime.session.latestResult!.resultKey
+            })
+          );
+        }
         await runtime.shareResultArtifact({
           title: runtime.copy["result.secretTitle"],
           text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
@@ -309,6 +325,16 @@ export class RewardScene extends Phaser.Scene {
                 resultKey: runtime.session.latestResult!.resultKey
               }
             });
+            if (runtime.platform.id === "telegram") {
+              window.sessionStorage.setItem(
+                "telegram-pending-share-return",
+                JSON.stringify({
+                  surface: "story",
+                  testId: runtime.session.selectedTest.id,
+                  resultKey: runtime.session.latestResult!.resultKey
+                })
+              );
+            }
             const shared = await runtime.shareResultStoryArtifact({
               title: runtime.copy["result.secretTitle"],
               text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
@@ -380,7 +406,7 @@ export class RewardScene extends Phaser.Scene {
     const feedItemsByTestId = new Map(runtime.getDiscoveryFeedItems().map((item) => [item.testId, item]));
 
     return homeFeedCards.flatMap((card) => {
-      const test = runtime.state.allTests.find((entry) => entry.id === card.testId);
+      const test = runtime.getAvailableTests().find((entry) => entry.id === card.testId);
       if (!test) {
         return [];
       }

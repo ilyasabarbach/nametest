@@ -153,18 +153,24 @@ export function showResultOverlay(args: {
       </div>
       <p class="hud-result-share-hint" data-artifact-share-hint>${args.shareHint}</p>
     </div>
-    <div class="hud-pill-row hud-pill-row-wide">
-      ${args.meta
-        .map(
-          (item) => `
-            <div class="hud-pill">
-              <strong>${item.value}</strong>
-              <span>${item.label}</span>
-            </div>
-          `
-        )
-        .join("")}
-    </div>
+    ${
+      args.meta.length
+        ? `
+          <div class="hud-pill-row hud-pill-row-wide">
+            ${args.meta
+              .map(
+                (item) => `
+                  <div class="hud-pill">
+                    <strong>${item.value}</strong>
+                    <span>${item.label}</span>
+                  </div>
+                `
+              )
+              .join("")}
+          </div>
+        `
+        : ""
+    }
     <div class="hud-result-actions hud-stack">
       <label class="hud-stack ${retryPartnerVisible ? "" : "hidden"}" data-retry-partner-field>
         <span class="hud-label">${args.partnerLabel}</span>
