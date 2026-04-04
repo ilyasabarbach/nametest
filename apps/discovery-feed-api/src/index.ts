@@ -146,6 +146,68 @@ function buildDeepLink(startState: TelegramStartAppState): string | null {
   return `https://t.me${basePath}?startapp=${encodeURIComponent(encodeStartAppState(startState))}`;
 }
 
+async function savePreparedInlineMessage(input: {
+  botToken: string;
+  userId: string;
+  title: string;
+  text: string;
+  deepLinkUrl: string;
+  photoUrl?: string;
+}): Promise<string | null> {
+  const endpoint = `https://api.telegram.org/bot${input.botToken}/savePreparedInlineMessage`;
+  const messageText = `${input.text}\n${input.deepLinkUrl}`;
+  const baseResult = {
+    id: randomUUID(),
+    reply_markup: {
+      inline_keyboard: [[{ text: "Make yours", url: input.deepLinkUrl }]]
+    }
+  };
+  const result = input.photoUrl
+    ? {
+        ...baseResult,
+        type: "photo",
+        photo_url: input.photoUrl,
+        thumbnail_url: input.photoUrl,
+        title: input.title,
+        caption: input.text
+      }
+    : {
+        ...baseResult,
+        type: "article",
+        title: input.title,
+        description: input.text.slice(0, 180),
+        input_message_content: {
+          message_text: messageText
+        }
+      };
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      user_id: input.userId,
+      result,
+      allow_user_chats: true,
+      allow_group_chats: true,
+      allow_channel_chats: true
+    })
+  });
+
+  if (!response.ok) {
+    return null;
+  }
+
+  const payload = (await response.json()) as {
+    ok?: boolean;
+    result?: {
+      id?: string;
+    };
+  };
+  return payload.ok && payload.result?.id ? payload.result.id : null;
+}
+
 function dataUrlToBinary(dataUrl: string): { contentType: string; buffer: Buffer } | null {
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) {
@@ -744,6 +806,7 @@ async function handleTelegramPrepareShareRequest(
     storyWidgetLinkName: "Make yours"
   };
 
+  let publicPosterUrl: string | undefined;
   const publicBaseUrl = process.env.TELEGRAM_PUBLIC_BASE_URL?.trim();
   if (publicBaseUrl && payload.imageDataUrl) {
     cleanExpiredShareMedia();
@@ -752,6 +815,7 @@ async function handleTelegramPrepareShareRequest(
       const storyUrl = new URL(`/api/telegram/share-media/${media.mediaId}`, publicBaseUrl);
       storyUrl.searchParams.set("filename", payload.filename ?? "result.png");
       prepared.storyMediaUrl = storyUrl.toString();
+      publicPosterUrl = prepared.storyMediaUrl;
     }
   } else if (requestUrl.origin !== "null" && payload.imageDataUrl) {
     cleanExpiredShareMedia();
@@ -760,7 +824,27 @@ async function handleTelegramPrepareShareRequest(
       const origin = process.env.TELEGRAM_PUBLIC_BASE_URL?.trim();
       if (origin) {
         prepared.storyMediaUrl = new URL(`/api/telegram/share-media/${media.mediaId}`, origin).toString();
+        publicPosterUrl = prepared.storyMediaUrl;
       }
+    }
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (botToken && payload.userId) {
+    try {
+      const messageId = await savePreparedInlineMessage({
+        botToken,
+        userId: payload.userId,
+        title: payload.title ?? "Cosmic Match result",
+        text: payload.text,
+        deepLinkUrl,
+        photoUrl: publicPosterUrl
+      });
+      if (messageId) {
+        prepared.messageId = messageId;
+      }
+    } catch {
+      // Fall back to URL-based share when prepared message creation fails.
     }
   }
 

@@ -1287,6 +1287,7 @@ export const runtime = {
       title: payload.title,
       imageDataUrl: payload.imageDataUrl,
       filename: payload.filename,
+      userId: this.state.profile?.provider === "telegram" ? this.state.profile.id : undefined,
       state: this.privateBuildTelegramStartState(payload.template)
     };
 
@@ -1322,13 +1323,13 @@ export const runtime = {
     template?: ArtifactRemixRequest["template"];
   }): Promise<void> {
     if (this.state.platform.id === "telegram") {
-      const localTelegramShare = this.privateBuildLocalTelegramShare(payload);
+      const telegramShare = await this.prepareTelegramShare(payload);
       await this.state.share.share({
         title: payload.title,
-        text: localTelegramShare?.shareText ?? payload.text,
-        linkUrl: localTelegramShare?.deepLinkUrl,
-        telegramShareUrl: localTelegramShare?.shareUrl,
-        telegramMessageId: localTelegramShare?.messageId
+        text: telegramShare?.shareText ?? payload.text,
+        linkUrl: telegramShare?.deepLinkUrl,
+        telegramShareUrl: telegramShare?.shareUrl,
+        telegramMessageId: telegramShare?.messageId
       });
       return;
     }

@@ -37,6 +37,7 @@ export type TelegramPrepareShareRequest = {
   title?: string;
   imageDataUrl?: string;
   filename?: string;
+  userId?: string;
   state: TelegramStartAppState;
 };
 
