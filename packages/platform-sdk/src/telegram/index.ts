@@ -382,6 +382,7 @@ function showTelegramShareAssist(shareUrl: string, shareText?: string): { close(
 function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText?: string): void {
   const assist = showTelegramShareAssist(shareUrl, shareText);
   let handoffObserved = false;
+  let bridgeAttempted = false;
   const markHandoff = () => {
     handoffObserved = true;
     assist.close();
@@ -389,41 +390,22 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText
   document.addEventListener("visibilitychange", markHandoff, { once: true });
   window.addEventListener("pagehide", markHandoff, { once: true });
 
-  const forceNavigation = () => {
-    if (handoffObserved) {
-      return;
-    }
-
-    try {
-      window.location.assign(shareUrl);
-      return;
-    } catch {
-      // Fall through to href assignment.
-    }
-
-    window.location.href = shareUrl;
-  };
-
-  const scheduleFallback = () => {
+  const showManualFallback = () => {
     window.setTimeout(() => {
       if (handoffObserved) {
         return;
       }
 
-      forceNavigation();
-      window.setTimeout(() => {
-        if (!handoffObserved) {
-          assist.markManual();
-          showTelegramShareFallback(shareUrl, shareText);
-        }
-      }, 500);
-    }, 220);
+      assist.markManual();
+      showTelegramShareFallback(shareUrl, shareText);
+    }, bridgeAttempted ? 900 : 500);
   };
 
   try {
     if (webApp?.openTelegramLink) {
+      bridgeAttempted = true;
       webApp.openTelegramLink(shareUrl);
-      scheduleFallback();
+      showManualFallback();
       return;
     }
   } catch {
@@ -432,8 +414,9 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText
 
   try {
     if (webApp?.openLink) {
+      bridgeAttempted = true;
       webApp.openLink(shareUrl, { try_instant_view: false });
-      scheduleFallback();
+      showManualFallback();
       return;
     }
   } catch {
@@ -442,13 +425,12 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText
 
   const popup = window.open(shareUrl, "_blank", "noopener,noreferrer");
   if (!popup) {
-    forceNavigation();
-    window.setTimeout(() => {
-      if (!handoffObserved) {
-        assist.markManual();
-        showTelegramShareFallback(shareUrl, shareText);
-      }
-    }, 500);
+    try {
+      window.location.assign(shareUrl);
+    } catch {
+      window.location.href = shareUrl;
+    }
+    showManualFallback();
   }
 }
 
