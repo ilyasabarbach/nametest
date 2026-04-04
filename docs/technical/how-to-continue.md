@@ -130,6 +130,7 @@ Recent Telegram-specific progress already made:
 - Telegram chat-share now uses a fast local deeplink path instead of waiting on share-card rendering first, which fixes the earlier "tap share and nothing happens" behavior on Telegram clients
 - the Telegram branch now also exposes a tighter curated launch catalog and hides the louder reward/collection stat pills on Telegram home/result surfaces
 - Telegram resume after a share handoff now records a lightweight `share_returned` analytics event so re-entry can be measured during launch QA
+- Telegram chat-share now also shows an in-app assist sheet with `Open share` / `Copy link` fallback actions, so stricter Telegram clients no longer fail invisibly when the first share bridge call is swallowed
 
 ## Files Most Likely To Need Changes Next
 

@@ -127,10 +127,257 @@ function toTelegramShareUrl(payload: SharePayload): string | null {
   return shareUrl.toString();
 }
 
-function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
+function showTelegramShareFallback(shareUrl: string, shareText?: string): void {
+  const existing = document.querySelector<HTMLElement>("[data-telegram-share-fallback]");
+  existing?.remove();
+
+  const backdrop = document.createElement("div");
+  backdrop.setAttribute("data-telegram-share-fallback", "true");
+  backdrop.style.position = "fixed";
+  backdrop.style.inset = "0";
+  backdrop.style.zIndex = "99999";
+  backdrop.style.background = "rgba(12, 16, 28, 0.78)";
+  backdrop.style.display = "flex";
+  backdrop.style.alignItems = "center";
+  backdrop.style.justifyContent = "center";
+  backdrop.style.padding = "20px";
+
+  const card = document.createElement("div");
+  card.style.width = "min(420px, 100%)";
+  card.style.background = "#fff8ee";
+  card.style.borderRadius = "20px";
+  card.style.boxShadow = "0 18px 48px rgba(0, 0, 0, 0.22)";
+  card.style.padding = "20px";
+  card.style.display = "grid";
+  card.style.gap = "12px";
+  card.style.fontFamily = "Georgia, serif";
+  card.style.color = "#23160f";
+
+  const title = document.createElement("strong");
+  title.textContent = "Telegram share needs a manual nudge";
+  title.style.fontSize = "20px";
+
+  const body = document.createElement("p");
+  body.textContent = "The automatic share handoff did not open. You can still open the Telegram share screen directly.";
+  body.style.margin = "0";
+  body.style.lineHeight = "1.45";
+
+  const linkBox = document.createElement("textarea");
+  linkBox.value = shareUrl;
+  linkBox.readOnly = true;
+  linkBox.style.width = "100%";
+  linkBox.style.minHeight = "90px";
+  linkBox.style.borderRadius = "12px";
+  linkBox.style.border = "1px solid #e4cfbf";
+  linkBox.style.padding = "10px 12px";
+  linkBox.style.fontFamily = "Consolas, monospace";
+  linkBox.style.fontSize = "12px";
+  linkBox.style.background = "#fffdf8";
+  linkBox.style.color = "#4c2f1f";
+
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.flexWrap = "wrap";
+  actions.style.gap = "10px";
+
+  const openButton = document.createElement("button");
+  openButton.type = "button";
+  openButton.textContent = "Open Telegram share";
+  openButton.style.flex = "1 1 180px";
+  openButton.style.border = "0";
+  openButton.style.borderRadius = "14px";
+  openButton.style.padding = "12px 16px";
+  openButton.style.background = "#f36d32";
+  openButton.style.color = "#fff";
+  openButton.style.fontWeight = "700";
+  openButton.style.cursor = "pointer";
+  openButton.addEventListener("click", () => {
+    window.location.href = shareUrl;
+  });
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.textContent = "Copy share link";
+  copyButton.style.flex = "1 1 140px";
+  copyButton.style.border = "1px solid #d9beaa";
+  copyButton.style.borderRadius = "14px";
+  copyButton.style.padding = "12px 16px";
+  copyButton.style.background = "#fff";
+  copyButton.style.color = "#5b3826";
+  copyButton.style.fontWeight = "700";
+  copyButton.style.cursor = "pointer";
+  copyButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      copyButton.textContent = "Link copied";
+    } catch {
+      linkBox.focus();
+      linkBox.select();
+      copyButton.textContent = "Select and copy";
+    }
+  });
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.textContent = "Close";
+  closeButton.style.border = "0";
+  closeButton.style.background = "transparent";
+  closeButton.style.color = "#7a5540";
+  closeButton.style.fontWeight = "700";
+  closeButton.style.cursor = "pointer";
+  closeButton.addEventListener("click", () => {
+    backdrop.remove();
+  });
+
+  if (shareText) {
+    const sharePreview = document.createElement("p");
+    sharePreview.textContent = shareText;
+    sharePreview.style.margin = "0";
+    sharePreview.style.fontSize = "13px";
+    sharePreview.style.lineHeight = "1.45";
+    sharePreview.style.color = "#7a5540";
+    card.append(title, body, sharePreview, linkBox, actions, closeButton);
+  } else {
+    card.append(title, body, linkBox, actions, closeButton);
+  }
+
+  actions.append(openButton, copyButton);
+  backdrop.append(card);
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) {
+      backdrop.remove();
+    }
+  });
+
+  document.body.append(backdrop);
+}
+
+function showTelegramShareAssist(shareUrl: string, shareText?: string): { close(): void; markManual(): void } {
+  const existing = document.querySelector<HTMLElement>("[data-telegram-share-fallback]");
+  existing?.remove();
+
+  const backdrop = document.createElement("div");
+  backdrop.setAttribute("data-telegram-share-fallback", "true");
+  backdrop.style.position = "fixed";
+  backdrop.style.inset = "0";
+  backdrop.style.zIndex = "99999";
+  backdrop.style.background = "rgba(12, 16, 28, 0.52)";
+  backdrop.style.display = "flex";
+  backdrop.style.alignItems = "flex-end";
+  backdrop.style.justifyContent = "center";
+  backdrop.style.padding = "16px";
+
+  const sheet = document.createElement("div");
+  sheet.style.width = "min(460px, 100%)";
+  sheet.style.background = "#fff8ee";
+  sheet.style.borderRadius = "22px 22px 16px 16px";
+  sheet.style.boxShadow = "0 18px 48px rgba(0, 0, 0, 0.24)";
+  sheet.style.padding = "18px";
+  sheet.style.display = "grid";
+  sheet.style.gap = "10px";
+  sheet.style.fontFamily = "Georgia, serif";
+  sheet.style.color = "#23160f";
+
+  const title = document.createElement("strong");
+  title.textContent = "Opening Telegram share";
+  title.style.fontSize = "20px";
+
+  const body = document.createElement("p");
+  body.textContent = "If Telegram does not open right away, use the button below.";
+  body.style.margin = "0";
+  body.style.lineHeight = "1.45";
+
+  const actions = document.createElement("div");
+  actions.style.display = "flex";
+  actions.style.flexWrap = "wrap";
+  actions.style.gap = "10px";
+
+  const openButton = document.createElement("button");
+  openButton.type = "button";
+  openButton.textContent = "Open share";
+  openButton.style.flex = "1 1 180px";
+  openButton.style.border = "0";
+  openButton.style.borderRadius = "14px";
+  openButton.style.padding = "12px 16px";
+  openButton.style.background = "#f36d32";
+  openButton.style.color = "#fff";
+  openButton.style.fontWeight = "700";
+  openButton.style.cursor = "pointer";
+  openButton.addEventListener("click", () => {
+    window.location.href = shareUrl;
+  });
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.textContent = "Copy link";
+  copyButton.style.flex = "1 1 140px";
+  copyButton.style.border = "1px solid #d9beaa";
+  copyButton.style.borderRadius = "14px";
+  copyButton.style.padding = "12px 16px";
+  copyButton.style.background = "#fff";
+  copyButton.style.color = "#5b3826";
+  copyButton.style.fontWeight = "700";
+  copyButton.style.cursor = "pointer";
+  copyButton.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      copyButton.textContent = "Link copied";
+    } catch {
+      copyButton.textContent = "Copy failed";
+    }
+  });
+
+  const closeButton = document.createElement("button");
+  closeButton.type = "button";
+  closeButton.textContent = "Close";
+  closeButton.style.border = "0";
+  closeButton.style.background = "transparent";
+  closeButton.style.color = "#7a5540";
+  closeButton.style.fontWeight = "700";
+  closeButton.style.cursor = "pointer";
+  closeButton.addEventListener("click", () => {
+    backdrop.remove();
+  });
+
+  if (shareText) {
+    const sharePreview = document.createElement("p");
+    sharePreview.textContent = shareText;
+    sharePreview.style.margin = "0";
+    sharePreview.style.fontSize = "13px";
+    sharePreview.style.lineHeight = "1.45";
+    sharePreview.style.color = "#7a5540";
+    sheet.append(title, body, sharePreview, actions, closeButton);
+  } else {
+    sheet.append(title, body, actions, closeButton);
+  }
+
+  actions.append(openButton, copyButton);
+  backdrop.append(sheet);
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) {
+      backdrop.remove();
+    }
+  });
+  document.body.append(backdrop);
+
+  return {
+    close() {
+      backdrop.remove();
+    },
+    markManual() {
+      title.textContent = "Telegram share needs a manual tap";
+      body.textContent = "Telegram did not switch to the share screen automatically. Use Open share or copy the link.";
+      openButton.textContent = "Open Telegram share";
+    }
+  };
+}
+
+function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText?: string): void {
+  const assist = showTelegramShareAssist(shareUrl, shareText);
   let handoffObserved = false;
   const markHandoff = () => {
     handoffObserved = true;
+    assist.close();
   };
   document.addEventListener("visibilitychange", markHandoff, { once: true });
   window.addEventListener("pagehide", markHandoff, { once: true });
@@ -150,10 +397,26 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
     window.location.href = shareUrl;
   };
 
+  const scheduleFallback = () => {
+    window.setTimeout(() => {
+      if (handoffObserved) {
+        return;
+      }
+
+      forceNavigation();
+      window.setTimeout(() => {
+        if (!handoffObserved) {
+          assist.markManual();
+          showTelegramShareFallback(shareUrl, shareText);
+        }
+      }, 500);
+    }, 220);
+  };
+
   try {
     if (webApp?.openTelegramLink) {
       webApp.openTelegramLink(shareUrl);
-      window.setTimeout(forceNavigation, 220);
+      scheduleFallback();
       return;
     }
   } catch {
@@ -163,7 +426,7 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
   try {
     if (webApp?.openLink) {
       webApp.openLink(shareUrl, { try_instant_view: false });
-      window.setTimeout(forceNavigation, 220);
+      scheduleFallback();
       return;
     }
   } catch {
@@ -173,6 +436,12 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
   const popup = window.open(shareUrl, "_blank", "noopener,noreferrer");
   if (!popup) {
     forceNavigation();
+    window.setTimeout(() => {
+      if (!handoffObserved) {
+        assist.markManual();
+        showTelegramShareFallback(shareUrl, shareText);
+      }
+    }, 500);
   }
 }
 
@@ -392,7 +661,7 @@ export const telegramShare: IShare = {
 
     const shareUrl = toTelegramShareUrl(payload);
     if (shareUrl) {
-      openShareUrl(shareUrl, webApp);
+      openShareUrl(shareUrl, webApp, payload.text);
       return;
     }
 
@@ -400,7 +669,7 @@ export const telegramShare: IShare = {
       const fallbackShareUrl = new URL("https://t.me/share/url");
       fallbackShareUrl.searchParams.set("url", "https://t.me");
       fallbackShareUrl.searchParams.set("text", payload.text);
-      openShareUrl(fallbackShareUrl.toString(), webApp);
+      openShareUrl(fallbackShareUrl.toString(), webApp, payload.text);
       return;
     }
 
