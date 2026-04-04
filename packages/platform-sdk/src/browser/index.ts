@@ -7,6 +7,39 @@ import type { IShare, SharePayload } from "../interfaces/IShare";
 import type { IStorage } from "../interfaces/IStorage";
 import { defaultBalanceConfig, defaultFeatureFlags, type AnalyticsEvent } from "@nametests/core";
 
+function canUseClipboard(): boolean {
+  return typeof navigator !== "undefined" && Boolean(navigator.clipboard?.writeText);
+}
+
+function isLikelyTelegramHost(): boolean {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hostWindow = window as Window & {
+    Telegram?: {
+      WebApp?: unknown;
+    };
+    TelegramWebviewProxy?: unknown;
+  };
+  return (
+    Boolean(hostWindow.Telegram?.WebApp) ||
+    Boolean(hostWindow.TelegramWebviewProxy) ||
+    searchParams.has("tgWebAppPlatform") ||
+    searchParams.has("tgWebAppVersion") ||
+    searchParams.has("tgWebAppThemeParams") ||
+    /\bTelegram(?:Bot)?\b/i.test(navigator.userAgent || "")
+  );
+}
+
+function openExternalShareLink(url: string): void {
+  try {
+    window.location.assign(url);
+    return;
+  } catch {
+    // Fall through.
+  }
+
+  window.location.href = url;
+}
+
 export const browserPlatform: IPlatform = {
   id: "browser",
   isOnline: () => navigator.onLine,
@@ -71,23 +104,44 @@ export const browserRemoteConfig: IRemoteConfig = {
 
 export const browserShare: IShare = {
   async share(payload: SharePayload) {
-    if (navigator.share && payload.imageDataUrl) {
-      const response = await fetch(payload.imageDataUrl);
-      const blob = await response.blob();
-      const file = new File([blob], payload.filename ?? "nametests-card.png", { type: "image/png" });
+    if (isLikelyTelegramHost() && payload.telegramShareUrl) {
+      openExternalShareLink(payload.telegramShareUrl);
+      return;
+    }
 
-      if ("canShare" in navigator && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ text: payload.text, title: payload.title, files: [file] });
+    try {
+      if (navigator.share && payload.imageDataUrl) {
+        const response = await fetch(payload.imageDataUrl);
+        const blob = await response.blob();
+        const file = new File([blob], payload.filename ?? "nametests-card.png", { type: "image/png" });
+
+        if ("canShare" in navigator && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ text: payload.text, title: payload.title, files: [file] });
+          return;
+        }
+      }
+
+      if (navigator.share) {
+        await navigator.share({ text: payload.text, title: payload.title });
+        return;
+      }
+    } catch (error) {
+      const shareError = error as DOMException | Error;
+      if (payload.telegramShareUrl && (shareError.name === "NotAllowedError" || shareError.name === "AbortError")) {
+        openExternalShareLink(payload.telegramShareUrl);
         return;
       }
     }
 
-    if (navigator.share) {
-      await navigator.share({ text: payload.text, title: payload.title });
+    if (payload.linkUrl) {
+      openExternalShareLink(payload.linkUrl);
       return;
     }
 
-    await navigator.clipboard.writeText(payload.text);
+    if (canUseClipboard()) {
+      await navigator.clipboard.writeText(payload.text);
+    }
+
     if (payload.imageDataUrl) {
       const anchor = document.createElement("a");
       anchor.href = payload.imageDataUrl;

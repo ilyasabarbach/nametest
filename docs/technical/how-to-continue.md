@@ -131,6 +131,8 @@ Recent Telegram-specific progress already made:
 - the Telegram branch now also exposes a tighter curated launch catalog and hides the louder reward/collection stat pills on Telegram home/result surfaces
 - Telegram resume after a share handoff now records a lightweight `share_returned` analytics event so re-entry can be measured during launch QA
 - Telegram chat-share now also shows an in-app assist sheet with `Open share` / `Copy link` fallback actions, so stricter Telegram clients no longer fail invisibly when the first share bridge call is swallowed
+- Telegram platform detection now also keys off Telegram launch params / webview markers, which protects against Telegram clients that inject the WebApp bridge too late for first-paint platform detection
+- Browser fallback share now catches `NotAllowedError` from `navigator.share` and redirects into Telegram deeplink sharing when the app is clearly running inside a Telegram webview
 
 ## Files Most Likely To Need Changes Next
 

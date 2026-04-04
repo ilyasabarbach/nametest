@@ -67,17 +67,27 @@ function detectPlatform(): PlatformId {
     Telegram?: {
       WebApp?: unknown;
     };
+    TelegramWebviewProxy?: unknown;
     Capacitor?: {
       isNativePlatform?: () => boolean;
       getPlatform?: () => string;
     };
   };
+  const searchParams = new URLSearchParams(window.location.search);
+  const userAgent = navigator.userAgent || "";
+  const isTelegramLaunch =
+    Boolean(hostWindow.Telegram?.WebApp) ||
+    Boolean(hostWindow.TelegramWebviewProxy) ||
+    searchParams.has("tgWebAppPlatform") ||
+    searchParams.has("tgWebAppVersion") ||
+    searchParams.has("tgWebAppThemeParams") ||
+    /\bTelegram(?:Bot)?\b/i.test(userAgent);
 
   if (hostWindow.FBInstant) {
     return "facebook";
   }
 
-  if (hostWindow.Telegram?.WebApp) {
+  if (isTelegramLaunch) {
     return "telegram";
   }
 
