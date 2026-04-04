@@ -273,7 +273,7 @@ function resolveSharedApiOrigin(): string | null {
     }
   }
 
-  return null;
+  return window.location.origin;
 }
 
 function resolveBackendUrl(explicitEnvKey: string, fallbackPath: string): string | null {

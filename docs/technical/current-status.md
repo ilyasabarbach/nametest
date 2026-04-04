@@ -29,6 +29,7 @@ This is the quickest "where are we now?" document.
 - Telegram Web launch parsing now reads `tgWebApp*` params from both the query string and the hash fragment, which fixes the earlier case where Telegram Web passed Mini App context in `#...` and the app misdetected itself as plain browser
 - Telegram chat-share bridge calls now trust the native Telegram handoff first instead of immediately force-navigating to the share URL, which should prevent the duplicate dark `Webpage` tab that appeared alongside the real forward/share surface on live devices
 - Telegram phone share now prefers the native `shareMessage(messageId)` flow via backend-prepared messages, with `t.me/share/url` kept only as fallback, which should eliminate the extra dark webpage task when the backend has a working `TELEGRAM_BOT_TOKEN`
+- Game web now defaults its Telegram/backend calls to same-origin `/api/...` routes, and the repo now includes root serverless Telegram endpoints for init verification, `startapp` resolution, and share preparation, so a Vercel-style deploy can support native Telegram share without requiring the separate discovery-feed API workspace to be deployed first
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout
