@@ -128,9 +128,32 @@ function toTelegramShareUrl(payload: SharePayload): string | null {
 }
 
 function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
+  let handoffObserved = false;
+  const markHandoff = () => {
+    handoffObserved = true;
+  };
+  document.addEventListener("visibilitychange", markHandoff, { once: true });
+  window.addEventListener("pagehide", markHandoff, { once: true });
+
+  const forceNavigation = () => {
+    if (handoffObserved) {
+      return;
+    }
+
+    try {
+      window.location.assign(shareUrl);
+      return;
+    } catch {
+      // Fall through to href assignment.
+    }
+
+    window.location.href = shareUrl;
+  };
+
   try {
     if (webApp?.openTelegramLink) {
       webApp.openTelegramLink(shareUrl);
+      window.setTimeout(forceNavigation, 220);
       return;
     }
   } catch {
@@ -140,13 +163,17 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null): void {
   try {
     if (webApp?.openLink) {
       webApp.openLink(shareUrl, { try_instant_view: false });
+      window.setTimeout(forceNavigation, 220);
       return;
     }
   } catch {
     // Continue to browser fallback.
   }
 
-  window.open(shareUrl, "_blank", "noopener,noreferrer");
+  const popup = window.open(shareUrl, "_blank", "noopener,noreferrer");
+  if (!popup) {
+    forceNavigation();
+  }
 }
 
 async function withCloudStorage<T>(
