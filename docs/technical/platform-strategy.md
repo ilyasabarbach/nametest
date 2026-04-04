@@ -21,6 +21,7 @@ Current readiness by engineering judgment:
 
 - local gameplay prototype: strong
 - Google Play Android release: partial
+- Telegram Mini App release: partial foundation
 - Facebook Instant release: early
 - YouTube Playables release: early-to-partial
 
@@ -35,6 +36,7 @@ Current readiness by engineering judgment:
 - the game now supports multi-language presentation across the supported selector locales
 - the discovery feed now has a real API seam instead of being only a front-end mock
 - the project has a clear platform abstraction package, even though not all adapters are finished yet
+- the platform abstraction layer now also has a real Telegram Mini App branch instead of only browser / Android / placeholder Facebook paths
 - the browser build is functional and production-buildable, though still too large for comfort
 - workspace typecheck, unit tests, and content validation pass
 
@@ -47,6 +49,7 @@ Current readiness by engineering judgment:
 - the current content catalog is still MVP-sized rather than category-leading
 - translation quality is still implementation-grade rather than release-grade
 - the new discovery-feed API is a real backend seam, but not yet a full live-ops/content-management system
+- the Telegram branch now has code-level launch/share/storage foundations, but no production bot, Main Mini App setup, public HTTPS host, or Telegram-client QA signoff yet
 
 ### Concrete Repo Facts To Remember
 
@@ -55,6 +58,10 @@ Current readiness by engineering judgment:
 - `apps/game-web/src/GameRuntime.ts` also now owns locale-aware copy resolution and paginated discovery-feed loading
 - `packages/platform-sdk/src/capacitor/index.ts` now uses Capacitor platform detection, Preferences-backed storage, a native share path with browser fallback, and Android lifecycle/back-button hooks
 - `apps/game-web/src/platform/installLifecycle.ts` now binds platform lifecycle behavior to the Phaser game at startup
+- `packages/platform-sdk/src/telegram/index.ts` now provides a Telegram-specific platform bundle for launch context, navigation chrome, theme/viewport, share, identity, and storage behavior
+- `apps/game-web/src/GameRuntime.ts` now understands platform launch context and can resolve Telegram `startapp` state into a promoted test selection
+- `apps/discovery-feed-api/src/index.ts` now exposes Telegram-oriented backend endpoints for init-data verification, `startapp` resolution, prepared share payloads, and optional story-media hosting
+- `packages/backend-contracts/src/telegram.schema.ts` defines the shared payloads for Telegram init verification, launch resolution, and share preparation
 - `apps/game-web/src/GameRuntime.ts` now also tracks a lightweight scene-history path so Android back can step through the active home/test/result/reward flow more naturally
 - `apps/game-web/src/GameRuntime.ts` now also persists the active session flow, drafts, selected story, and scene history so preload can restore the player into the right main scene after a hard background/restart
 - lifecycle pause/unload now explicitly snapshots that app-flow state, and restore logic now avoids obvious mis-restores when the app was backgrounded during the reveal/result handoff
@@ -179,6 +186,65 @@ Why:
 - real ads and analytics decisions for production
 - crash / ANR monitoring
 
+## Telegram Mini App Strategy
+
+Telegram is now a real active platform branch, not just a future thought experiment.
+
+The closest Telegram equivalent to old Facebook Instant virality is not "being listed in App Center" by itself. It is:
+
+- a Main Mini App configured on the bot profile
+- strong preview assets in the bot profile and Apps tab
+- exact-test deep links via `startapp`
+- result sharing into chats and stories
+- bot-assisted re-entry that lands the recipient directly on the promoted test
+
+### What Is Already In Place For Telegram
+
+- `packages/platform-sdk/src/telegram/index.ts` can now detect Telegram Mini App context and expose launch/theme/viewport/navigation behavior through the shared platform interfaces
+- `apps/game-web/src/platform/services.ts` can now select the Telegram platform bundle either by environment target or by live Telegram detection
+- `apps/game-web/src/platform/installLifecycle.ts` now maps native Telegram back/settings buttons into the same runtime navigation/settings behavior the app already uses elsewhere
+- `apps/game-web/src/GameRuntime.ts` can now ingest Telegram launch context, resolve `startapp` tokens through the backend, and promote the linked test directly into the landing-page flow
+- the runtime can now request a generic platform profile and reuse Telegram `photo_url` in the same poster/share path used by other optional profile-image flows
+- `apps/discovery-feed-api/src/index.ts` now exposes local backend endpoints for Telegram init verification, `startapp` resolution, prepared share payloads, and optional story-media hosting
+- the result UI now supports Telegram-style `Share to chat` and optional `Share to story` actions instead of only the generic browser/app share language
+
+### What Is Still Missing Before Telegram Release
+
+- a real Telegram bot and BotFather configuration for:
+  - Main Mini App
+  - bot username
+  - menu button / profile launch
+  - app icon and preview media
+- a production HTTPS host for the Telegram build and backend endpoints
+- production environment variables such as:
+  - `TELEGRAM_BOT_TOKEN`
+  - `TELEGRAM_BOT_USERNAME`
+  - `TELEGRAM_STARTAPP_SECRET`
+  - `TELEGRAM_PUBLIC_BASE_URL`
+- Telegram-client QA across Android, iOS, Desktop, Web A, and Web K
+- true end-to-end story-share validation with a public media URL
+- exact App Center/profile copy, privacy policy, support URL, screenshots, and short demo videos
+- launch telemetry disciplined enough to measure source, share, re-entry, and replay
+
+### Telegram Product Rules
+
+- Telegram should be a dedicated surface, not just "the current web build inside Telegram"
+- the Telegram branch should ship with a tight launch catalog, not the full experimental catalog
+- result sharing should always route back into the same test/remix state through `startapp`
+- visible progression systems should stay lower-profile on Telegram surfaces so the product reads like a social object first
+- Telegram profile photo should be opportunistic, never mandatory; the result must still work when only names are available
+
+### Recommended Telegram Launch Catalog
+
+Ship only the strongest 8 to 12 tests in the first Telegram branch:
+
+- the best single-name identity/fate/story tests
+- the strongest pair-name social/relationship tests
+- the poster families that already read as shareable artifacts
+- the tests that can benefit from Telegram profile data or photo when available
+
+Do not lead the Telegram branch with the more experimental or weaker-result families.
+
 ## Facebook Instant Strategy
 
 Facebook Instant remains a later platform target.
@@ -276,6 +342,13 @@ The runtime can now resolve platform services through a shared selector, but the
 
 The remaining work is no longer "invent the architecture". It is now "finish the actual adapters and platform-specific behavior".
 
+For Telegram specifically, the remaining work is also no longer "invent how launch/share should fit the runtime". It is now:
+
+- finish the real bot/backend/public-host setup
+- verify init-data validation and `startapp` routing in production
+- polish story/share flows on actual Telegram clients
+- tighten the product around a Telegram-specific launch catalog
+
 ### 2. QA And Automation
 
 Current QA is good enough for local iteration, not for shipping.
@@ -348,6 +421,17 @@ This is the durable backlog view.
 - test on real Android hardware
 - add production analytics and crash monitoring
 
+### Telegram Release Work
+
+- create the real Telegram bot and configure the Main Mini App in BotFather
+- deploy the web app and API to a public HTTPS host
+- set `VITE_TARGET_PLATFORM=telegram` and the Telegram backend environment correctly for the deployed build
+- verify init-data validation with the live bot token
+- verify `startapp` landing so shared results reopen into the exact test/remix state instead of generic home
+- verify `Share to chat` and `Share to story` behavior on Telegram clients
+- prepare App Center/profile assets, privacy policy, and support URL
+- add minimal launch/share/re-entry telemetry and confirm it records the right lifecycle
+
 ### Current Android QA Status
 
 - Android Studio can now sync the shell and launch the app on a real phone
@@ -392,8 +476,8 @@ Use this order unless product strategy changes:
 
 1. finish local UX and content polish until the browser build is genuinely fun
 2. finish the adapter-level work that builds on the new platform injection path
-3. finish Android shell hardening and Google Play readiness
-4. launch Android and learn from real metrics
+3. harden Android and Telegram as the two active near-term branches
+4. launch the strongest branch first and learn from real metrics
 5. only then begin a Facebook Instant branch or a YouTube Playables branch
 
 ## Current Best Next Step
@@ -401,10 +485,11 @@ Use this order unless product strategy changes:
 The immediate next engineering step is now:
 
 - run and fix the remaining on-device gameplay QA issues across the feed, thread selection, reading, result, replay, share, back-button, background/resume, persistence, locale-switching, selected-story continuity, short-height layouts, and the new result-page continuation flow
+- in parallel, finish the Telegram operational layer: BotFather setup, public HTTPS deployment, environment configuration, and real Telegram-client verification of `startapp` plus share/re-entry
 
 The next strategic step after that is:
 
-- deepen the Android-native layer beyond the current storage/share/lifecycle baseline, while also maturing the new feed/live-content path
+- deepen the Android-native and Telegram-native layers beyond the current shared foundation, while also maturing the new feed/live-content path
 
 ### Updated Product Priority From Screenshot Review
 
@@ -438,6 +523,9 @@ Important references:
 - YouTube Playables trust and safety requirements: `https://developers.google.com/youtube/gaming/playables/certification/requirements_trustsafety`
 - Google Play Instant checklist noting the end of new publishing: `https://developer.android.com/topic/google-play-instant/instant-play-games-checklist`
 - Meta official sample repo for FB Instant: `https://github.com/fbsamples/fbinstant-samples`
+- Telegram Mini Apps platform docs: `https://docs.telegram-mini-apps.com/platform/about`
+- Telegram Mini Apps app-link docs: `https://docs.telegram-mini-apps.com/platform/getting-app-link`
+- Telegram official Web Apps docs: `https://core.telegram.org/bots/webapps`
 
 ### Confidence Note
 

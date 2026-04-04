@@ -1,5 +1,6 @@
 export * from "./interfaces/IAds";
 export * from "./interfaces/IAnalytics";
+export * from "./interfaces/IIdentity";
 export * from "./interfaces/IPlatform";
 export * from "./interfaces/IRemoteConfig";
 export * from "./interfaces/IShare";
@@ -7,3 +8,4 @@ export * from "./interfaces/IStorage";
 export * from "./browser";
 export * from "./capacitor";
 export * from "./facebookInstant";
+export * from "./telegram";

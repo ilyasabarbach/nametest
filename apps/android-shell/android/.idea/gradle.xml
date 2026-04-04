@@ -14,8 +14,10 @@
             <option value="$PROJECT_DIR$/capacitor-cordova-android-plugins" />
             <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capacitor+android@7.6.0_@capacitor+core@7.6.0/node_modules/@capacitor/android/capacitor" />
             <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capacitor+app@7.1.2_@capacitor+core@7.6.0/node_modules/@capacitor/app/android" />
+            <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capacitor+filesystem@7.0.0_@capacitor+core@7.6.0/node_modules/@capacitor/filesystem/android" />
             <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capacitor+preferences@7.0.0_@capacitor+core@7.6.0/node_modules/@capacitor/preferences/android" />
             <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capacitor+share@7.0.0_@capacitor+core@7.6.0/node_modules/@capacitor/share/android" />
+            <option value="$PROJECT_DIR$/../../../node_modules/.pnpm/@capgo+capacitor-social-login@7.20.0_@capacitor+core@7.6.0/node_modules/@capgo/capacitor-social-login/android" />
           </set>
         </option>
       </GradleProjectSettings>

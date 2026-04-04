@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import type { ArtifactRemixRequest } from "@nametests/backend-contracts";
 import { runtime } from "../GameRuntime";
 import { createReplayState, isNameValid, sanitizeName } from "@nametests/core";
 import { showResultOverlay } from "../ui/overlays/resultOverlay";
@@ -43,6 +44,17 @@ export class ResultScene extends Phaser.Scene {
       template: entry,
       label: this.getRemixLabel(entry)
     }));
+    const aiRemixEnabled = Boolean(runtime.session.selectedTest.imageRecipeId);
+    const profilePhotoEnabled = aiRemixEnabled && runtime.canUsePlatformProfilePhoto();
+    const initialPosterImageDataUrl =
+      aiRemixEnabled && runtime.getActiveProfilePhotoDataUrl()
+        ? runtime.buildResultPosterImage({
+            title: card.headline,
+            body: card.body,
+            insight: card.insight,
+            accent: card.accent
+          })
+        : undefined;
     const progressionSummary = runtime.session.progressSummary;
     const nextStories = this.buildNextStories();
     const browseStories = this.buildBrowseStories(nextStories);
@@ -85,10 +97,16 @@ export class ResultScene extends Phaser.Scene {
       signature: card.signature,
       signatureLabel: runtime.copy["result.signatureLabel"],
       shareHint: card.sharePrompt,
-      shareLabel: runtime.copy["result.shareLabel"],
+      shareLabel:
+        runtime.platform.id === "telegram"
+          ? runtime.copy["result.shareToChatLabel"] ?? "Share to chat"
+          : runtime.copy["result.shareLabel"],
+      shareStoryLabel: runtime.copy["result.shareToStoryLabel"] ?? "Share to story",
       remixTitle: runtime.copy["result.remixTitle"] ?? "Remix this result",
       remixBody: runtime.copy["result.remixBody"] ?? "Try another visual version before you share it.",
       remixOptions,
+      aiRemixLabel: runtime.copy["result.aiRemixLabel"] ?? "Make AI version",
+      profilePhotoLabel: runtime.getProfilePhotoActionLabel(),
       partnerName: partnerDraft,
       partnerLabel: runtime.copy["home.partnerLabel"],
       retryPartnerVisible,
@@ -112,6 +130,71 @@ export class ResultScene extends Phaser.Scene {
       },
       accent: card.accent,
       template,
+      posterImageDataUrl: initialPosterImageDataUrl,
+      badgeLabel: initialPosterImageDataUrl ? (runtime.copy["result.googlePhotoReady"] ?? "Google photo active") : "",
+      onRequestAiRemix: aiRemixEnabled
+        ? async (selectedTemplate) => {
+            if (!runtime.session.latestResult) {
+              return null;
+            }
+            const request: ArtifactRemixRequest = {
+              testId: runtime.session.selectedTest.id,
+              recipeId: runtime.session.selectedTest.artifactRecipeId ?? runtime.session.selectedTest.id,
+              imageRecipeId: runtime.session.selectedTest.imageRecipeId,
+              locale: runtime.locale,
+              template: selectedTemplate,
+              names: {
+                primaryName: runtime.session.names.primaryName,
+                partnerName: runtime.session.names.partnerName
+              },
+              presentPhotoDataUrl: runtime.getActiveProfilePhotoDataUrl(),
+              result: {
+                resultKey: runtime.session.latestResult.resultKey,
+                score: card.score,
+                hook: card.hook,
+                title: card.headline,
+                body: card.body,
+                insight: card.insight,
+                signature: card.signature,
+                sharePrompt: card.sharePrompt
+              }
+            };
+
+            const response = await runtime.requestArtifactRemix(request);
+            return response
+              ? {
+                  hook: response.artifact.hook,
+                  title: response.artifact.title,
+                  body: response.artifact.body,
+                  insight: response.artifact.insight,
+                  signature: response.artifact.signature,
+                  shareHint: response.artifact.sharePrompt,
+                  accent: response.artifact.accent ?? card.accent,
+                  badgeLabel: response.artifact.badgeLabel ?? "AI version active",
+                  posterImageDataUrl: response.artifact.posterImageDataUrl
+                }
+              : null;
+          }
+        : undefined,
+      onUseProfilePhoto: profilePhotoEnabled
+        ? async (_selectedTemplate, artifact) => {
+            const profile = await runtime.connectPlatformProfilePhoto();
+            if (!profile) {
+              window.alert(runtime.copy["result.profilePhotoError"] ?? runtime.copy["result.googlePhotoError"] ?? "Profile photo could not be loaded right now.");
+              return null;
+            }
+
+            return {
+              posterImageDataUrl: runtime.buildResultPosterImage({
+                title: artifact.title,
+                body: artifact.body,
+                insight: artifact.insight,
+                accent: artifact.accent
+              }),
+              badgeLabel: runtime.copy["result.googlePhotoReady"] ?? "Google photo active"
+            };
+          }
+        : undefined,
       rewardVisible: runtime.canShowReward(),
       onGoHome: () => {
         runtime.clearHomeSelection();
@@ -181,13 +264,24 @@ export class ResultScene extends Phaser.Scene {
             runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
           ),
           accent: artifact.accent,
-          template: selectedTemplate
+          template: selectedTemplate,
+          posterImageDataUrl: artifact.posterImageDataUrl
         });
-        await runtime.share.share({
+        runtime.analytics.track({
+          name: "share_started",
+          payload: {
+            platform: runtime.platform.id,
+            surface: "chat",
+            testId: runtime.session.selectedTest.id,
+            resultKey: runtime.session.latestResult!.resultKey
+          }
+        });
+        await runtime.shareResultArtifact({
           title: card.headline,
           text: runtime.latestShareText(),
           imageDataUrl,
-          filename: `${runtime.session.selectedTest.id}-${runtime.session.latestResult!.resultKey}.png`
+          filename: `${runtime.session.selectedTest.id}-${runtime.session.latestResult!.resultKey}.png`,
+          template: selectedTemplate
         });
         runtime.analytics.track({
           name: "result_shared",
@@ -196,7 +290,67 @@ export class ResultScene extends Phaser.Scene {
             resultKey: runtime.session.latestResult!.resultKey
           }
         });
+        runtime.analytics.track({
+          name: "share_sent",
+          payload: {
+            platform: runtime.platform.id,
+            surface: "chat",
+            testId: runtime.session.selectedTest.id,
+            resultKey: runtime.session.latestResult!.resultKey
+          }
+        });
       },
+      onShareToStory: runtime.canShareToStory()
+        ? async (selectedTemplate, artifact) => {
+            const imageDataUrl = await buildShareCard({
+              brandLabel: runtime.copy["app.title"],
+              hook: artifact.hook,
+              testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
+              title: artifact.title,
+              score: card.score,
+              body: artifact.body,
+              insight: artifact.insight,
+              signature: artifact.signature,
+              signatureLabel: runtime.copy["result.signatureLabel"],
+              sharePrompt: artifact.shareHint,
+              names: this.formatNamesForDisplay(
+                runtime.session.names.primaryName,
+                runtime.session.names.partnerName,
+                runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
+              ),
+              accent: artifact.accent,
+              template: selectedTemplate,
+              posterImageDataUrl: artifact.posterImageDataUrl
+            });
+            runtime.analytics.track({
+              name: "share_started",
+              payload: {
+                platform: runtime.platform.id,
+                surface: "story",
+                testId: runtime.session.selectedTest.id,
+                resultKey: runtime.session.latestResult!.resultKey
+              }
+            });
+            const shared = await runtime.shareResultStoryArtifact({
+              title: card.headline,
+              text: runtime.latestShareText(),
+              imageDataUrl,
+              filename: `${runtime.session.selectedTest.id}-${runtime.session.latestResult!.resultKey}.png`,
+              template: selectedTemplate
+            });
+            if (shared) {
+              runtime.analytics.track({
+                name: "share_sent",
+                payload: {
+                  platform: runtime.platform.id,
+                  surface: "story",
+                  testId: runtime.session.selectedTest.id,
+                  resultKey: runtime.session.latestResult!.resultKey
+                }
+              });
+            }
+          }
+        : undefined,
       onReward: () => {
         runtime.analytics.track({
           name: "reward_prompt_viewed",

@@ -1,1 +1,9 @@
-export { browserAds, browserAnalytics, browserPlatform, browserRemoteConfig, browserShare, browserStorage } from "@nametests/platform-sdk";
+export {
+  browserAds,
+  browserAnalytics,
+  browserIdentity,
+  browserPlatform,
+  browserRemoteConfig,
+  browserShare,
+  browserStorage
+} from "@nametests/platform-sdk";

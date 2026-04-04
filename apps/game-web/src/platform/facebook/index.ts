@@ -1,1 +1,9 @@
-export { facebookAds, facebookAnalytics, facebookPlatform, facebookRemoteConfig, facebookShare, facebookStorage } from "@nametests/platform-sdk";
+export {
+  facebookAds,
+  facebookAnalytics,
+  facebookIdentity,
+  facebookPlatform,
+  facebookRemoteConfig,
+  facebookShare,
+  facebookStorage
+} from "@nametests/platform-sdk";

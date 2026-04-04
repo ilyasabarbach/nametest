@@ -1,5 +1,6 @@
 import type { IAds } from "../interfaces/IAds";
 import type { IAnalytics } from "../interfaces/IAnalytics";
+import type { IIdentity } from "../interfaces/IIdentity";
 import type { IPlatform } from "../interfaces/IPlatform";
 import type { IRemoteConfig } from "../interfaces/IRemoteConfig";
 import type { IShare } from "../interfaces/IShare";
@@ -9,7 +10,20 @@ import { defaultBalanceConfig, defaultFeatureFlags } from "@nametests/core";
 export const facebookPlatform: IPlatform = {
   id: "facebook",
   isOnline: () => true,
-  vibrate: () => undefined
+  vibrate: () => undefined,
+  getLaunchContext: () => ({
+    source: "unknown",
+    platform: "facebook",
+    isNativeShell: false
+  }),
+  getTheme: () => ({
+    colorScheme: "light"
+  }),
+  getViewport: () => ({
+    height: window.innerHeight,
+    stableHeight: window.innerHeight,
+    isExpanded: true
+  })
 };
 
 export const facebookAds: IAds = {
@@ -30,6 +44,21 @@ export const facebookAnalytics: IAnalytics = {
   }
 };
 
+export const facebookIdentity: IIdentity = {
+  canUseGoogleProfile() {
+    return false;
+  },
+  async connectGoogleProfile() {
+    return null;
+  },
+  async disconnectGoogleProfile() {
+    return;
+  },
+  async getPlatformProfile() {
+    return null;
+  }
+};
+
 export const facebookRemoteConfig: IRemoteConfig = {
   async getFeatureFlags() {
     return defaultFeatureFlags;
@@ -41,6 +70,12 @@ export const facebookRemoteConfig: IRemoteConfig = {
 
 export const facebookShare: IShare = {
   async share() {
+    return;
+  },
+  canShareToStory() {
+    return false;
+  },
+  async shareToStory() {
     return;
   }
 };

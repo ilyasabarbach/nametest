@@ -13,6 +13,13 @@ This is the quickest "where are we now?" document.
 - Runtime now persists the active reading flow itself, including session, selected story, name drafts, and scene history, so preload can restore players closer to where they left off after a hard background/restart
 - Lifecycle pause/unload now also forces an app-state snapshot, and restore now prefers the right main scene defensively when a reveal/result transition is interrupted by backgrounding
 - Fresh app reopen now intentionally returns to the browse-first home feed instead of restoring the last promoted home test box at the top
+- Platform injection now also has a first real Telegram Mini App branch instead of only browser / Android / placeholder Facebook paths
+- Telegram now has a dedicated adapter for launch context, theme/viewport, native back/settings buttons, fullscreen/expand hooks, haptics, share routing, and CloudStorage-backed persistence with browser fallback
+- Runtime now consumes Telegram launch context and platform profile data through neutral interfaces instead of hardcoding browser-only assumptions
+- Telegram backend foundation now exists for init-data verification, `startapp` deep-link resolution, prepared share payloads, and optional story-media hosting
+- Telegram result flow can now swap to platform-native share behavior, including `Share to chat`, optional `Share to story`, and exact-test re-entry via prepared `startapp` links
+- Telegram `Share to chat` now has a hardened open path (native Telegram link, then Telegram openLink, then browser fallback) so button taps do not silently no-op on stricter Telegram clients
+- Telegram deep links now normalize usernames with or without `@` and prefer the Mini App short-name path (`/bot/short_name?startapp=...`) for better re-entry consistency
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout
@@ -38,6 +45,7 @@ This is the quickest "where are we now?" document.
 - The oversized home hero and inline locale chip row are now gone, and language switching now lives inside a lighter settings menu in the top chrome instead of taking over the top of the page
 - Short-height home and result layouts now keep the editorial feed/result surfaces readable instead of collapsing into overly narrow columns on landscape phones and cramped browser windows
 - The landing/test/result flow now supports both pair-name readings and single-name readings instead of hardcoding the entire experience around two-name inputs
+- `past-life-echo` now runs as a single-name reading instead of a fake tap-photo flow, so the result can map the player's actual name cleanly into the poster
 - The first touch-photo readings now exist, so some stories can start directly from tapping the promoted image instead of always opening the keyboard and waiting for manual text entry
 - The first single-name headline / past-life / hidden-gift batch now has locale-copy parity across all supported languages instead of staying partially English-only in practice
 - The next higher-contrast editorial batch now also exists in the catalog: aura, group-role, soul-story, photo-archetype, and movie-poster tests have been added on top of the first non-pair expansion
@@ -59,8 +67,12 @@ This is the quickest "where are we now?" document.
 - Result posters and generated share posters now use multiple visual template families instead of one single poster treatment
 - Result/share artifact selection is now starting to move onto an explicit recipe layer instead of relying only on hardcoded symbol-to-template guesses
 - Result pages now expose visible remix UI on top of that recipe layer, so players can switch the poster family in-place before sharing instead of only seeing the default artifact treatment
-- The deeper viral/AI groundwork now exists in schema and backend seams, but the user-facing `Make AI version` button is intentionally removed again for now because the free/fallback image quality did not yet clear the product bar
+- The deeper viral/AI groundwork now exists in schema and backend seams, but the broad user-facing `Make AI version` path is intentionally removed again for now because the free/fallback image quality did not yet clear the product bar
 - Tests now also carry first-pass `imageRecipeId` and `thumbnailRecipeId` metadata, but live feed art is intentionally back on manual/static thumbnails for now until curated test-by-test artwork is ready
+- The live product now only re-exposes `Make AI version` for tests that have a real result-image recipe behind them, so the current narrow test path is `past-life-echo` rather than the full catalog
+- The first narrow AI-poster path has now been rebuilt around `past-life-echo`: the generated poster uses wrapped headline text, fixed identity/story slots, cleaner vintage composition, and a poster-focused result surface instead of the earlier broken mock-like layout
+- Android now also has an optional Google profile-photo path, so image-backed poster families such as `past-life-echo` can pull an explicitly approved Google profile image into the present-day side of the result instead of staying monogram-only
+- The Google profile-photo path is opt-in and cached locally through the runtime, and it keeps working with the narrow AI-remix path instead of competing with it
 - Result-page partner-name entry now stays in sync across retry, next-story continuation, and reward/secret-result flow instead of drifting between separate inputs
 - Daily featured test is selected
 - A rotating live event is shown
@@ -75,6 +87,7 @@ This is the quickest "where are we now?" document.
 - Test definitions now carry first-pass viral/AI-ready metadata such as input mode, artifact recipe, style family, remix modes, and structured hook data
 - The content package now also has a shared artifact recipe registry, which is the first step toward optional AI remix work without stuffing raw prompt logic into every test JSON
 - The first larger viral-content batch now uses that metadata and recipe layer end to end, so the feed/result/share system can distinguish portrait, headline, storybook, and poster families more explicitly
+- The Telegram branch now treats identity generically enough that Telegram `photo_url` and profile data can slot into the same poster/share pipeline as other optional profile-image paths
 - Game web build now succeeds with explicit Vite workspace aliases
 - Screenshot comparison of the reference product clarified the next major structural gap, and the codebase has now started moving toward that dedicated landing-page style test flow
 
@@ -84,6 +97,7 @@ This is the quickest "where are we now?" document.
 - Real analytics backend and experiments
 - Facebook Instant platform adapter implementation
 - Store-ready Android hardening beyond the current shell baseline
+- Real Telegram bot configuration, BotFather Main Mini App setup, public HTTPS hosting, and Telegram App Center listing assets
 - Formal QA/live-ops infrastructure
 
 These are not forgotten. They are simply parked while local gameplay is being refined.
@@ -106,6 +120,11 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Hard background/restart should now restore into the current main flow more gracefully instead of always cold-starting the player at a fresh home state
 - Hard background/restart during the reveal -> result handoff should now restore to the correct side of that transition more reliably instead of falling back into the wrong scene
 - Every test should be visible and playable from the home feed immediately
+- Telegram browser/device launch should now resolve `startapp` context into the exact promoted test instead of generic browse-first home when a valid share link is used
+- Telegram native settings/back buttons should mirror the same settings menu and scene-navigation behavior the web/app UI already exposes
+- Telegram share-to-chat should now prepare a result-specific deep link that re-enters the exact test/remix state instead of dropping recipients into generic home
+- Telegram share button should now always trigger a visible share navigation path even when one Telegram WebApp API method is unavailable in a specific client build
+- Telegram story-share should only appear when `VITE_TELEGRAM_PUBLIC_BASE_URL` is configured and the API can serve a public result poster URL
 - Daily reward appears only once per day
 - Test reveal pacing feels good across repeated plays
 - Tapping during reveal skips cleanly into the result screen
@@ -113,7 +132,9 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Result page keeps share, retry, reward, and next-story continuation working together without dead-ending the player
 - Result page keeps the additional "more popular stories" browse layer working as a continuation surface instead of feeling like a final screen
 - Result page uses the lower browse layer to select from the full editorial catalog without breaking the main continuation composer
-- Result pages should currently expose only the normal remix choices again, with no `Make AI version` button in the live product
+- Result pages should currently expose the normal remix choices across the catalog, and only image-recipe-backed tests such as `past-life-echo` should show `Make AI version`
+- `past-life-echo` should now accept a single name, render that exact name into the poster fields, and keep the generated poster readable instead of clipping the headline or overlapping field/body text
+- On Android, `past-life-echo` should now also offer `Use Google photo` when `VITE_GOOGLE_WEB_CLIENT_ID` is configured, and using it should replace the left-side present portrait with the user's Google image
 - Editing the partner name on the result page carries cleanly through retry, next-story continuation, and reward flow
 - Single-name readings hide the extra partner input where appropriate and keep share/retry copy from rendering awkward empty-name combinations
 - Share action generates a card image
@@ -122,6 +143,8 @@ These are not forgotten. They are simply parked while local gameplay is being re
 ## Most Important Files Right Now
 
 - `apps/game-web/src/GameRuntime.ts`
+- `apps/game-web/src/platform/services.ts`
+- `apps/game-web/src/platform/installLifecycle.ts`
 - `apps/game-web/src/scenes/HomeScene.ts`
 - `apps/game-web/src/scenes/TestScene.ts`
 - `apps/game-web/src/scenes/ResultScene.ts`
@@ -130,6 +153,11 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - `apps/game-web/src/styles/main.css`
 - `apps/discovery-feed-api/src/index.ts`
 - `packages/core/src/game/GameFlow.ts`
+- `packages/platform-sdk/src/telegram/index.ts`
+- `packages/platform-sdk/src/interfaces/IPlatform.ts`
+- `packages/platform-sdk/src/interfaces/IIdentity.ts`
+- `packages/platform-sdk/src/interfaces/IShare.ts`
+- `packages/backend-contracts/src/telegram.schema.ts`
 - `packages/core/src/progression/*`
 - `packages/backend-contracts/src/discoveryFeed.schema.ts`
 - `packages/content-packs/src/index.ts`
@@ -146,7 +174,10 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Supported locales exist, but translation quality still needs native-speaker review before release quality can be claimed
 - The discovery feed is now API-driven in local architecture, but it is not yet a true CMS/live-ops backend with remote editorial control
 - The landing-page style flow now extends further into the result page with an explicit browse-more layer, but it is still not yet a true standalone dedicated test page with full feed/result continuity
-- The viral/AI strategy is now documented and the deeper schema/backend groundwork exists, but user-facing AI image generation is intentionally parked again until curated manual thumbnails exist and a clearly better image-generation path is ready
+- The viral/AI strategy is now documented and the deeper schema/backend groundwork exists, but broad user-facing AI image generation is still intentionally parked until curated manual thumbnails exist and more than the first narrow poster family clearly clears the product bar
+- The next realism step is not broad AI thumbnails; it is tuning the new opt-in Google-photo + narrow AI-poster path until the personalized result artifact clearly feels worth sharing on-device
+- Telegram Mini App platform seams now exist in code, but the branch is not publish-ready until there is a real bot, BotFather Main Mini App setup, public HTTPS hosting, verified Telegram init-data in production, and true Telegram-client QA
+- Telegram-native virality is still only partially complete: exact-test `startapp` routing and prepared share links exist, but the bot-driven re-entry loop, App Center polish, and real share-to-story/public-media validation still need end-to-end testing on Telegram clients
 - Real-device QA is now finding narrower polish issues, especially around short-height behavior, rather than basic structural layout failure
 - Persistence and back continuity are stronger now, but they still need real-device verification across Android pause/resume, process death, and share-return edge cases
 - Android-style back/home continuity is improving and now uses a lightweight scene-history path, but the full scene model still is not yet a true URL-like page stack

@@ -1,5 +1,6 @@
 import type { IAds } from "../interfaces/IAds";
 import type { IAnalytics } from "../interfaces/IAnalytics";
+import type { IIdentity } from "../interfaces/IIdentity";
 import type { IPlatform } from "../interfaces/IPlatform";
 import type { IRemoteConfig } from "../interfaces/IRemoteConfig";
 import type { IShare, SharePayload } from "../interfaces/IShare";
@@ -9,7 +10,21 @@ import { defaultBalanceConfig, defaultFeatureFlags, type AnalyticsEvent } from "
 export const browserPlatform: IPlatform = {
   id: "browser",
   isOnline: () => navigator.onLine,
-  vibrate: (milliseconds) => navigator.vibrate?.(milliseconds)
+  vibrate: (milliseconds) => navigator.vibrate?.(milliseconds),
+  getLaunchContext: () => ({
+    source: "unknown",
+    startParam: new URLSearchParams(window.location.search).get("startapp") ?? undefined,
+    platform: "browser",
+    isNativeShell: false
+  }),
+  getTheme: () => ({
+    colorScheme: window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light"
+  }),
+  getViewport: () => ({
+    height: window.innerHeight,
+    stableHeight: window.innerHeight,
+    isExpanded: true
+  })
 };
 
 export const browserAds: IAds = {
@@ -27,6 +42,21 @@ export const browserAds: IAds = {
 export const browserAnalytics: IAnalytics = {
   track(event: AnalyticsEvent) {
     console.info("[analytics]", event.name, event.payload);
+  }
+};
+
+export const browserIdentity: IIdentity = {
+  canUseGoogleProfile() {
+    return false;
+  },
+  async connectGoogleProfile() {
+    return null;
+  },
+  async disconnectGoogleProfile() {
+    return;
+  },
+  async getPlatformProfile() {
+    return null;
   }
 };
 
@@ -64,6 +94,12 @@ export const browserShare: IShare = {
       anchor.download = payload.filename ?? "nametests-card.png";
       anchor.click();
     }
+  },
+  canShareToStory() {
+    return false;
+  },
+  async shareToStory(payload: SharePayload) {
+    await browserShare.share(payload);
   }
 };
 

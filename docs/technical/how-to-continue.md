@@ -10,7 +10,8 @@ The smartest next phase is:
 
 1. continue deepening the new landing-page style test flow until it feels like a true destination instead of an upgraded selector
 2. keep running full on-device gameplay QA against that new flow
-3. then deepen product polish and Android publishability
+3. in parallel, finish the Telegram operational layer now that the adapter/backend groundwork exists
+4. then deepen product polish and Android / Telegram publishability
 
 Before doing deeper platform work, reread `docs/technical/platform-strategy.md`.
 
@@ -54,6 +55,7 @@ Recent progress already made:
 - the oversized home hero and inline locale chips are now removed, and locale switching now sits behind a small settings control in the social chrome instead of occupying the full top section
 - short-height and small-window home/result layouts now preserve wider editorial grids where possible and only collapse fully when the screen is truly narrow
 - the flow now supports single-name readings end to end, and the catalog now includes a first batch of headline / past-life / hidden-gift style tests instead of staying almost entirely pair-based
+- `past-life-echo` has now been tightened into a true single-name reading, so future poster work should assume it receives a real player name instead of a fake tap-photo placeholder state
 - the first touch-photo readings now exist for the editorial flow, so not every promoted story depends on typed input before reveal
 - the first single-name content batch now has locale parity across the supported languages, so the next work should shift back toward QA and broader editorial depth
 - the next broader editorial batch now also exists in the catalog, adding aura, group-role, soul-story, photo-archetype, and movie-poster readings with distinct hook/artifact families
@@ -73,6 +75,10 @@ Recent progress already made:
 - the newer editorial batch now uses that recipe layer in practice, so portrait / headline / storybook / poster presentation is no longer only a theoretical plan
 - result pages now expose visible remix choices so the player can switch between recipe-backed artifact families before sharing, which lands the next real step from the viral-growth plan without requiring AI yet
 - the deeper AI/image-generation groundwork now exists in schema and backend seams, but the live product has intentionally gone back to normal remix-only result pages and manual/static thumbnails because the current free/fallback image quality was not strong enough
+- the only current exception is image-recipe-backed result families such as `past-life-echo`, which are allowed to expose `Make AI version` again for narrow testing without reopening low-quality AI across the whole catalog
+- the current `past-life-echo` exception is no longer the old broken mock poster: its generated result now uses wrapped editorial headline text, fixed present/past identity slots, and a cleaner poster-first layout that should be used as the baseline for judging any future AI poster family
+- Android now also has an opt-in Google profile-photo path for image-backed poster families, so `past-life-echo` can upgrade the present-day side of the poster with a real user image without forcing sign-in on the rest of the app
+- the Google-photo path is intentionally optional and should stay confined to poster families where the artifact meaningfully benefits from a personal portrait instead of being expanded across the whole catalog by default
 - the result layer and generated share posters now have multiple visual families instead of one single poster treatment
 - result-page partner-name entry now survives and stays synchronized across retry, continuation, and reward flow instead of splitting into separate drafts
 - copy is now localized across the active game flow for the six supported locales in the selector
@@ -101,9 +107,32 @@ Focus here:
 - add release metadata and package polish
 - test on real Android devices
 
+## If The Goal Is "Telegram Next"
+
+Focus here:
+
+- create and configure the real Telegram bot in BotFather
+- deploy the web build and API to a public HTTPS host
+- set the Telegram environment variables for both the game and backend
+- verify live init-data validation, `startapp` landing, and result re-entry on Telegram clients
+- test Telegram native back/settings buttons, theme/viewport behavior, and share-return flow
+- prepare Main Mini App / Apps-tab assets, privacy policy, support URL, and launch copy
+
+Recent Telegram-specific progress already made:
+
+- `packages/platform-sdk/src/telegram/index.ts` now exists as a real Telegram adapter instead of a placeholder
+- `apps/game-web/src/platform/services.ts` can now detect or explicitly target Telegram
+- `apps/game-web/src/platform/installLifecycle.ts` can now map Telegram back/settings buttons into the shared runtime navigation/settings behavior
+- `apps/game-web/src/GameRuntime.ts` now resolves Telegram launch context and can promote an exact test from a prepared `startapp` deep link
+- `apps/discovery-feed-api/src/index.ts` now has local endpoints for Telegram init verification, `startapp` resolution, prepared share payloads, and optional story-media hosting
+- result pages now support Telegram-style `Share to chat` and optional `Share to story` actions when the deployed environment supports them
+- platform profile handling is now generic enough that Telegram user data and `photo_url` can feed the same poster pipeline as other optional profile-image flows
+
 ## Files Most Likely To Need Changes Next
 
 - `apps/game-web/src/GameRuntime.ts`
+- `apps/game-web/src/platform/services.ts`
+- `apps/game-web/src/platform/installLifecycle.ts`
 - `apps/game-web/src/scenes/HomeScene.ts`
 - `apps/game-web/src/scenes/TestScene.ts`
 - `apps/game-web/src/scenes/ResultScene.ts`
@@ -111,6 +140,11 @@ Focus here:
 - `apps/game-web/src/ui/components/shareCard.ts`
 - `apps/game-web/src/styles/main.css`
 - `apps/discovery-feed-api/src/index.ts`
+- `packages/platform-sdk/src/telegram/index.ts`
+- `packages/platform-sdk/src/interfaces/IPlatform.ts`
+- `packages/platform-sdk/src/interfaces/IIdentity.ts`
+- `packages/platform-sdk/src/interfaces/IShare.ts`
+- `packages/backend-contracts/src/telegram.schema.ts`
 - `packages/backend-contracts/src/discoveryFeed.schema.ts`
 - `packages/core/src/game/GameFlow.ts`
 - `packages/core/src/progression/*`
@@ -157,5 +191,6 @@ The next session should:
 
 1. run the full gameplay loop on-device with special attention to feed continuity, result continuity, retry flow, locale switching, and the new social-page chrome on small screens
 2. note every remaining issue with feed scrolling, thread taps, reveal, result, replay, share, back button, background/resume, persistence, locale switching, selected-story continuity, short-height device layouts, the new settings menu, and the first touch-photo readings
-3. fix the concrete QA issues that shake out of that pass before shifting platform effort deeper into Android
-4. after QA stabilizes, tackle bundle splitting, translation quality review, stronger human-photo-led thumbnail curation, deeper live-content control, and only then revisit AI image generation if it can clearly beat manual art quality
+3. finish the Telegram operational checklist: bot setup, public HTTPS hosting, `TELEGRAM_BOT_TOKEN` / `TELEGRAM_BOT_USERNAME` / `TELEGRAM_PUBLIC_BASE_URL` configuration, and live `startapp` verification
+4. verify Telegram `Share to chat` and `Share to story` behavior on actual Telegram clients and fix any concrete re-entry or share-return bugs
+5. after QA stabilizes across Android and Telegram, keep tuning the narrow `past-life-echo` poster path, especially the new Google-photo + AI layering, until it clearly beats the previous mock result on-device, then tackle bundle splitting, translation quality review, stronger human-photo-led thumbnail curation, deeper live-content control, and only then expand AI image generation beyond that first family

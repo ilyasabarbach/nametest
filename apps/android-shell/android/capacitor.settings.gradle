@@ -13,3 +13,6 @@ project(':capacitor-preferences').projectDir = new File('../../../node_modules/.
 
 include ':capacitor-share'
 project(':capacitor-share').projectDir = new File('../../../node_modules/.pnpm/@capacitor+share@7.0.0_@capacitor+core@7.6.0/node_modules/@capacitor/share/android')
+
+include ':capgo-capacitor-social-login'
+project(':capgo-capacitor-social-login').projectDir = new File('../../../node_modules/.pnpm/@capgo+capacitor-social-login@7.20.0_@capacitor+core@7.6.0/node_modules/@capgo/capacitor-social-login/android')

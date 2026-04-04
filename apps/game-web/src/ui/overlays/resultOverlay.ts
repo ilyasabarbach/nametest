@@ -44,10 +44,12 @@ export function showResultOverlay(args: {
   signatureLabel: string;
   shareHint: string;
   shareLabel: string;
+  shareStoryLabel?: string;
   remixTitle?: string;
   remixBody?: string;
   remixOptions?: Array<{ template: ArtifactTemplate; label: string }>;
   aiRemixLabel?: string;
+  profilePhotoLabel?: string;
   progressTitle?: string;
   partnerName: string;
   partnerLabel: string;
@@ -71,11 +73,18 @@ export function showResultOverlay(args: {
   onSelectStory?: (testId: string, storyId: string) => void;
   onStartNext?: (testId: string, storyId: string, partnerName: string) => void;
   onRequestAiRemix?: (template: ArtifactTemplate) => Promise<Partial<ResultArtifactState> | null>;
+  onUseProfilePhoto?: (
+    template: ArtifactTemplate,
+    artifact: ResultArtifactState
+  ) => Promise<Partial<ResultArtifactState> | null>;
   onShare: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
+  onShareToStory?: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
   onReward: () => void;
   rewardVisible: boolean;
   accent: string;
   template?: ArtifactTemplate;
+  posterImageDataUrl?: string;
+  badgeLabel?: string;
 }): void {
   const panel = document.createElement("section");
   panel.className = "hud-panel hud-panel--result-feed hud-stack";
@@ -89,8 +98,8 @@ export function showResultOverlay(args: {
     signature: args.signature,
     shareHint: args.shareHint,
     accent: args.accent,
-    badgeLabel: "",
-    posterImageDataUrl: ""
+    badgeLabel: args.badgeLabel ?? "",
+    posterImageDataUrl: args.posterImageDataUrl ?? ""
   };
   const stories = [...(args.nextStories ?? []), ...(args.browseStories ?? [])];
   const retryPartnerVisible = args.retryPartnerVisible ?? true;
@@ -163,6 +172,11 @@ export function showResultOverlay(args: {
       </label>
       <div class="hud-result-actions__buttons">
         <button class="hud-button" type="button" data-action="share">${args.shareLabel}</button>
+        ${
+          args.onShareToStory
+            ? `<button class="hud-button secondary hud-button--story" type="button" data-action="share-story">${args.shareStoryLabel ?? "Share to story"}</button>`
+            : ""
+        }
         <button class="hud-button secondary" type="button" data-action="retry">${args.retryLabel}</button>
         ${args.rewardVisible ? `<button class="hud-button secondary" type="button" data-action="reward">${args.rewardLabel}</button>` : ""}
       </div>
@@ -189,6 +203,11 @@ export function showResultOverlay(args: {
                   `
                 )
                 .join("")}
+              ${
+                args.onUseProfilePhoto
+                  ? `<button class="hud-remix-chip hud-remix-chip--photo" type="button" data-action="profile-photo">${args.profilePhotoLabel ?? "Use Google photo"}</button>`
+                  : ""
+              }
               ${
                 args.onRequestAiRemix
                   ? `<button class="hud-remix-chip hud-remix-chip--ai" type="button" data-action="ai-remix">${args.aiRemixLabel ?? "Make AI version"}</button>`
@@ -250,6 +269,7 @@ export function showResultOverlay(args: {
   const shareHintEl = panel.querySelector<HTMLElement>("[data-artifact-share-hint]");
   const badgeEl = panel.querySelector<HTMLElement>("[data-artifact-badge]");
   const posterImageEl = panel.querySelector<HTMLImageElement>("[data-artifact-poster-image]");
+  const profilePhotoButton = panel.querySelector<HTMLButtonElement>('[data-action="profile-photo"]');
   const aiRemixButton = panel.querySelector<HTMLButtonElement>('[data-action="ai-remix"]');
 
   retryInput?.addEventListener("input", () => {
@@ -298,12 +318,14 @@ export function showResultOverlay(args: {
       shareHintEl.textContent = currentArtifact.shareHint;
     }
     if (currentArtifact.posterImageDataUrl) {
+      panel.classList.add("hud-panel--poster-focus");
       posterImageEl?.classList.remove("hidden");
       if (posterImageEl) {
         posterImageEl.src = currentArtifact.posterImageDataUrl;
       }
       resultPoster?.classList.add("hud-result-poster--image-mode");
     } else {
+      panel.classList.remove("hud-panel--poster-focus");
       posterImageEl?.classList.add("hidden");
       resultPoster?.classList.remove("hud-result-poster--image-mode");
       if (posterImageEl) {
@@ -345,6 +367,25 @@ export function showResultOverlay(args: {
     }
   });
 
+  profilePhotoButton?.addEventListener("click", async () => {
+    if (!args.onUseProfilePhoto) {
+      return;
+    }
+
+    profilePhotoButton.disabled = true;
+    const previousLabel = profilePhotoButton.textContent;
+    profilePhotoButton.textContent = `${args.profilePhotoLabel ?? "Use Google photo"}...`;
+    try {
+      const nextArtifact = await args.onUseProfilePhoto(currentTemplate, currentArtifact);
+      if (nextArtifact) {
+        applyArtifact(nextArtifact);
+      }
+    } finally {
+      profilePhotoButton.disabled = false;
+      profilePhotoButton.textContent = previousLabel;
+    }
+  });
+
   panel.querySelectorAll<HTMLButtonElement>("[data-locale-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const localeId = button.dataset.localeId as HomeFeedLocale | undefined;
@@ -359,6 +400,15 @@ export function showResultOverlay(args: {
   panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
     settingsMenu?.classList.toggle("hidden");
   });
+  const handlePlatformSettingsToggle = () => {
+    if (!panel.isConnected) {
+      window.removeEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
+      return;
+    }
+
+    settingsMenu?.classList.toggle("hidden");
+  };
+  window.addEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
   panel.querySelector<HTMLButtonElement>('[data-action="go-home"]')?.addEventListener("click", () => {
     args.onGoHome();
   });
@@ -382,12 +432,17 @@ export function showResultOverlay(args: {
   });
 
   panel.querySelector('[data-action="share"]')?.addEventListener("click", () => args.onShare(currentTemplate, currentArtifact));
+  panel.querySelector('[data-action="share-story"]')?.addEventListener("click", () => args.onShareToStory?.(currentTemplate, currentArtifact));
   panel.querySelector('[data-action="retry"]')?.addEventListener("click", () => {
     const partnerName = retryInput?.value ?? args.partnerName;
     args.onPartnerDraftChange?.(partnerName);
     args.onRetry(partnerName);
   });
   panel.querySelector('[data-action="reward"]')?.addEventListener("click", args.onReward);
+
+  if (currentArtifact.posterImageDataUrl) {
+    panel.classList.add("hud-panel--poster-focus");
+  }
 
   setHud(panel);
 }

@@ -1,10 +1,12 @@
 import { App } from "@capacitor/app";
+import { SocialLogin } from "@capgo/capacitor-social-login";
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
 import { Preferences } from "@capacitor/preferences";
 import { Share } from "@capacitor/share";
 import type { IAds } from "../interfaces/IAds";
 import type { IAnalytics } from "../interfaces/IAnalytics";
+import type { IIdentity, SocialProfile } from "../interfaces/IIdentity";
 import type { IPlatform, PlatformLifecycleHooks } from "../interfaces/IPlatform";
 import type { IRemoteConfig } from "../interfaces/IRemoteConfig";
 import type { IShare, SharePayload } from "../interfaces/IShare";
@@ -26,6 +28,19 @@ export const capacitorPlatform: IPlatform = {
   id: "android",
   isOnline: () => navigator.onLine,
   vibrate: (milliseconds) => navigator.vibrate?.(milliseconds),
+  getLaunchContext: () => ({
+    source: "unknown",
+    platform: "android",
+    isNativeShell: isNativeAndroid()
+  }),
+  getTheme: () => ({
+    colorScheme: window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light"
+  }),
+  getViewport: () => ({
+    height: window.innerHeight,
+    stableHeight: window.innerHeight,
+    isExpanded: true
+  }),
   async installLifecycle(hooks: PlatformLifecycleHooks) {
     if (!isNativeAndroid()) {
       return;
@@ -93,6 +108,98 @@ export const capacitorAnalytics: IAnalytics = {
     console.info("[analytics:android]", event.name, event.payload);
   }
 };
+
+type CapacitorIdentityConfig = {
+  googleWebClientId?: string;
+};
+
+export function createCapacitorIdentity(config: CapacitorIdentityConfig = {}): IIdentity {
+  let initialized = false;
+
+  async function ensureInitialized(): Promise<void> {
+    if (!isNativeAndroid() || initialized || !config.googleWebClientId) {
+      return;
+    }
+
+    await SocialLogin.initialize({
+      google: {
+        webClientId: config.googleWebClientId,
+        mode: "online"
+      }
+    });
+    initialized = true;
+  }
+
+  function canUseGoogleProfile(): boolean {
+    return isNativeAndroid() && Boolean(config.googleWebClientId);
+  }
+
+  function toSocialProfile(
+    profile:
+      | {
+          email: string | null;
+          familyName: string | null;
+          givenName: string | null;
+          id: string | null;
+          name: string | null;
+          imageUrl: string | null;
+        }
+      | null
+      | undefined
+  ): SocialProfile | null {
+    if (!profile?.imageUrl) {
+      return null;
+    }
+
+    return {
+      provider: "google",
+      id: profile.id ?? profile.email ?? profile.name ?? "google-profile",
+      displayName: profile.name ?? ([profile.givenName, profile.familyName].filter(Boolean).join(" ") || "Google profile"),
+      email: profile.email ?? undefined,
+      imageUrl: profile.imageUrl
+    };
+  }
+
+  return {
+    canUseGoogleProfile() {
+      return canUseGoogleProfile();
+    },
+    async connectGoogleProfile() {
+      if (!canUseGoogleProfile()) {
+        return null;
+      }
+
+      await ensureInitialized();
+      const response = await SocialLogin.login({
+        provider: "google",
+        options: {
+          scopes: ["email", "profile"],
+          filterByAuthorizedAccounts: false,
+          autoSelectEnabled: false
+        }
+      });
+
+      if (response.result.responseType !== "online") {
+        return null;
+      }
+
+      return toSocialProfile(response.result.profile);
+    },
+    async disconnectGoogleProfile() {
+      if (!canUseGoogleProfile()) {
+        return;
+      }
+
+      await ensureInitialized();
+      await SocialLogin.logout({ provider: "google" });
+    },
+    async getPlatformProfile() {
+      return null;
+    }
+  };
+}
+
+export const capacitorIdentity = createCapacitorIdentity();
 
 export const capacitorRemoteConfig: IRemoteConfig = {
   async getFeatureFlags() {
@@ -165,6 +272,12 @@ export const capacitorShare: IShare = {
     }
 
     await browserShare.share(payload);
+  },
+  canShareToStory() {
+    return false;
+  },
+  async shareToStory(payload: SharePayload) {
+    await capacitorShare.share(payload);
   }
 };
 

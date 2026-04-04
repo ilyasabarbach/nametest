@@ -403,6 +403,15 @@ export function showHomeOverlay(args: {
   panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
     settingsMenu?.classList.toggle("hidden");
   });
+  const handlePlatformSettingsToggle = () => {
+    if (!panel.isConnected) {
+      window.removeEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
+      return;
+    }
+
+    settingsMenu?.classList.toggle("hidden");
+  };
+  window.addEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
   panel.addEventListener("click", (event) => {
     const target = event.target as HTMLElement | null;
     if (!target?.closest("[data-action='toggle-settings']") && !target?.closest("[data-settings-menu]")) {

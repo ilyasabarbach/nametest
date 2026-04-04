@@ -1,14 +1,20 @@
 import {
   isArtifactRemixResponse,
   isDiscoveryFeedPagePayload,
+  isTelegramInitDataVerifyResponse,
+  isTelegramPrepareShareResponse,
+  isTelegramStartAppResolveResponse,
   type ArtifactRemixRequest,
   type ArtifactRemixResponse,
   type DiscoveryFeedItemPayload,
-  type RemoteConfigPayload
+  type RemoteConfigPayload,
+  type TelegramMiniAppUser,
+  type TelegramPrepareShareRequest,
+  type TelegramPrepareShareResponse,
+  type TelegramStartAppState
 } from "@nametests/backend-contracts";
 import {
   buildGeneratedPosterDataUrl,
-  derivePastLifeEchoName,
   defaultManifest,
   defaultTests,
   enCopy,
@@ -35,7 +41,17 @@ import {
   type SessionState,
   type TestDefinition
 } from "@nametests/core";
-import type { IAds, IAnalytics, IPlatform, IRemoteConfig, IShare, IStorage } from "@nametests/platform-sdk";
+import type {
+  IAds,
+  IAnalytics,
+  IIdentity,
+  IPlatform,
+  IRemoteConfig,
+  IShare,
+  IStorage,
+  PlatformLaunchContext,
+  SocialProfile
+} from "@nametests/platform-sdk";
 import { resolvePlatformServices, type PlatformServices } from "./platform/services";
 import fallbackRemoteConfig from "../../../services/config/remote-config/dev.json";
 
@@ -47,6 +63,7 @@ type RuntimeState = {
   platform: IPlatform;
   ads: IAds;
   analytics: IAnalytics;
+  identity: IIdentity;
   remoteConfigService: IRemoteConfig;
   share: IShare;
   storage: IStorage;
@@ -69,8 +86,20 @@ type RuntimeState = {
     primaryName: string;
     partnerName: string;
   };
+  profile: StoredProfile | null;
   resultDraftPartnerName: string;
   sceneHistory: string[];
+  launchContext: PlatformLaunchContext;
+  launchStartAppState: TelegramStartAppState | null;
+};
+
+type StoredProfile = SocialProfile & {
+  imageDataUrl: string;
+};
+
+type ResolvedTelegramLaunch = {
+  verifiedProfile: SocialProfile | null;
+  startAppState: TelegramStartAppState | null;
 };
 
 type PersistedAppState = {
@@ -80,6 +109,9 @@ type PersistedAppState = {
   resultDraftPartnerName?: string;
   sceneHistory?: string[];
 };
+
+const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
+const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
 
 async function loadRemoteConfig(remoteConfigService: IRemoteConfig): Promise<RemoteConfigPayload> {
   const configuredPath = import.meta.env.VITE_REMOTE_CONFIG_URL as string | undefined;
@@ -142,6 +174,134 @@ async function loadStoredAppState(storage: IStorage): Promise<PersistedAppState 
   }
 }
 
+async function loadStoredProfile(storage: IStorage): Promise<StoredProfile | null> {
+  const raw = await storage.getItem(STORAGE_KEYS.profile);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as StoredProfile;
+  } catch {
+    return null;
+  }
+}
+
+function toStoredProfile(profile: SocialProfile, imageDataUrl = ""): StoredProfile {
+  return {
+    ...profile,
+    imageDataUrl
+  };
+}
+
+function telegramUserToSocialProfile(user?: TelegramMiniAppUser): SocialProfile | null {
+  if (!user) {
+    return null;
+  }
+
+  const displayName =
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.username || "Telegram user";
+
+  return {
+    provider: "telegram",
+    id: user.id,
+    displayName,
+    username: user.username,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    languageCode: user.languageCode,
+    imageUrl: user.photoUrl
+  };
+}
+
+async function remoteImageToDataUrl(source: string, maxSize = 320): Promise<string | null> {
+  try {
+    const response = await fetch(source);
+    if (!response.ok) {
+      return null;
+    }
+
+    const blob = await response.blob();
+    return await blobToSizedDataUrl(blob, maxSize);
+  } catch {
+    return null;
+  }
+}
+
+function resolveSharedApiOrigin(): string | null {
+  const explicitBase = (import.meta.env.VITE_BACKEND_BASE_URL as string | undefined)?.trim();
+  if (explicitBase) {
+    return new URL(explicitBase, window.location.href).origin;
+  }
+
+  const candidates = [
+    import.meta.env.VITE_DISCOVERY_FEED_URL as string | undefined,
+    import.meta.env.VITE_ARTIFACT_REMIX_URL as string | undefined
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    try {
+      return new URL(candidate, window.location.href).origin;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+function resolveBackendUrl(explicitEnvKey: string, fallbackPath: string): string | null {
+  const configuredPath = (import.meta.env[explicitEnvKey] as string | undefined)?.trim();
+  if (configuredPath) {
+    return new URL(configuredPath, window.location.href).toString();
+  }
+
+  const sharedOrigin = resolveSharedApiOrigin();
+  return sharedOrigin ? new URL(fallbackPath, sharedOrigin).toString() : null;
+}
+
+function resolveTelegramInitVerifyUrl(): string | null {
+  return resolveBackendUrl("VITE_TELEGRAM_INIT_VERIFY_URL", "/api/telegram/init-verify");
+}
+
+function resolveTelegramStartAppResolveUrl(): string | null {
+  return resolveBackendUrl("VITE_TELEGRAM_STARTAPP_RESOLVE_URL", "/api/telegram/startapp-resolve");
+}
+
+function resolveTelegramPrepareShareUrl(): string | null {
+  return resolveBackendUrl("VITE_TELEGRAM_SHARE_URL", "/api/telegram/share-result");
+}
+
+async function blobToSizedDataUrl(blob: Blob, maxSize: number): Promise<string> {
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image();
+      nextImage.onload = () => resolve(nextImage);
+      nextImage.onerror = () => reject(new Error("profile_image_load_failed"));
+      nextImage.src = objectUrl;
+    });
+
+    const canvas = document.createElement("canvas");
+    const scale = Math.min(1, maxSize / Math.max(image.naturalWidth || 1, image.naturalHeight || 1));
+    canvas.width = Math.max(1, Math.round((image.naturalWidth || 1) * scale));
+    canvas.height = Math.max(1, Math.round((image.naturalHeight || 1) * scale));
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return objectUrl;
+    }
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.92);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function createInitialState(services: PlatformServices): RuntimeState {
   const flow = new GameFlow(defaultFeatureFlags);
   const dailyFeatured = defaultTests[0];
@@ -155,6 +315,7 @@ function createInitialState(services: PlatformServices): RuntimeState {
     platform: services.platform,
     ads: services.ads,
     analytics: services.analytics,
+    identity: services.identity,
     remoteConfigService: services.remoteConfig,
     share: services.share,
     storage: services.storage,
@@ -177,8 +338,15 @@ function createInitialState(services: PlatformServices): RuntimeState {
       primaryName: "",
       partnerName: ""
     },
+    profile: null,
     resultDraftPartnerName: "",
-    sceneHistory: []
+    sceneHistory: [],
+    launchContext: services.platform.getLaunchContext?.() ?? {
+      source: "unknown",
+      platform: services.platform.id,
+      isNativeShell: false
+    },
+    launchStartAppState: null
   };
 }
 
@@ -207,20 +375,7 @@ async function loadDiscoveryFeedPage(locale: HomeFeedLocale, cursor?: string) {
 }
 
 function resolveArtifactRemixUrl(): string | null {
-  const configuredPath = import.meta.env.VITE_ARTIFACT_REMIX_URL as string | undefined;
-  if (configuredPath) {
-    return new URL(configuredPath, window.location.href).toString();
-  }
-
-  const discoveryFeedPath = import.meta.env.VITE_DISCOVERY_FEED_URL as string | undefined;
-  if (discoveryFeedPath) {
-    const discoveryUrl = new URL(discoveryFeedPath, window.location.href);
-    discoveryUrl.pathname = discoveryUrl.pathname.replace(/\/?(api\/)?discovery-feed$/, "/api/artifact-remix");
-    discoveryUrl.search = "";
-    return discoveryUrl.toString();
-  }
-
-  return null;
+  return resolveBackendUrl("VITE_ARTIFACT_REMIX_URL", "/api/artifact-remix");
 }
 
 function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixResponse {
@@ -228,7 +383,6 @@ function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixRe
   const scoreSeed = Array.from(seed).reduce((total, character) => total + character.charCodeAt(0), 0);
   const name = payload.names.primaryName || payload.result.title;
   const pair = payload.names.partnerName ? `${payload.names.primaryName} + ${payload.names.partnerName}` : name;
-  const derivedName = derivePastLifeEchoName(name);
   const accentPalettes = {
     cosmic: ["#7c5cff", "#2bc0ff", "#ff87b5"],
     spotlight: ["#ffd166", "#72ddf7", "#ff8fab"],
@@ -262,12 +416,13 @@ function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixRe
           payload.imageRecipeId === "past-life-vintage-poster"
             ? buildGeneratedPosterDataUrl({
                 recipeId: payload.imageRecipeId,
-                headline: payload.result.title,
                 primaryName: name,
-                derivedName,
-                body: payload.result.body,
-                insight: "Heart of gold",
-                accent: pickAccent("portrait")
+                resultKey: payload.result.resultKey,
+                resultTitle: payload.result.title,
+              body: payload.result.body,
+              insight: payload.result.insight,
+                accent: pickAccent("portrait"),
+                presentPortraitImageDataUrl: payload.presentPhotoDataUrl
               })
             : undefined
       }
@@ -296,12 +451,13 @@ function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixRe
           payload.imageRecipeId === "past-life-vintage-poster"
             ? buildGeneratedPosterDataUrl({
                 recipeId: payload.imageRecipeId,
-                headline: "No one is born without a past life",
                 primaryName: name,
-                derivedName,
+                resultKey: payload.result.resultKey,
+                resultTitle: payload.result.title,
                 body: payload.result.body,
-                insight: "Gentle side",
-                accent: pickAccent("storybook")
+                insight: payload.result.insight,
+                accent: pickAccent("storybook"),
+                presentPortraitImageDataUrl: payload.presentPhotoDataUrl
               })
             : undefined
       }
@@ -409,12 +565,13 @@ function synthesizeArtifactRemix(payload: ArtifactRemixRequest): ArtifactRemixRe
         payload.imageRecipeId === "past-life-vintage-poster"
           ? buildGeneratedPosterDataUrl({
               recipeId: payload.imageRecipeId,
-              headline: "No one is born without a past life",
               primaryName: name,
-              derivedName,
+              resultKey: payload.result.resultKey,
+              resultTitle: payload.result.title,
               body: payload.result.body,
-              insight: "Hidden memory",
-              accent: pickAccent("cosmic")
+              insight: payload.result.insight,
+              accent: pickAccent("cosmic"),
+              presentPortraitImageDataUrl: payload.presentPhotoDataUrl
             })
           : undefined
     }
@@ -437,30 +594,168 @@ function resolveFeedSelection(
   };
 }
 
+function decodeLocalStartAppState(token: string): TelegramStartAppState | null {
+  const [encodedPayload] = token.split(".", 1);
+  try {
+    const normalized = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4 || 4)) % 4);
+    const payload = JSON.parse(atob(padded)) as TelegramStartAppState;
+    if (payload?.version !== 1 || typeof payload.testId !== "string") {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeBotUsername(raw: string | undefined): string | null {
+  const normalized = raw?.trim().replace(/^@+/, "");
+  return normalized ? normalized : null;
+}
+
+async function resolveTelegramLaunchContext(launchContext: PlatformLaunchContext): Promise<ResolvedTelegramLaunch> {
+  const fallback: ResolvedTelegramLaunch = {
+    verifiedProfile: null,
+    startAppState: null
+  };
+
+  if (!launchContext.initDataRaw && !launchContext.startParam) {
+    return fallback;
+  }
+
+  let verifiedProfile: SocialProfile | null = null;
+  const initVerifyUrl = resolveTelegramInitVerifyUrl();
+  if (launchContext.initDataRaw && initVerifyUrl) {
+    try {
+      const response = await fetch(initVerifyUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ initDataRaw: launchContext.initDataRaw })
+      });
+      if (response.ok) {
+        const payload = (await response.json()) as unknown;
+        if (isTelegramInitDataVerifyResponse(payload)) {
+          verifiedProfile = telegramUserToSocialProfile(payload.user);
+          if (!launchContext.startParam && payload.startParam) {
+            launchContext.startParam = payload.startParam;
+          }
+        }
+      }
+    } catch {
+      verifiedProfile = null;
+    }
+  }
+
+  let startAppState: TelegramStartAppState | null = null;
+  if (launchContext.startParam) {
+    const startAppUrl = resolveTelegramStartAppResolveUrl();
+    if (startAppUrl) {
+      try {
+        const resolveUrl = new URL(startAppUrl);
+        resolveUrl.searchParams.set("startapp", launchContext.startParam);
+        const response = await fetch(resolveUrl.toString());
+        if (response.ok) {
+          const payload = (await response.json()) as unknown;
+          if (isTelegramStartAppResolveResponse(payload) && payload.status === "ok") {
+            startAppState = payload.state ?? null;
+          }
+        }
+      } catch {
+        startAppState = null;
+      }
+    }
+
+    if (!startAppState) {
+      startAppState = decodeLocalStartAppState(launchContext.startParam);
+    }
+  }
+
+  return {
+    verifiedProfile,
+    startAppState
+  };
+}
+
 export const runtime = {
   state: createInitialState(resolvePlatformServices()),
+
+  syncPlatformChrome(): void {
+    this.state.platform.updateNavigationChrome?.({
+      showBack: this.canNavigateBackScene(),
+      showSettings: true
+    });
+    this.state.platform.setClosingConfirmation?.(this.canNavigateBackScene());
+  },
 
   configureServices(services: PlatformServices): void {
     this.state.platform = services.platform;
     this.state.ads = services.ads;
     this.state.analytics = services.analytics;
+    this.state.identity = services.identity;
     this.state.remoteConfigService = services.remoteConfig;
     this.state.share = services.share;
     this.state.storage = services.storage;
+    this.state.launchContext = services.platform.getLaunchContext?.() ?? {
+      source: "unknown",
+      platform: services.platform.id,
+      isNativeShell: false
+    };
   },
 
   async init(): Promise<void> {
-    const [remoteConfig, progress, locale] = await Promise.all([
+    this.state.launchContext = this.state.platform.getLaunchContext?.() ?? {
+      source: "unknown",
+      platform: this.state.platform.id,
+      isNativeShell: false
+    };
+
+    const [remoteConfig, progress, locale, profile, platformProfile, resolvedTelegramLaunch] = await Promise.all([
       loadRemoteConfig(this.state.remoteConfigService),
       loadStoredProgress(this.state.storage),
-      loadStoredLocale(this.state.storage)
+      loadStoredLocale(this.state.storage),
+      loadStoredProfile(this.state.storage),
+      this.state.identity.getPlatformProfile(),
+      this.state.platform.id === "telegram"
+        ? resolveTelegramLaunchContext({ ...this.state.launchContext })
+        : Promise.resolve<ResolvedTelegramLaunch>({
+            verifiedProfile: null,
+            startAppState: null
+          })
     ]);
     const storedAppState = await loadStoredAppState(this.state.storage);
     this.state.remoteConfig = remoteConfig;
     this.state.progress = progress;
     this.state.locale = locale;
     this.state.copy = resolveCopyForLocale(locale);
+    this.state.profile = profile;
+    this.state.launchStartAppState = resolvedTelegramLaunch.startAppState;
     this.state.flow.setFlags(remoteConfig.featureFlags);
+
+    const effectivePlatformProfile = resolvedTelegramLaunch.verifiedProfile ?? platformProfile ?? profile;
+    if (
+      effectivePlatformProfile &&
+      (!this.state.profile ||
+        this.state.profile.id !== effectivePlatformProfile.id ||
+        this.state.profile.provider !== effectivePlatformProfile.provider)
+    ) {
+      const imageDataUrl = effectivePlatformProfile.imageUrl
+        ? (await remoteImageToDataUrl(effectivePlatformProfile.imageUrl)) ?? ""
+        : "";
+      this.state.profile = toStoredProfile(effectivePlatformProfile, imageDataUrl);
+      await this.state.storage.setItem(STORAGE_KEYS.profile, JSON.stringify(this.state.profile));
+    } else if (this.state.profile?.imageUrl && !this.state.profile.imageDataUrl) {
+      const imageDataUrl = await remoteImageToDataUrl(this.state.profile.imageUrl);
+      if (imageDataUrl) {
+        this.state.profile = {
+          ...this.state.profile,
+          imageDataUrl
+        };
+        await this.state.storage.setItem(STORAGE_KEYS.profile, JSON.stringify(this.state.profile));
+      }
+    }
 
     const manifest = {
       ...defaultManifest,
@@ -540,8 +835,39 @@ export const runtime = {
       this.state.sceneHistory = restoredHistory.length ? restoredHistory : ["HomeScene"];
     }
 
+    if (this.state.launchStartAppState) {
+      const launchTest =
+        this.state.allTests.find((test) => test.id === this.state.launchStartAppState?.testId) ?? this.state.session.selectedTest;
+      this.state.session = {
+        ...this.state.flow.createSession(launchTest),
+        playerProgress: effectiveProgress,
+        dailyFeaturedTestId: dailyFeatured.id
+      };
+      this.state.homeSelection = resolveFeedSelection(
+        this.state.discoveryFeedItems,
+        launchTest.id,
+        this.state.launchStartAppState.feedItemId
+      );
+      this.state.homeDraftNames = {
+        primaryName: "",
+        partnerName: ""
+      };
+      this.state.resultDraftPartnerName = "";
+      this.state.sceneHistory = ["HomeScene"];
+    }
+
     await this.persistProgress();
     await this.persistAppState();
+    this.analytics.track({
+      name: "launch_resolved",
+      payload: {
+        platform: this.state.platform.id,
+        source: this.state.launchContext.source,
+        startParam: this.state.launchContext.startParam,
+        testId: this.state.launchStartAppState?.testId
+      }
+    });
+    this.syncPlatformChrome();
     this.state.initialized = true;
   },
 
@@ -573,12 +899,105 @@ export const runtime = {
     return this.state.analytics;
   },
 
+  get identity() {
+    return this.state.identity;
+  },
+
   get share() {
     return this.state.share;
   },
 
   get progress() {
     return this.state.progress;
+  },
+
+  get profile() {
+    return this.state.profile;
+  },
+
+  getLaunchContext() {
+    return this.state.launchContext;
+  },
+
+  canUsePlatformProfilePhoto(): boolean {
+    return Boolean(this.state.profile?.imageUrl || this.state.identity.canUseGoogleProfile());
+  },
+
+  canUseGoogleProfilePhoto(): boolean {
+    return this.canUsePlatformProfilePhoto();
+  },
+
+  getProfilePhotoActionLabel(): string {
+    if (this.state.platform.id === "telegram") {
+      return this.state.copy["result.telegramPhotoLabel"] ?? "Use Telegram photo";
+    }
+
+    return this.state.copy["result.googlePhotoLabel"] ?? this.state.copy["result.profilePhotoLabel"] ?? "Use profile photo";
+  },
+
+  getActiveProfilePhotoDataUrl(): string | undefined {
+    return this.state.profile?.imageDataUrl || undefined;
+  },
+
+  async connectPlatformProfilePhoto(): Promise<StoredProfile | null> {
+    if (this.state.profile?.imageDataUrl) {
+      return this.state.profile;
+    }
+
+    const platformProfile = this.state.profile ?? (await this.state.identity.getPlatformProfile());
+    if (platformProfile?.imageUrl) {
+      const imageDataUrl = await remoteImageToDataUrl(platformProfile.imageUrl);
+      if (imageDataUrl) {
+        this.state.profile = toStoredProfile(platformProfile, imageDataUrl);
+        await this.state.storage.setItem(STORAGE_KEYS.profile, JSON.stringify(this.state.profile));
+        return this.state.profile;
+      }
+    }
+
+    const connectedProfile = await this.state.identity.connectGoogleProfile();
+    if (!connectedProfile?.imageUrl) {
+      return null;
+    }
+
+    const imageDataUrl = await remoteImageToDataUrl(connectedProfile.imageUrl);
+    if (!imageDataUrl) {
+      return null;
+    }
+
+    this.state.profile = {
+      ...connectedProfile,
+      imageDataUrl
+    };
+    await this.state.storage.setItem(STORAGE_KEYS.profile, JSON.stringify(this.state.profile));
+    return this.state.profile;
+  },
+
+  async connectGoogleProfilePhoto(): Promise<StoredProfile | null> {
+    return this.connectPlatformProfilePhoto();
+  },
+
+  async clearGoogleProfilePhoto(): Promise<void> {
+    this.state.profile = null;
+    await this.state.storage.setItem(STORAGE_KEYS.profile, "");
+    await this.state.identity.disconnectGoogleProfile();
+  },
+
+  buildResultPosterImage(params: { title: string; body: string; insight: string; accent: string }): string | undefined {
+    const imageRecipeId = this.state.session.selectedTest.imageRecipeId;
+    if (!imageRecipeId) {
+      return undefined;
+    }
+
+    return buildGeneratedPosterDataUrl({
+      recipeId: imageRecipeId,
+      primaryName: this.state.session.names.primaryName || params.title,
+      resultKey: this.state.session.latestResult?.resultKey ?? "default",
+      resultTitle: params.title,
+      body: params.body,
+      insight: params.insight,
+      accent: params.accent,
+      presentPortraitImageDataUrl: this.state.profile?.imageDataUrl
+    });
   },
 
   get locale() {
@@ -606,6 +1025,7 @@ export const runtime = {
     this.state.progress = session.playerProgress;
     void this.persistProgress();
     void this.persistAppState();
+    this.syncPlatformChrome();
   },
 
   getAvailableTests(): TestDefinition[] {
@@ -631,6 +1051,7 @@ export const runtime = {
       selectedFeedItemId: ""
     };
     void this.persistAppState();
+    this.syncPlatformChrome();
   },
 
   setHomeDraftNames(primaryName: string, partnerName: string): void {
@@ -659,11 +1080,13 @@ export const runtime = {
 
     this.state.sceneHistory.push(sceneKey);
     void this.persistAppState();
+    this.syncPlatformChrome();
   },
 
   resetSceneHistory(sceneKey = "HomeScene"): void {
     this.state.sceneHistory = [sceneKey];
     void this.persistAppState();
+    this.syncPlatformChrome();
   },
 
   canNavigateBackScene(): boolean {
@@ -677,6 +1100,7 @@ export const runtime = {
 
     this.state.sceneHistory.pop();
     void this.persistAppState();
+    this.syncPlatformChrome();
     return this.state.sceneHistory.at(-1) ?? null;
   },
 
@@ -727,6 +1151,7 @@ export const runtime = {
     this.state.homeSelection = resolveFeedSelection(this.state.discoveryFeedItems, selected.id, feedItemId);
     this.state.resultDraftPartnerName = this.state.session.names.partnerName;
     void this.persistAppState();
+    this.syncPlatformChrome();
   },
 
   startSession(primaryName: string, partnerName: string, inputValues?: Record<string, TestInputValue>): void {
@@ -762,6 +1187,143 @@ export const runtime = {
     }
 
     return buildSharePayload(this.state.session.selectedTest, this.state.session.latestResult, this.state.session.names, this.state.copy);
+  },
+
+  canShareToStory(): boolean {
+    return (
+      this.state.platform.id === "telegram" &&
+      Boolean(this.state.share.canShareToStory?.()) &&
+      Boolean((import.meta.env.VITE_TELEGRAM_PUBLIC_BASE_URL as string | undefined)?.trim())
+    );
+  },
+
+  privateBuildTelegramStartState(template?: ArtifactRemixRequest["template"]): TelegramStartAppState {
+    return {
+      version: 1,
+      testId: this.state.session.selectedTest.id,
+      feedItemId: this.state.homeSelection.selectedFeedItemId || undefined,
+      template,
+      resultKey: this.state.session.latestResult?.resultKey
+    };
+  },
+
+  async prepareTelegramShare(payload: {
+    text: string;
+    title?: string;
+    imageDataUrl?: string;
+    filename?: string;
+    template?: ArtifactRemixRequest["template"];
+  }): Promise<TelegramPrepareShareResponse | null> {
+    if (this.state.platform.id !== "telegram") {
+      return null;
+    }
+
+    const request: TelegramPrepareShareRequest = {
+      text: payload.text,
+      title: payload.title,
+      imageDataUrl: payload.imageDataUrl,
+      filename: payload.filename,
+      state: this.privateBuildTelegramStartState(payload.template)
+    };
+
+    const endpoint = resolveTelegramPrepareShareUrl();
+    if (endpoint) {
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(request)
+        });
+        if (response.ok) {
+          const data = (await response.json()) as unknown;
+          if (isTelegramPrepareShareResponse(data)) {
+            return data;
+          }
+        }
+      } catch {
+        // Fall back to local deeplink generation below.
+      }
+    }
+
+    const botUsername =
+      normalizeBotUsername(import.meta.env.VITE_TELEGRAM_BOT_USERNAME as string | undefined) ??
+      DEFAULT_TELEGRAM_BOT_USERNAME;
+    if (!botUsername) {
+      return null;
+    }
+
+    const encodedState = btoa(JSON.stringify(request.state))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/g, "");
+    const miniAppShortName =
+      (import.meta.env.VITE_TELEGRAM_MINI_APP_SHORT_NAME as string | undefined)?.trim() ||
+      DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
+    const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
+    const deepLinkUrl = `https://t.me${basePath}?startapp=${encodedState}`;
+    const shareUrl = new URL("https://t.me/share/url");
+    shareUrl.searchParams.set("url", deepLinkUrl);
+    shareUrl.searchParams.set("text", payload.text);
+
+    return {
+      status: "ok",
+      deepLinkUrl,
+      shareUrl: shareUrl.toString(),
+      shareText: payload.text,
+      storyWidgetLinkUrl: deepLinkUrl,
+      storyWidgetLinkName: this.state.copy["result.makeYours"] ?? "Make yours"
+    };
+  },
+
+  async shareResultArtifact(payload: {
+    title: string;
+    text: string;
+    imageDataUrl?: string;
+    filename?: string;
+    template?: ArtifactRemixRequest["template"];
+  }): Promise<void> {
+    const telegramShare = await this.prepareTelegramShare(payload);
+    await this.state.share.share({
+      title: payload.title,
+      text: telegramShare?.shareText ?? payload.text,
+      imageDataUrl: payload.imageDataUrl,
+      filename: payload.filename,
+      linkUrl: telegramShare?.deepLinkUrl,
+      telegramShareUrl: telegramShare?.shareUrl,
+      telegramMessageId: telegramShare?.messageId
+    });
+  },
+
+  async shareResultStoryArtifact(payload: {
+    title: string;
+    text: string;
+    imageDataUrl?: string;
+    filename?: string;
+    template?: ArtifactRemixRequest["template"];
+  }): Promise<boolean> {
+    if (!this.canShareToStory() || !this.state.share.shareToStory) {
+      return false;
+    }
+
+    const telegramShare = await this.prepareTelegramShare(payload);
+    if (!telegramShare?.storyMediaUrl) {
+      return false;
+    }
+
+    await this.state.share.shareToStory({
+      title: payload.title,
+      text: telegramShare.shareText,
+      imageDataUrl: payload.imageDataUrl,
+      filename: payload.filename,
+      linkUrl: telegramShare.deepLinkUrl,
+      storyMediaUrl: telegramShare.storyMediaUrl,
+      storyWidgetLinkUrl: telegramShare.storyWidgetLinkUrl,
+      storyWidgetLinkName: telegramShare.storyWidgetLinkName,
+      storyText: `${payload.title ?? this.state.session.selectedTest.id} · ${this.state.copy["result.makeYours"] ?? "Make yours"}`
+    });
+    return true;
   },
 
   canShowReward() {

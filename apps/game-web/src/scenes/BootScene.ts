@@ -9,7 +9,10 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     clearHud();
-    runtime.analytics.track({ name: "app_open", payload: { source: "boot" } });
+    runtime.analytics.track({
+      name: "app_open",
+      payload: { source: `${runtime.platform.id}:${runtime.getLaunchContext().source}` }
+    });
     this.scene.start("PreloadScene");
   }
 }

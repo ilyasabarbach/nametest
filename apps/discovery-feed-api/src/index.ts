@@ -1,19 +1,33 @@
 import { createServer } from "node:http";
+import { createHmac, randomUUID } from "node:crypto";
 import {
   buildGeneratedPosterDataUrl,
-  derivePastLifeEchoName,
   getFallbackDiscoveryFeedPage,
   type HomeFeedLocale
 } from "@nametests/content-packs";
 import {
   isArtifactRemixRequest,
   isDiscoveryFeedPagePayload,
+  isTelegramInitDataVerifyRequest,
+  isTelegramPrepareShareRequest,
   type ArtifactRemixRequest,
-  type ArtifactRemixResponse
+  type ArtifactRemixResponse,
+  type TelegramPrepareShareResponse,
+  type TelegramStartAppState
 } from "@nametests/backend-contracts";
 
 const DEFAULT_PORT = 8787;
 const allowedLocales: HomeFeedLocale[] = ["en", "fr", "es", "de", "ar", "pt"];
+const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
+const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
+const ephemeralShareMedia = new Map<
+  string,
+  {
+    contentType: string;
+    buffer: Buffer;
+    expiresAt: number;
+  }
+>();
 
 function resolveLocale(input: string | null): HomeFeedLocale {
   return allowedLocales.find((locale) => locale === input) ?? "en";
@@ -23,10 +37,250 @@ function writeJson(response: import("node:http").ServerResponse, statusCode: num
   response.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type"
   });
   response.end(JSON.stringify(body));
+}
+
+function writeBinary(
+  response: import("node:http").ServerResponse,
+  statusCode: number,
+  buffer: Buffer,
+  contentType: string,
+  maxAgeSeconds = 600
+): void {
+  response.writeHead(statusCode, {
+    "Content-Type": contentType,
+    "Content-Length": buffer.length,
+    "Cache-Control": `public, max-age=${maxAgeSeconds}`,
+    "Access-Control-Allow-Origin": "*"
+  });
+  response.end(buffer);
+}
+
+function parseJsonBody(request: import("node:http").IncomingMessage): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    let raw = "";
+    request.setEncoding("utf8");
+    request.on("data", (chunk) => {
+      raw += chunk;
+    });
+    request.on("end", () => {
+      try {
+        resolve(raw ? JSON.parse(raw) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+function encodeBase64Url(value: string): string {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+
+function decodeBase64Url(value: string): string | null {
+  try {
+    return Buffer.from(value, "base64url").toString("utf8");
+  } catch {
+    return null;
+  }
+}
+
+function signStartAppPayload(encodedPayload: string): string {
+  const secret = process.env.TELEGRAM_STARTAPP_SECRET?.trim();
+  if (!secret) {
+    return encodedPayload;
+  }
+
+  const signature = createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+  return `${encodedPayload}.${signature}`;
+}
+
+function decodeSignedStartAppPayload(token: string): TelegramStartAppState | null {
+  const [encodedPayload, providedSignature] = token.split(".", 2);
+  const secret = process.env.TELEGRAM_STARTAPP_SECRET?.trim();
+  if (secret) {
+    const expectedSignature = createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+    if (!providedSignature || providedSignature !== expectedSignature) {
+      return null;
+    }
+  }
+
+  const json = decodeBase64Url(encodedPayload);
+  if (!json) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(json) as TelegramStartAppState;
+    if (payload?.version !== 1 || typeof payload.testId !== "string") {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function encodeStartAppState(state: TelegramStartAppState): string {
+  return signStartAppPayload(encodeBase64Url(JSON.stringify(state)));
+}
+
+function normalizeBotUsername(raw: string | undefined): string | null {
+  const normalized = raw?.trim().replace(/^@+/, "");
+  return normalized ? normalized : null;
+}
+
+function buildDeepLink(startState: TelegramStartAppState): string | null {
+  const botUsername = normalizeBotUsername(process.env.TELEGRAM_BOT_USERNAME) ?? DEFAULT_TELEGRAM_BOT_USERNAME;
+  if (!botUsername) {
+    return null;
+  }
+
+  const miniAppShortName =
+    process.env.TELEGRAM_MINI_APP_SHORT_NAME?.trim().replace(/^\/+/, "") || DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
+  const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
+  return `https://t.me${basePath}?startapp=${encodeURIComponent(encodeStartAppState(startState))}`;
+}
+
+function dataUrlToBinary(dataUrl: string): { contentType: string; buffer: Buffer } | null {
+  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+  if (!match) {
+    return null;
+  }
+
+  const [, contentType, base64Payload] = match;
+  return {
+    contentType,
+    buffer: Buffer.from(base64Payload, "base64")
+  };
+}
+
+function registerShareMedia(dataUrl: string): { mediaId: string; contentType: string } | null {
+  const binary = dataUrlToBinary(dataUrl);
+  if (!binary) {
+    return null;
+  }
+
+  const mediaId = randomUUID();
+  ephemeralShareMedia.set(mediaId, {
+    contentType: binary.contentType,
+    buffer: binary.buffer,
+    expiresAt: Date.now() + 1000 * 60 * 30
+  });
+  return {
+    mediaId,
+    contentType: binary.contentType
+  };
+}
+
+function cleanExpiredShareMedia(): void {
+  const now = Date.now();
+  for (const [mediaId, entry] of ephemeralShareMedia.entries()) {
+    if (entry.expiresAt <= now) {
+      ephemeralShareMedia.delete(mediaId);
+    }
+  }
+}
+
+function parseTelegramInitData(raw: string): {
+  hash?: string;
+  startParam?: string;
+  user?: {
+    id: string;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    languageCode?: string;
+    photoUrl?: string;
+  };
+  dataCheckString: string;
+} {
+  const params = new URLSearchParams(raw);
+  const entries = [...params.entries()];
+  const hash = params.get("hash") ?? undefined;
+  const dataCheckString = entries
+    .filter(([key]) => key !== "hash")
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([key, value]) => `${key}=${value}`)
+    .join("\n");
+
+  let user:
+    | {
+        id: string;
+        username?: string;
+        firstName?: string;
+        lastName?: string;
+        languageCode?: string;
+        photoUrl?: string;
+      }
+    | undefined;
+
+  const rawUser = params.get("user");
+  if (rawUser) {
+    try {
+      const parsedUser = JSON.parse(rawUser) as Record<string, unknown>;
+      if (typeof parsedUser.id === "number") {
+        user = {
+          id: String(parsedUser.id),
+          username: typeof parsedUser.username === "string" ? parsedUser.username : undefined,
+          firstName: typeof parsedUser.first_name === "string" ? parsedUser.first_name : undefined,
+          lastName: typeof parsedUser.last_name === "string" ? parsedUser.last_name : undefined,
+          languageCode: typeof parsedUser.language_code === "string" ? parsedUser.language_code : undefined,
+          photoUrl: typeof parsedUser.photo_url === "string" ? parsedUser.photo_url : undefined
+        };
+      }
+    } catch {
+      user = undefined;
+    }
+  }
+
+  return {
+    hash,
+    startParam: params.get("start_param") ?? undefined,
+    user,
+    dataCheckString
+  };
+}
+
+function verifyTelegramInitData(raw: string): {
+  status: "verified" | "unverified" | "invalid";
+  startParam?: string;
+  user?: {
+    id: string;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    languageCode?: string;
+    photoUrl?: string;
+  };
+} {
+  const parsed = parseTelegramInitData(raw);
+  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
+  if (!parsed.hash) {
+    return {
+      status: "invalid"
+    };
+  }
+
+  if (!botToken) {
+    return {
+      status: "unverified",
+      startParam: parsed.startParam,
+      user: parsed.user
+    };
+  }
+
+  const secret = createHmac("sha256", "WebAppData").update(botToken).digest();
+  const calculatedHash = createHmac("sha256", secret).update(parsed.dataCheckString).digest("hex");
+  return {
+    status: calculatedHash === parsed.hash ? "verified" : "invalid",
+    startParam: parsed.startParam,
+    user: parsed.user
+  };
 }
 
 function handleFeedRequest(requestUrl: URL, response: import("node:http").ServerResponse): void {
@@ -69,7 +323,6 @@ function buildSyntheticArtifact(request: ArtifactRemixRequest): ArtifactRemixRes
   const duoName = request.names.partnerName
     ? `${request.names.primaryName} + ${request.names.partnerName}`
     : request.names.primaryName || request.result.title;
-  const derivedName = derivePastLifeEchoName(displayName);
   const accentPalettes = {
     cosmic: ["#7c5cff", "#2bc0ff", "#ff87b5"],
     spotlight: ["#ffd166", "#72ddf7", "#ff8fab"],
@@ -113,12 +366,13 @@ function buildSyntheticArtifact(request: ArtifactRemixRequest): ArtifactRemixRes
           request.imageRecipeId === "past-life-vintage-poster"
             ? buildGeneratedPosterDataUrl({
                 recipeId: request.imageRecipeId,
-                headline: "No one is born without a past life",
                 primaryName: displayName,
-                derivedName,
+                resultKey: request.result.resultKey,
+                resultTitle: request.result.title,
                 body: request.result.body,
-                insight: "Heart of gold",
-                accent: pickAccent("portrait")
+                insight: request.result.insight,
+                accent: pickAccent("portrait"),
+                presentPortraitImageDataUrl: request.presentPhotoDataUrl
               })
             : undefined
       }
@@ -157,12 +411,13 @@ function buildSyntheticArtifact(request: ArtifactRemixRequest): ArtifactRemixRes
           request.imageRecipeId === "past-life-vintage-poster"
             ? buildGeneratedPosterDataUrl({
                 recipeId: request.imageRecipeId,
-                headline: "No one is born without a past life",
                 primaryName: displayName,
-                derivedName,
+                resultKey: request.result.resultKey,
+                resultTitle: request.result.title,
                 body: request.result.body,
-                insight: "Gentle side",
-                accent: pickAccent("storybook")
+                insight: request.result.insight,
+                accent: pickAccent("storybook"),
+                presentPortraitImageDataUrl: request.presentPhotoDataUrl
               })
             : undefined
       }
@@ -314,12 +569,13 @@ function buildSyntheticArtifact(request: ArtifactRemixRequest): ArtifactRemixRes
         request.imageRecipeId === "past-life-vintage-poster"
           ? buildGeneratedPosterDataUrl({
               recipeId: request.imageRecipeId,
-              headline: "No one is born without a past life",
               primaryName: displayName,
-              derivedName,
+              resultKey: request.result.resultKey,
+              resultTitle: request.result.title,
               body: request.result.body,
-              insight: "Hidden memory",
-              accent: pickAccent("cosmic")
+              insight: request.result.insight,
+              accent: pickAccent("cosmic"),
+              presentPortraitImageDataUrl: request.presentPhotoDataUrl
             })
           : undefined
     }
@@ -377,19 +633,9 @@ async function handleArtifactRemixRequest(
   request: import("node:http").IncomingMessage,
   response: import("node:http").ServerResponse
 ): Promise<void> {
-  const body = await new Promise<string>((resolve, reject) => {
-    let raw = "";
-    request.setEncoding("utf8");
-    request.on("data", (chunk) => {
-      raw += chunk;
-    });
-    request.on("end", () => resolve(raw));
-    request.on("error", reject);
-  });
-
   let payload: unknown;
   try {
-    payload = JSON.parse(body);
+    payload = await parseJsonBody(request);
   } catch {
     writeJson(response, 400, { error: "invalid_json" });
     return;
@@ -408,12 +654,13 @@ async function handleArtifactRemixRequest(
     if (portraitDataUrl) {
       result.artifact.posterImageDataUrl = buildGeneratedPosterDataUrl({
         recipeId: payload.imageRecipeId,
-        headline: "No one is born without a past life",
         primaryName: payload.names.primaryName || payload.result.title,
-        derivedName: derivePastLifeEchoName(payload.names.primaryName || payload.result.title),
+        resultKey: payload.result.resultKey,
+        resultTitle: payload.result.title,
         body: payload.result.body,
-        insight: "Heart of gold",
+        insight: payload.result.insight,
         accent: result.artifact.accent ?? "#c98fa9",
+        presentPortraitImageDataUrl: payload.presentPhotoDataUrl,
         portraitImageDataUrl: portraitDataUrl
       });
       result.artifact.badgeLabel = "AI portrait generated";
@@ -421,6 +668,103 @@ async function handleArtifactRemixRequest(
   }
 
   writeJson(response, 200, result);
+}
+
+async function handleTelegramInitVerifyRequest(
+  request: import("node:http").IncomingMessage,
+  response: import("node:http").ServerResponse
+): Promise<void> {
+  let payload: unknown;
+  try {
+    payload = await parseJsonBody(request);
+  } catch {
+    writeJson(response, 400, { error: "invalid_json" });
+    return;
+  }
+
+  if (!isTelegramInitDataVerifyRequest(payload)) {
+    writeJson(response, 400, { error: "invalid_payload" });
+    return;
+  }
+
+  writeJson(response, 200, verifyTelegramInitData(payload.initDataRaw));
+}
+
+function handleTelegramStartAppResolveRequest(
+  requestUrl: URL,
+  response: import("node:http").ServerResponse
+): void {
+  const token = requestUrl.searchParams.get("startapp") ?? "";
+  const state = token ? decodeSignedStartAppPayload(token) : null;
+  if (!state) {
+    writeJson(response, 200, { status: "invalid" });
+    return;
+  }
+
+  writeJson(response, 200, {
+    status: "ok",
+    state
+  });
+}
+
+async function handleTelegramPrepareShareRequest(
+  request: import("node:http").IncomingMessage,
+  response: import("node:http").ServerResponse,
+  requestUrl: URL
+): Promise<void> {
+  let payload: unknown;
+  try {
+    payload = await parseJsonBody(request);
+  } catch {
+    writeJson(response, 400, { error: "invalid_json" });
+    return;
+  }
+
+  if (!isTelegramPrepareShareRequest(payload)) {
+    writeJson(response, 400, { error: "invalid_payload" });
+    return;
+  }
+
+  const deepLinkUrl = buildDeepLink(payload.state);
+  if (!deepLinkUrl) {
+    writeJson(response, 400, { error: "missing_bot_username" });
+    return;
+  }
+
+  const shareUrl = new URL("https://t.me/share/url");
+  shareUrl.searchParams.set("url", deepLinkUrl);
+  shareUrl.searchParams.set("text", payload.text);
+
+  const prepared: TelegramPrepareShareResponse = {
+    status: "ok",
+    deepLinkUrl,
+    shareUrl: shareUrl.toString(),
+    shareText: payload.text,
+    storyWidgetLinkUrl: deepLinkUrl,
+    storyWidgetLinkName: "Make yours"
+  };
+
+  const publicBaseUrl = process.env.TELEGRAM_PUBLIC_BASE_URL?.trim();
+  if (publicBaseUrl && payload.imageDataUrl) {
+    cleanExpiredShareMedia();
+    const media = registerShareMedia(payload.imageDataUrl);
+    if (media) {
+      const storyUrl = new URL(`/api/telegram/share-media/${media.mediaId}`, publicBaseUrl);
+      storyUrl.searchParams.set("filename", payload.filename ?? "result.png");
+      prepared.storyMediaUrl = storyUrl.toString();
+    }
+  } else if (requestUrl.origin !== "null" && payload.imageDataUrl) {
+    cleanExpiredShareMedia();
+    const media = registerShareMedia(payload.imageDataUrl);
+    if (media) {
+      const origin = process.env.TELEGRAM_PUBLIC_BASE_URL?.trim();
+      if (origin) {
+        prepared.storyMediaUrl = new URL(`/api/telegram/share-media/${media.mediaId}`, origin).toString();
+      }
+    }
+  }
+
+  writeJson(response, 200, prepared);
 }
 
 const server = createServer((request, response) => {
@@ -432,7 +776,7 @@ const server = createServer((request, response) => {
   if (request.method === "OPTIONS") {
     response.writeHead(204, {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     });
     response.end();
@@ -457,6 +801,34 @@ const server = createServer((request, response) => {
 
   if (request.method === "POST" && (requestUrl.pathname === "/artifact-remix" || requestUrl.pathname === "/api/artifact-remix")) {
     void handleArtifactRemixRequest(request, response);
+    return;
+  }
+
+  if (request.method === "POST" && (requestUrl.pathname === "/telegram/init-verify" || requestUrl.pathname === "/api/telegram/init-verify")) {
+    void handleTelegramInitVerifyRequest(request, response);
+    return;
+  }
+
+  if (request.method === "GET" && (requestUrl.pathname === "/telegram/startapp-resolve" || requestUrl.pathname === "/api/telegram/startapp-resolve")) {
+    handleTelegramStartAppResolveRequest(requestUrl, response);
+    return;
+  }
+
+  if (request.method === "POST" && (requestUrl.pathname === "/telegram/share-result" || requestUrl.pathname === "/api/telegram/share-result")) {
+    void handleTelegramPrepareShareRequest(request, response, requestUrl);
+    return;
+  }
+
+  if (request.method === "GET" && requestUrl.pathname.startsWith("/api/telegram/share-media/")) {
+    cleanExpiredShareMedia();
+    const mediaId = requestUrl.pathname.split("/").at(-1) ?? "";
+    const media = ephemeralShareMedia.get(mediaId);
+    if (!media) {
+      writeJson(response, 404, { error: "media_not_found" });
+      return;
+    }
+
+    writeBinary(response, 200, media.buffer, media.contentType);
     return;
   }
 

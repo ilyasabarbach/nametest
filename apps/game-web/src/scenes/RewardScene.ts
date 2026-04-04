@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import type { ArtifactRemixRequest } from "@nametests/backend-contracts";
 import { createReplayState, sanitizeName } from "@nametests/core";
 import { homeFeedCards, homeFeedUiCopy } from "@nametests/content-packs";
 import { runtime } from "../GameRuntime";
@@ -59,6 +60,19 @@ export class RewardScene extends Phaser.Scene {
       template: entry,
       label: this.getRemixLabel(entry)
     }));
+    const aiRemixEnabled = Boolean(runtime.session.selectedTest.imageRecipeId);
+    const profilePhotoEnabled = aiRemixEnabled && runtime.canUsePlatformProfilePhoto();
+    const secretBody = `${card.body} ${runtime.copy["result.secretBodySuffix"]}`;
+    const secretInsight = `${card.insight} ${runtime.copy["result.secretInsightSuffix"]}`;
+    const initialPosterImageDataUrl =
+      aiRemixEnabled && runtime.getActiveProfilePhotoDataUrl()
+        ? runtime.buildResultPosterImage({
+            title: runtime.copy["result.secretTitle"],
+            body: secretBody,
+            insight: secretInsight,
+            accent: "#ffd166"
+          })
+        : undefined;
     const partnerDraft = runtime.getResultDraftPartnerName() || runtime.session.names.partnerName;
     const retryPartnerVisible = runtime.session.selectedTest.prompts.some(
       (prompt) => prompt.type === "name" && prompt.id === "partnerName"
@@ -75,16 +89,22 @@ export class RewardScene extends Phaser.Scene {
       hook: card.hook,
       testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
       title: runtime.copy["result.secretTitle"],
-      body: `${card.body} ${runtime.copy["result.secretBodySuffix"]}`,
-      insight: `${card.insight} ${runtime.copy["result.secretInsightSuffix"]}`,
+      body: secretBody,
+      insight: secretInsight,
       score: card.score,
       signature: `${card.signature}-PLUS`,
       signatureLabel: runtime.copy["result.signatureLabel"],
       shareHint: card.sharePrompt,
-      shareLabel: runtime.copy["result.shareLabel"],
+      shareLabel:
+        runtime.platform.id === "telegram"
+          ? runtime.copy["result.shareToChatLabel"] ?? "Share to chat"
+          : runtime.copy["result.shareLabel"],
+      shareStoryLabel: runtime.copy["result.shareToStoryLabel"] ?? "Share to story",
       remixTitle: runtime.copy["result.remixTitle"] ?? "Remix this result",
       remixBody: runtime.copy["result.remixBody"] ?? "Try another visual version before you share it.",
       remixOptions,
+      aiRemixLabel: runtime.copy["result.aiRemixLabel"] ?? "Make AI version",
+      profilePhotoLabel: runtime.getProfilePhotoActionLabel(),
       partnerName: partnerDraft,
       partnerLabel: runtime.copy["home.partnerLabel"],
       retryPartnerVisible,
@@ -108,6 +128,71 @@ export class RewardScene extends Phaser.Scene {
       },
       accent: "#ffd166",
       template,
+      posterImageDataUrl: initialPosterImageDataUrl,
+      badgeLabel: initialPosterImageDataUrl ? (runtime.copy["result.googlePhotoReady"] ?? "Google photo active") : "",
+      onRequestAiRemix: aiRemixEnabled
+        ? async (selectedTemplate) => {
+            if (!runtime.session.latestResult) {
+              return null;
+            }
+            const request: ArtifactRemixRequest = {
+              testId: runtime.session.selectedTest.id,
+              recipeId: runtime.session.selectedTest.artifactRecipeId ?? runtime.session.selectedTest.id,
+              imageRecipeId: runtime.session.selectedTest.imageRecipeId,
+              locale: runtime.locale,
+              template: selectedTemplate,
+              names: {
+                primaryName: runtime.session.names.primaryName,
+                partnerName: runtime.session.names.partnerName
+              },
+              presentPhotoDataUrl: runtime.getActiveProfilePhotoDataUrl(),
+              result: {
+                resultKey: runtime.session.latestResult.resultKey,
+                score: card.score,
+                hook: card.hook,
+                title: runtime.copy["result.secretTitle"],
+                body: secretBody,
+                insight: secretInsight,
+                signature: `${card.signature}-PLUS`,
+                sharePrompt: card.sharePrompt
+              }
+            };
+
+            const response = await runtime.requestArtifactRemix(request);
+            return response
+              ? {
+                  hook: response.artifact.hook,
+                  title: response.artifact.title,
+                  body: response.artifact.body,
+                  insight: response.artifact.insight,
+                  signature: response.artifact.signature,
+                  shareHint: response.artifact.sharePrompt,
+                  accent: response.artifact.accent ?? "#ffd166",
+                  badgeLabel: response.artifact.badgeLabel ?? "AI version active",
+                  posterImageDataUrl: response.artifact.posterImageDataUrl
+                }
+              : null;
+          }
+        : undefined,
+      onUseProfilePhoto: profilePhotoEnabled
+        ? async (_selectedTemplate, artifact) => {
+            const profile = await runtime.connectPlatformProfilePhoto();
+            if (!profile) {
+              window.alert(runtime.copy["result.profilePhotoError"] ?? runtime.copy["result.googlePhotoError"] ?? "Profile photo could not be loaded right now.");
+              return null;
+            }
+
+            return {
+              posterImageDataUrl: runtime.buildResultPosterImage({
+                title: artifact.title,
+                body: artifact.body,
+                insight: artifact.insight,
+                accent: artifact.accent
+              }),
+              badgeLabel: runtime.copy["result.googlePhotoReady"] ?? "Google photo active"
+            };
+          }
+        : undefined,
       rewardVisible: false,
       onGoHome: () => {
         runtime.clearHomeSelection();
@@ -146,11 +231,8 @@ export class RewardScene extends Phaser.Scene {
         });
         this.scene.start("TestScene");
       },
-      onShare: async (selectedTemplate, artifact) =>
-        runtime.share.share({
-          title: runtime.copy["result.secretTitle"],
-          text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
-          imageDataUrl: await buildShareCard({
+      onShare: async (selectedTemplate, artifact) => {
+        const imageDataUrl = await buildShareCard({
             brandLabel: runtime.copy["app.title"],
             hook: artifact.hook,
             testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
@@ -167,10 +249,86 @@ export class RewardScene extends Phaser.Scene {
               runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
             ),
             accent: artifact.accent,
-            template: selectedTemplate
-          }),
-          filename: `${runtime.session.selectedTest.id}-secret.png`
-        }),
+            template: selectedTemplate,
+            posterImageDataUrl: artifact.posterImageDataUrl
+          });
+        runtime.analytics.track({
+          name: "share_started",
+          payload: {
+            platform: runtime.platform.id,
+            surface: "chat",
+            testId: runtime.session.selectedTest.id,
+            resultKey: runtime.session.latestResult!.resultKey
+          }
+        });
+        await runtime.shareResultArtifact({
+          title: runtime.copy["result.secretTitle"],
+          text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
+          imageDataUrl,
+          filename: `${runtime.session.selectedTest.id}-secret.png`,
+          template: selectedTemplate
+        });
+        runtime.analytics.track({
+          name: "share_sent",
+          payload: {
+            platform: runtime.platform.id,
+            surface: "chat",
+            testId: runtime.session.selectedTest.id,
+            resultKey: runtime.session.latestResult!.resultKey
+          }
+        });
+      },
+      onShareToStory: runtime.canShareToStory()
+        ? async (selectedTemplate, artifact) => {
+            const imageDataUrl = await buildShareCard({
+              brandLabel: runtime.copy["app.title"],
+              hook: artifact.hook,
+              testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
+              title: artifact.title,
+              score: card.score,
+              body: artifact.body,
+              insight: artifact.insight,
+              signature: artifact.signature,
+              signatureLabel: runtime.copy["result.signatureLabel"],
+              sharePrompt: artifact.shareHint,
+              names: this.formatNamesForDisplay(
+                runtime.session.names.primaryName,
+                runtime.session.names.partnerName,
+                runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
+              ),
+              accent: artifact.accent,
+              template: selectedTemplate,
+              posterImageDataUrl: artifact.posterImageDataUrl
+            });
+            runtime.analytics.track({
+              name: "share_started",
+              payload: {
+                platform: runtime.platform.id,
+                surface: "story",
+                testId: runtime.session.selectedTest.id,
+                resultKey: runtime.session.latestResult!.resultKey
+              }
+            });
+            const shared = await runtime.shareResultStoryArtifact({
+              title: runtime.copy["result.secretTitle"],
+              text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
+              imageDataUrl,
+              filename: `${runtime.session.selectedTest.id}-secret.png`,
+              template: selectedTemplate
+            });
+            if (shared) {
+              runtime.analytics.track({
+                name: "share_sent",
+                payload: {
+                  platform: runtime.platform.id,
+                  surface: "story",
+                  testId: runtime.session.selectedTest.id,
+                  resultKey: runtime.session.latestResult!.resultKey
+                }
+              });
+            }
+          }
+        : undefined,
       onReward: () => undefined
     });
   }

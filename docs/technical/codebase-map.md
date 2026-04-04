@@ -30,6 +30,8 @@ Important files:
 - `src/main.ts`: starts the app
 - `src/boot/createGame.ts`: configures Phaser
 - `src/GameRuntime.ts`: central runtime state and orchestration
+- `src/platform/services.ts`: chooses the active platform adapter bundle
+- `src/platform/installLifecycle.ts`: binds platform lifecycle/navigation hooks into the runtime
 - `src/scenes/*`: visual flow of the game
 - `src/ui/*`: DOM-based overlays and small UI helpers
 - `src/styles/main.css`: browser layout and overlay styling
@@ -78,12 +80,33 @@ This is the abstraction layer for platform-specific features:
 - analytics
 - ads
 - remote config
+- identity
+- launch context / navigation chrome
 
-At the moment the browser adapter is the one actually in use.
+The important adapters now are:
+
+- `src/browser`: browser fallback behavior
+- `src/capacitor`: Android shell behavior
+- `src/telegram`: Telegram Mini App behavior
+- `src/facebookInstant`: future placeholder branch
 
 ### `packages/backend-contracts`
 
-This contains shared payload shapes and validation helpers for things like remote config.
+This contains shared payload shapes and validation helpers for things like:
+
+- discovery feed
+- artifact remix
+- Telegram init/share/startapp contracts
+
+## Platform-Specific Runtime Files
+
+These are easy to forget but matter a lot now:
+
+- `apps/game-web/src/platform/services.ts`: where browser / Android / Telegram selection happens
+- `apps/game-web/src/platform/installLifecycle.ts`: where back/settings/pause/resume hooks are connected
+- `packages/platform-sdk/src/interfaces/*`: neutral platform contracts that `GameRuntime` consumes
+- `packages/platform-sdk/src/telegram/index.ts`: the Telegram Mini App implementation
+- `apps/discovery-feed-api/src/index.ts`: the local backend seam for feed data, artifact remix, and Telegram endpoints
 
 ## Services
 

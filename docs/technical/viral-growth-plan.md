@@ -176,6 +176,13 @@ The modern replacement for the old bot loop should be:
 - quick "make yours" loop
 - optional "remix this in another style" loop
 
+For Android / Google Play, an additional personalization layer is now valid:
+
+- optional Google profile-photo import
+- only with explicit user action
+- only for tests whose artifact is meaningfully stronger with a present-day portrait
+- never as a mandatory sign-in wall for the general catalog
+
 That creates a stronger re-entry path than plain result sharing.
 
 ## Technical Foundation
@@ -280,9 +287,11 @@ Status:
 Status:
 
 - a minimal optional AI-remix seam now exists through shared backend contracts, a local `/api/artifact-remix` endpoint, and a runtime synthetic fallback
-- recipe-driven generated thumbnails now also exist as the first replacement path for the older static feed art, so human-photo-led editorial cards can scale through structured recipes instead of one-off SVGs
+- recipe-driven generated thumbnails now also exist as groundwork for replacing the older static feed art later, even though the live product is intentionally still on curated manual thumbnails for now
 - the first real poster-image AI path now exists for `past-life-echo`, using `imageRecipeId` and a poster-image field in the remix contract so result/share can move toward true image artifacts instead of text-only remixes
 - the local API now also has a Cloudflare Workers AI seam for image generation when credentials are configured, while still falling back to deterministic generated poster art locally
+- `past-life-echo` has now also been tightened into a single-name input model and a code-composed vintage poster layout with wrapped headline text and fixed story slots, which should be treated as the baseline rule for future AI families: AI can supply art, but code must still own the final poster composition
+- Android now also supports an opt-in Google profile-photo path for that same narrow poster family, so the present-day side of the result can use a real user portrait while the code still composes the final artifact
 - the remaining question is product tuning: whether the first image-backed poster family feels strong enough on-device to justify expanding this path to aura, archetype, and movie-poster families next
 
 ### Phase 5: Growth Loop

@@ -9,12 +9,13 @@ type ThumbnailOptions = {
 
 type PosterOptions = {
   recipeId: string;
-  headline: string;
   primaryName: string;
-  derivedName: string;
+  resultKey: string;
+  resultTitle: string;
   body: string;
   insight: string;
   accent: string;
+  presentPortraitImageDataUrl?: string;
   portraitImageDataUrl?: string;
 };
 
@@ -211,59 +212,128 @@ export function derivePastLifeEchoName(name: string): string {
   return pool[seed % pool.length];
 }
 
+type PastLifePosterProfile = {
+  headline: string;
+  presentName: string;
+  presentNature: string;
+  pastName: string;
+  pastGift: string;
+  storyTitle: string;
+  storyBody: string;
+  monogram: string;
+};
+
+function buildPastLifePosterProfile(options: PosterOptions): PastLifePosterProfile {
+  const pastName = derivePastLifeEchoName(options.primaryName);
+  const normalizedInsight = options.insight.trim().replace(/\.$/, "");
+  const monogram = (options.primaryName.trim()[0] ?? "N").toUpperCase();
+  const softBody = options.body.trim().replace(/\.$/, "");
+
+  switch (options.resultKey) {
+    case "royal":
+      return {
+        headline: "YOUR NAME STILL REMEMBERS A PAST LIFE. WHO WERE YOU?",
+        presentName: options.primaryName,
+        presentNature: "Grace under pressure",
+        pastName,
+        pastGift: "Protective and composed",
+        storyTitle: "Past Life Story",
+        storyBody: `The name ${pastName} carries the feeling of someone who knew how to protect what mattered without ever looking rushed. ${softBody} This reading suggests a past self that stayed elegant in public but fierce in private.`,
+        monogram
+      };
+    case "mythic":
+      return {
+        headline: "YOUR NAME STILL REMEMBERS A PAST LIFE. WHO WERE YOU?",
+        presentName: options.primaryName,
+        presentNature: "Fearless spirit",
+        pastName,
+        pastGift: "Leads with courage",
+        storyTitle: "Past Life Story",
+        storyBody: `The name ${pastName} feels like it belonged to someone people remembered long after they left the room. ${softBody} This result points to a past life shaped by bold choices, dramatic loyalty, and a presence that refused to fade quietly.`,
+        monogram
+      };
+    case "familiar":
+    default:
+      return {
+        headline: "YOUR NAME STILL REMEMBERS A PAST LIFE. WHO WERE YOU?",
+        presentName: options.primaryName,
+        presentNature: normalizedInsight.length > 44 ? "Heart-led and trusted" : normalizedInsight,
+        pastName,
+        pastGift: "Warmth people trusted",
+        storyTitle: "Past Life Story",
+        storyBody: `The name ${pastName} carries the kind of warmth people trusted before they could explain why. ${softBody} This reading points to a past self who kept promises, protected closeness, and made others feel safe simply by staying steady.`,
+        monogram
+      };
+  }
+}
+
 export function buildGeneratedPosterDataUrl(options: PosterOptions): string {
   if (options.recipeId !== "past-life-vintage-poster") {
     return "";
   }
 
-  const bodyLines = wrapText(options.body, 54).slice(0, 5);
-  const insightLines = wrapText(options.insight, 48).slice(0, 2);
+  const profile = buildPastLifePosterProfile(options);
+  const headlineLines = wrapText(profile.headline, 24).slice(0, 2);
+  const storyLines = wrapText(profile.storyBody, 44).slice(0, 7);
   const portraitMarkup = options.portraitImageDataUrl
-    ? `<image href="${options.portraitImageDataUrl}" x="618" y="280" width="268" height="332" preserveAspectRatio="xMidYMid slice" clip-path="url(#frameClipRight)" />`
+    ? `<image href="${options.portraitImageDataUrl}" x="626" y="324" width="260" height="316" preserveAspectRatio="xMidYMid slice" clip-path="url(#frameClipRight)" />`
     : `
-      <ellipse cx="752" cy="448" rx="92" ry="118" fill="#dbc7b4"/>
-      <circle cx="752" cy="404" r="72" fill="#f3e7d7"/>
-      <path d="M668 404c12-56 150-90 168 4 8 38-2 126-14 180H686c-22-62-28-128-18-184z" fill="#47372a"/>
+      <rect x="626" y="324" width="260" height="316" fill="#ece0cf" clip-path="url(#frameClipRight)"/>
+      <ellipse cx="756" cy="454" rx="88" ry="116" fill="#dac5b2"/>
+      <circle cx="756" cy="410" r="68" fill="#f4e9da"/>
+      <path d="M678 410c12-58 144-90 160 6 8 42-2 118-14 172H692c-18-60-24-126-14-178z" fill="#47372a"/>
+    `;
+  const presentPortraitMarkup = options.presentPortraitImageDataUrl
+    ? `<image href="${options.presentPortraitImageDataUrl}" x="194" y="324" width="260" height="316" preserveAspectRatio="xMidYMid slice" clip-path="url(#frameClipLeft)" />`
+    : `
+      <rect x="194" y="324" width="260" height="316" fill="#efe3d0" clip-path="url(#frameClipLeft)"/>
+      <circle cx="324" cy="424" r="86" fill="rgba(93,55,36,0.08)"/>
+      <circle cx="324" cy="452" r="74" fill="#f3e8da" stroke="#d7c7af" stroke-width="4"/>
+      <text x="324" y="474" text-anchor="middle" font-family="Georgia, serif" font-size="88" font-weight="700" fill="#6a4c39">${escapeXml(profile.monogram)}</text>
     `;
 
   return svgToDataUrl(`
-    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1500" viewBox="0 0 1080 1500">
+    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1580" viewBox="0 0 1080 1580">
       <defs>
         <clipPath id="frameClipLeft">
-          <rect x="194" y="280" width="268" height="332" rx="8"/>
+          <rect x="194" y="324" width="260" height="316" rx="10"/>
         </clipPath>
         <clipPath id="frameClipRight">
-          <rect x="618" y="280" width="268" height="332" rx="8"/>
+          <rect x="626" y="324" width="260" height="316" rx="10"/>
         </clipPath>
       </defs>
-      <rect width="1080" height="1500" rx="30" fill="#f5efe2"/>
-      <rect x="28" y="28" width="1024" height="1444" rx="34" fill="#f6f0e5" stroke="#e2d5bf" stroke-width="4"/>
-      <text x="76" y="116" font-family="Georgia, serif" font-size="64" font-weight="700" fill="#16120f">${escapeXml(options.headline.toUpperCase())}</text>
-      <rect x="146" y="238" width="364" height="420" rx="10" fill="none" stroke="#2f2418" stroke-width="5"/>
-      <path d="M188 238v42h-42v336h42v42" fill="none" stroke="#2f2418" stroke-width="4"/>
-      <path d="M468 238v42h42v336h-42v42" fill="none" stroke="#2f2418" stroke-width="4"/>
-      <rect x="570" y="238" width="364" height="420" rx="10" fill="none" stroke="#2f2418" stroke-width="5"/>
-      <path d="M612 238v42h-42v336h42v42" fill="none" stroke="#2f2418" stroke-width="4"/>
-      <path d="M892 238v42h42v336h-42v42" fill="none" stroke="#2f2418" stroke-width="4"/>
-      <rect x="194" y="280" width="268" height="332" fill="#efe2cf" clip-path="url(#frameClipLeft)"/>
-      <circle cx="328" cy="410" r="86" fill="#f5eadb"/>
-      <path d="M242 412c14-58 152-90 170 10 8 46-2 110-20 180H264c-26-74-28-130-22-190z" fill="#564235"/>
+      <rect width="1080" height="1580" rx="30" fill="#f7f1e6"/>
+      <rect x="32" y="32" width="1016" height="1516" rx="38" fill="#f6efe3" stroke="#e2d4bd" stroke-width="4"/>
+      <rect x="48" y="48" width="984" height="1484" rx="30" fill="none" stroke="#efe2cb" stroke-width="2"/>
+      <text x="540" y="136" text-anchor="middle" font-family="Georgia, serif" font-size="62" font-weight="700" fill="#17120f">
+        ${headlineLines
+          .map((line, index) => `<tspan x="540" dy="${index === 0 ? 0 : 72}">${escapeXml(line)}</tspan>`)
+          .join("")}
+      </text>
+      <rect x="154" y="272" width="340" height="410" rx="12" fill="none" stroke="#2f2418" stroke-width="5"/>
+      <path d="M192 272v42h-38v326h38v42" fill="none" stroke="#2f2418" stroke-width="4"/>
+      <path d="M456 272v42h38v326h-38v42" fill="none" stroke="#2f2418" stroke-width="4"/>
+      <rect x="586" y="272" width="340" height="410" rx="12" fill="none" stroke="#2f2418" stroke-width="5"/>
+      <path d="M624 272v42h-38v326h38v42" fill="none" stroke="#2f2418" stroke-width="4"/>
+      <path d="M888 272v42h38v326h-38v42" fill="none" stroke="#2f2418" stroke-width="4"/>
+      ${presentPortraitMarkup}
+      <text x="324" y="562" text-anchor="middle" font-family="Georgia, serif" font-size="24" letter-spacing="6" fill="#9b7759">PRESENT</text>
       ${portraitMarkup}
-      <text x="328" y="704" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Present Name:</text>
-      <text x="328" y="758" text-anchor="middle" font-family="Georgia, serif" font-size="48" fill="#2f2418">${escapeXml(options.primaryName)}</text>
-      <text x="328" y="826" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Personality:</text>
-      <text x="328" y="878" text-anchor="middle" font-family="Georgia, serif" font-size="44" fill="#2f2418">${escapeXml(options.insight)}</text>
-      <text x="752" y="704" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Past Life Name:</text>
-      <text x="752" y="758" text-anchor="middle" font-family="Georgia, serif" font-size="48" fill="#2f2418">${escapeXml(options.derivedName)}</text>
-      <text x="752" y="826" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Gentle Side:</text>
-      <text x="752" y="878" text-anchor="middle" font-family="Georgia, serif" font-size="40" fill="${options.accent}">${escapeXml(options.headline)}</text>
-      <text x="540" y="980" text-anchor="middle" font-family="Georgia, serif" font-size="56" font-style="italic" fill="#8b5f3c">Past Life</text>
-      <text x="84" y="1068" font-family="Georgia, serif" font-size="36" fill="#2f2418">
-        ${bodyLines.map((line, index) => `<tspan x="84" dy="${index === 0 ? 0 : 46}">${escapeXml(line)}</tspan>`).join("")}
+      <text x="756" y="562" text-anchor="middle" font-family="Georgia, serif" font-size="24" letter-spacing="6" fill="#9b7759">PAST LIFE</text>
+      <text x="324" y="736" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Present Name</text>
+      <text x="324" y="790" text-anchor="middle" font-family="Georgia, serif" font-size="50" fill="#2f2418">${escapeXml(profile.presentName)}</text>
+      <text x="324" y="858" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Present Nature</text>
+      <text x="324" y="908" text-anchor="middle" font-family="Georgia, serif" font-size="38" fill="#2f2418">${escapeXml(profile.presentNature)}</text>
+      <text x="756" y="736" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Past Name</text>
+      <text x="756" y="790" text-anchor="middle" font-family="Georgia, serif" font-size="50" fill="#2f2418">${escapeXml(profile.pastName)}</text>
+      <text x="756" y="858" text-anchor="middle" font-family="Georgia, serif" font-size="34" font-style="italic" fill="#8b5f3c">Past Gift</text>
+      <text x="756" y="908" text-anchor="middle" font-family="Georgia, serif" font-size="38" fill="#6a4c39">${escapeXml(profile.pastGift)}</text>
+      <text x="540" y="1020" text-anchor="middle" font-family="Georgia, serif" font-size="60" font-style="italic" fill="#8b5f3c">${escapeXml(profile.storyTitle)}</text>
+      <text x="104" y="1110" font-family="Georgia, serif" font-size="38" fill="#2f2418">
+        ${storyLines.map((line, index) => `<tspan x="104" dy="${index === 0 ? 0 : 48}">${escapeXml(line)}</tspan>`).join("")}
       </text>
-      <text x="84" y="1324" font-family="Georgia, serif" font-size="30" font-style="italic" fill="#6c5b4a">
-        ${insightLines.map((line, index) => `<tspan x="84" dy="${index === 0 ? 0 : 38}">${escapeXml(line)}</tspan>`).join("")}
-      </text>
+      <line x1="104" y1="1424" x2="976" y2="1424" stroke="#e2d4bd" stroke-width="2"/>
+      <text x="104" y="1468" font-family="Georgia, serif" font-size="28" font-style="italic" fill="#8b6e53">Result band: ${escapeXml(options.resultTitle)}</text>
     </svg>
   `);
 }

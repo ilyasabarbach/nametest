@@ -6,7 +6,7 @@
   "unlockAfterSessions": 9,
   "titleKey": "test.pastLife.title",
   "subtitleKey": "test.pastLife.subtitle",
-  "inputMode": "tap-photo",
+  "inputMode": "single-name",
   "artifactRecipeId": "storybook-echo-cover",
   "imageRecipeId": "past-life-vintage-poster",
   "thumbnailRecipeId": "vintage-portrait-thumb",
@@ -17,11 +17,11 @@
     "artifactType": "storybook-cover",
     "shareAngle": "mythic identity reveal"
   },
-  "seasonalTags": ["evergreen", "mystery", "tap-photo"],
+  "seasonalTags": ["evergreen", "mystery", "single-name"],
   "remixModes": ["storybook", "portrait"],
-  "safetyProfile": "photo",
+  "safetyProfile": "identity",
   "prompts": [
-    { "type": "choice", "id": "tapPhoto", "label": "Tap the photo", "options": ["reveal"] }
+    { "type": "name", "id": "primaryName", "label": "Your name", "placeholder": "Enter your name", "maxLength": 20 }
   ],
   "scoringFormula": "futureFormula",
   "resultBands": [

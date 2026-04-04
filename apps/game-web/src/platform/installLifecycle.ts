@@ -7,11 +7,18 @@ function getActiveSceneKeys(game: Phaser.Game): string[] {
 
 export async function installPlatformLifecycle(game: Phaser.Game): Promise<void> {
   const activeSceneKeys = new Set<string>();
+  const syncNavigationChrome = () => {
+    runtime.platform.updateNavigationChrome?.({
+      showBack: runtime.canNavigateBackScene(),
+      showSettings: true
+    });
+  };
 
   const removeListeners = await runtime.platform.installLifecycle?.({
     pauseGame() {
       void runtime.persistProgress();
       void runtime.persistAppState();
+      runtime.platform.setClosingConfirmation?.(runtime.canNavigateBackScene());
       activeSceneKeys.clear();
       getActiveSceneKeys(game).forEach((key) => {
         activeSceneKeys.add(key);
@@ -27,6 +34,7 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
         game.scene.resume(key);
       });
       activeSceneKeys.clear();
+      syncNavigationChrome();
     },
     navigateBack() {
       activeSceneKeys.clear();
@@ -34,10 +42,12 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
       if (!previousSceneKey) {
         runtime.resetSceneHistory("HomeScene");
         game.scene.start("HomeScene");
+        syncNavigationChrome();
         return;
       }
 
       game.scene.start(previousSceneKey);
+      syncNavigationChrome();
     },
     canNavigateBack() {
       return runtime.canNavigateBackScene();
@@ -46,11 +56,18 @@ export async function installPlatformLifecycle(game: Phaser.Game): Promise<void>
       activeSceneKeys.clear();
       runtime.resetSceneHistory("HomeScene");
       game.scene.start("HomeScene");
+      syncNavigationChrome();
     },
     canExitApp() {
       return game.scene.isActive("HomeScene");
+    },
+    toggleSettings() {
+      window.dispatchEvent(new CustomEvent("platform:settings-toggle"));
     }
   });
+
+  syncNavigationChrome();
+  runtime.platform.setClosingConfirmation?.(runtime.canNavigateBackScene());
 
   if (!removeListeners) {
     return;

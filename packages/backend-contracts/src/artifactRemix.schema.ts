@@ -4,6 +4,7 @@ export type ArtifactRemixRequest = {
   testId: string;
   recipeId: string;
   imageRecipeId?: string;
+  presentPhotoDataUrl?: string;
   locale: string;
   template: ArtifactRemixTemplate;
   names: {

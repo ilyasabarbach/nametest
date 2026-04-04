@@ -25,7 +25,7 @@ body {
 #app {
   position: relative;
   width: 100vw;
-  height: 100dvh;
+  height: var(--platform-viewport-height, 100dvh);
   display: grid;
   place-items: center;
 }
@@ -47,7 +47,7 @@ body {
 
 .hud-panel {
   width: min(100%, 360px);
-  max-height: calc(100dvh - 48px);
+  max-height: calc(var(--platform-viewport-height, 100dvh) - 48px);
   pointer-events: auto;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 28px;
@@ -65,7 +65,7 @@ body {
 
 .hud-panel--home-feed {
   width: min(100%, 980px);
-  max-height: calc(100dvh - 40px);
+  max-height: calc(var(--platform-viewport-height, 100dvh) - 40px);
   gap: 18px;
   padding: 22px;
   color: #18213a;
@@ -77,7 +77,7 @@ body {
 
 .hud-panel--result-feed {
   width: min(100%, 920px);
-  max-height: calc(100dvh - 40px);
+  max-height: calc(var(--platform-viewport-height, 100dvh) - 40px);
   gap: 18px;
   color: #18213a;
   background: rgba(255, 251, 245, 0.96);
@@ -260,7 +260,9 @@ body {
 }
 
 .hud-result-poster--image-mode {
-  padding: 16px;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .hud-result-poster--image-mode .hud-result-poster__content {
@@ -268,8 +270,17 @@ body {
 }
 
 .hud-result-poster--image-mode .hud-result-share-hint {
-  position: relative;
-  z-index: 1;
+  display: none;
+}
+
+.hud-panel--poster-focus .hud-pill-row-wide {
+  display: none;
+}
+
+.hud-panel--poster-focus .hud-result-actions,
+.hud-panel--poster-focus .hud-result-remix {
+  border-color: rgba(24, 33, 58, 0.04);
+  box-shadow: none;
 }
 
 .hud-result-poster--spotlight {
@@ -1016,7 +1027,7 @@ body {
 
 .hud-result-actions__buttons {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 10px;
 }
 
@@ -1063,7 +1074,19 @@ body {
   border-color: transparent;
 }
 
+.hud-remix-chip--photo {
+  background: linear-gradient(135deg, #f2e6d6 0%, #ead2b4 100%);
+  color: #5c3d2e;
+  border-color: rgba(92, 61, 46, 0.12);
+}
+
 .hud-remix-chip--ai:disabled {
+  opacity: 0.7;
+  cursor: progress;
+  transform: none;
+}
+
+.hud-remix-chip--photo:disabled {
   opacity: 0.7;
   cursor: progress;
   transform: none;
@@ -1457,6 +1480,11 @@ body {
 .hud-panel--result-feed .hud-button.secondary {
   color: #18213a;
   background: #efe4d6;
+}
+
+.hud-panel--result-feed .hud-button--story {
+  background: linear-gradient(135deg, #59a6ff, #2b73f0);
+  color: #f8fbff;
 }
 
 .hud-test-grid {
