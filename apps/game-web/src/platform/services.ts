@@ -74,6 +74,7 @@ function detectPlatform(): PlatformId {
     };
   };
   const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const userAgent = navigator.userAgent || "";
   const isTelegramLaunch =
     Boolean(hostWindow.Telegram?.WebApp) ||
@@ -81,6 +82,9 @@ function detectPlatform(): PlatformId {
     searchParams.has("tgWebAppPlatform") ||
     searchParams.has("tgWebAppVersion") ||
     searchParams.has("tgWebAppThemeParams") ||
+    hashParams.has("tgWebAppPlatform") ||
+    hashParams.has("tgWebAppVersion") ||
+    hashParams.has("tgWebAppThemeParams") ||
     /\bTelegram(?:Bot)?\b/i.test(userAgent);
 
   if (hostWindow.FBInstant) {

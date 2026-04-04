@@ -26,6 +26,7 @@ This is the quickest "where are we now?" document.
 - Telegram chat-share now also shows a guaranteed visible in-app assist sheet while opening the share handoff, so players still get `Open share` / `Copy link` recovery instead of a dead tap when a Telegram client swallows the first bridge call
 - Telegram platform detection is now more defensive: if a Telegram client exposes only launch params or Telegram webview markers instead of `window.Telegram.WebApp` at first paint, the runtime should still select the Telegram branch instead of silently falling back to browser behavior
 - Browser-mode share now catches `navigator.share` permission failures and falls back to Telegram deeplinks when Telegram launch markers are present, so Telegram webviews that deny Web Share no longer produce a dead `Share this result` button
+- Telegram Web launch parsing now reads `tgWebApp*` params from both the query string and the hash fragment, which fixes the earlier case where Telegram Web passed Mini App context in `#...` and the app misdetected itself as plain browser
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout

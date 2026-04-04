@@ -13,6 +13,7 @@ function canUseClipboard(): boolean {
 
 function isLikelyTelegramHost(): boolean {
   const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
   const hostWindow = window as Window & {
     Telegram?: {
       WebApp?: unknown;
@@ -25,6 +26,9 @@ function isLikelyTelegramHost(): boolean {
     searchParams.has("tgWebAppPlatform") ||
     searchParams.has("tgWebAppVersion") ||
     searchParams.has("tgWebAppThemeParams") ||
+    hashParams.has("tgWebAppPlatform") ||
+    hashParams.has("tgWebAppVersion") ||
+    hashParams.has("tgWebAppThemeParams") ||
     /\bTelegram(?:Bot)?\b/i.test(navigator.userAgent || "")
   );
 }
@@ -44,12 +48,16 @@ export const browserPlatform: IPlatform = {
   id: "browser",
   isOnline: () => navigator.onLine,
   vibrate: (milliseconds) => navigator.vibrate?.(milliseconds),
-  getLaunchContext: () => ({
-    source: "unknown",
-    startParam: new URLSearchParams(window.location.search).get("startapp") ?? undefined,
-    platform: "browser",
-    isNativeShell: false
-  }),
+  getLaunchContext: () => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return {
+      source: "unknown",
+      startParam: searchParams.get("startapp") ?? hashParams.get("startapp") ?? undefined,
+      platform: "browser",
+      isNativeShell: false
+    };
+  },
   getTheme: () => ({
     colorScheme: window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "dark" : "light"
   }),

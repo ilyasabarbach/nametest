@@ -77,7 +77,14 @@ function isTelegramMiniApp(): boolean {
 }
 
 function getTelegramSearchParams(): URLSearchParams {
-  return new URLSearchParams(window.location.search);
+  const merged = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  hashParams.forEach((value, key) => {
+    if (!merged.has(key)) {
+      merged.set(key, value);
+    }
+  });
+  return merged;
 }
 
 function resolveLaunchSource(searchParams: URLSearchParams): PlatformLaunchContext["source"] {

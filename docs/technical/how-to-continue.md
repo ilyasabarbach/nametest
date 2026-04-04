@@ -133,6 +133,7 @@ Recent Telegram-specific progress already made:
 - Telegram chat-share now also shows an in-app assist sheet with `Open share` / `Copy link` fallback actions, so stricter Telegram clients no longer fail invisibly when the first share bridge call is swallowed
 - Telegram platform detection now also keys off Telegram launch params / webview markers, which protects against Telegram clients that inject the WebApp bridge too late for first-paint platform detection
 - Browser fallback share now catches `NotAllowedError` from `navigator.share` and redirects into Telegram deeplink sharing when the app is clearly running inside a Telegram webview
+- Telegram Web launch parsing now merges hash-based `tgWebApp*` params with normal query params, because real Telegram Web sessions may deliver Mini App context in the hash instead of `window.location.search`
 
 ## Files Most Likely To Need Changes Next
 
