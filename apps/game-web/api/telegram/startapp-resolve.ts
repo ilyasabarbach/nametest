@@ -1,5 +1,9 @@
 import { decodeSignedStartAppPayload, writeJson } from "./_shared";
 
+export const config = {
+  runtime: "nodejs"
+};
+
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method === "OPTIONS") {
     res.statusCode = 204;

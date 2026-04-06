@@ -33,6 +33,7 @@ This is the quickest "where are we now?" document.
 - Telegram mobile share now also tries the native `tg://msg_url` path before `t.me/share/url` when no prepared message ID is available, reducing the chance of extra dark web-page tasks on Android Telegram clients during fallback sharing
 - The same Telegram serverless handlers now also live under `apps/game-web/api/telegram/*`, so app-root-only deployments (for example Vercel configured to `apps/game-web`) can resolve `/api/telegram/*` instead of returning 404
 - Session persistence now supports optional deployment reset via `VITE_APP_BUILD_ID`; when it changes across releases, stale scene restore from older builds is ignored
+- `apps/game-web/api/telegram/*` routes are now explicitly pinned to Node runtime and `share-result` now has a safe top-level fallback response, so deployment/runtime mismatches are less likely to surface as hard `500` errors during live Telegram share flows
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout

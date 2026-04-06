@@ -140,6 +140,7 @@ Recent Telegram-specific progress already made:
 - Telegram mobile fallback sharing now prefers `tg://msg_url` before web share URLs when a prepared message is unavailable, which is intended to avoid the dark extra web task behavior seen on Android Telegram while still keeping desktop/web Telegram share behavior unchanged
 - The same `/api/telegram/*` handlers now also exist under `apps/game-web/api/telegram/*` for app-root-only deployments, which closes the production 404 gap where Telegram share preparation endpoints were missing in deployed builds
 - Runtime scene restore can now be invalidated across releases by setting `VITE_APP_BUILD_ID`; this prevents reopening stale old-version scenes after a deploy when Telegram keeps the webview session alive
+- Telegram app-root serverless routes now explicitly request Node runtime and the share-result handler now has a hard-fallback response path, reducing live `500` risk when deployment/runtime behavior differs from local expectations
 
 ## Files Most Likely To Need Changes Next
 
