@@ -292,12 +292,16 @@ export class ResultScene extends Phaser.Scene {
             })
           );
         }
+        
+        const shortId = await runtime.saveSessionResult(artifact, selectedTemplate) ?? undefined;
+        
         await runtime.shareResultArtifact({
           title: card.headline,
           text: runtime.latestShareText(),
           imageDataUrl,
           filename: `${runtime.session.selectedTest.id}-${runtime.session.latestResult!.resultKey}.png`,
-          template: selectedTemplate
+          template: selectedTemplate,
+          shortId
         });
         runtime.analytics.track({
           name: "result_shared",
@@ -357,12 +361,16 @@ export class ResultScene extends Phaser.Scene {
                 })
               );
             }
+            
+            const shortId = await runtime.saveSessionResult(artifact, selectedTemplate) ?? undefined;
+            
             const shared = await runtime.shareResultStoryArtifact({
               title: card.headline,
               text: runtime.latestShareText(),
               imageDataUrl,
               filename: `${runtime.session.selectedTest.id}-${runtime.session.latestResult!.resultKey}.png`,
-              template: selectedTemplate
+              template: selectedTemplate,
+              shortId
             });
             if (shared) {
               runtime.analytics.track({

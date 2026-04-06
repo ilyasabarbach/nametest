@@ -19,13 +19,32 @@ export type TelegramInitDataVerifyResponse = {
   user?: TelegramMiniAppUser;
 };
 
-export type TelegramStartAppState = {
+export type TelegramStartAppStateV1 = {
   version: 1;
   testId: string;
   feedItemId?: string;
   template?: ArtifactRemixTemplate;
   resultKey?: string;
 };
+
+export type TelegramStartAppStateV2 = {
+  version: 2;
+  testId: string;
+  resultKey: string;
+  score: number;
+  title: string;
+  body: string;
+  insight: string;
+  hook: string;
+  signature: string;
+  sharePrompt: string;
+  names?: { primaryName: string; partnerName?: string };
+  template?: ArtifactRemixTemplate;
+  imageRecipeId?: string;
+  feedItemId?: string;
+};
+
+export type TelegramStartAppState = TelegramStartAppStateV1 | TelegramStartAppStateV2;
 
 export type TelegramStartAppResolveResponse = {
   status: "ok" | "invalid";

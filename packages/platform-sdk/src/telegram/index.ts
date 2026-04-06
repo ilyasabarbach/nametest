@@ -51,6 +51,7 @@ type TelegramWebApp = {
   openLink?(url: string, options?: Record<string, unknown>): void;
   shareToStory?(mediaUrl: string, params?: Record<string, unknown>): void;
   shareMessage?(messageId: string, callback?: (sent: boolean) => void): void;
+  switchInlineQuery?(query: string, choose_chat_types?: Array<"users" | "bots" | "groups" | "channels" | "chats" | string>): void;
   onEvent?(event: string, listener: (...args: unknown[]) => void): void;
   offEvent?(event: string, listener: (...args: unknown[]) => void): void;
   BackButton?: TelegramButton;
@@ -667,38 +668,18 @@ export const telegramRemoteConfig: IRemoteConfig = {
 export const telegramShare: IShare = {
   async share(payload: SharePayload) {
     const webApp = getTelegramWebApp();
-    if (payload.telegramMessageId && webApp?.shareMessage) {
-      const didSend = await new Promise<boolean>((resolve) => {
-        let resolved = false;
-        const resolveOnce = (value: boolean) => {
-          if (resolved) return;
-          resolved = true;
-          resolve(value);
-        };
-
-        // We use a longer timeout. If Telegram silents ignores shareMessage, we must fallback.
-        const timeoutId = window.setTimeout(() => {
-          resolveOnce(false);
-        }, 2000);
-
-        try {
-          webApp.shareMessage?.(payload.telegramMessageId!, (sent) => {
-            window.clearTimeout(timeoutId);
-            resolveOnce(Boolean(sent));
-          });
-        } catch {
-          window.clearTimeout(timeoutId);
-          resolveOnce(false);
-        }
-      });
-      
-      const handoffObserved = document.hidden || document.visibilityState === "hidden";
-      if (didSend || handoffObserved) {
-        return; // Success or native sheet opened.
+    const shareUrl = toTelegramShareUrl(payload);
+    
+    if (shareUrl && webApp?.switchInlineQuery) {
+      try {
+        const queryText = `Check out my result! ${payload.linkUrl || shareUrl}`;
+        webApp.switchInlineQuery(queryText, ["users", "groups", "chats"]);
+        return;
+      } catch (e) {
+        console.warn("[share] switchInlineQuery failed", e);
       }
     }
 
-    const shareUrl = toTelegramShareUrl(payload);
     if (shareUrl) {
       const platform = webApp?.platform ?? "";
       const useNativePhoneShare = platform === "android" || platform === "ios";

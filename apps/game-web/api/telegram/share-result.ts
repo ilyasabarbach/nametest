@@ -39,7 +39,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     return;
   }
 
-  const deepLinkUrl = buildDeepLink(payload.state as TelegramStartAppState);
+  const deepLinkUrl = buildDeepLink(payload.state as TelegramStartAppState, payload.shortId);
   if (!deepLinkUrl) {
     writeJson(res, 400, { error: "missing_bot_username" });
     return;

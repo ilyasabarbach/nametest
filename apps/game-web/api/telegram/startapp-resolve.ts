@@ -1,4 +1,5 @@
 import { readJsonBody, resolveStartAppState, verifyTelegramInitData, writeJson } from "./_shared.js";
+import { getResultFromStore } from "../results/_store.js";
 
 export const config = {
   runtime: "nodejs"
@@ -65,7 +66,18 @@ export default async function handler(req: any, res: any): Promise<void> {
       }
     }
 
-    const state = startapp ? resolveStartAppState(startapp) : null;
+    let state: any = null;
+    if (startapp) {
+      if (startapp.startsWith("rs_")) {
+        const storedResult = await getResultFromStore(startapp);
+        if (storedResult) {
+          state = storedResult;
+        }
+      } else {
+        state = resolveStartAppState(startapp);
+      }
+    }
+    
     if (!state) {
       writeJson(res, 200, { status: "invalid", fallback: true, reason: "missing_or_expired_startapp" });
       return;
@@ -75,7 +87,8 @@ export default async function handler(req: any, res: any): Promise<void> {
       status: "ok",
       state
     });
-  } catch {
+  } catch (error) {
+    console.error("[startapp-resolve] exception", error);
     writeJson(res, 200, {
       status: "invalid",
       fallback: true,

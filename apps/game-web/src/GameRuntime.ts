@@ -305,6 +305,10 @@ function resolveTelegramPrepareShareUrl(): string | null {
   return resolveBackendUrl("VITE_TELEGRAM_SHARE_URL", "/api/telegram/share-result");
 }
 
+function resolveResultsSaveUrl(): string | null {
+  return resolveBackendUrl("VITE_RESULTS_SAVE_URL", "/api/results/save");
+}
+
 async function blobToSizedDataUrl(blob: Blob, maxSize: number): Promise<string> {
   const objectUrl = URL.createObjectURL(blob);
   try {
@@ -1278,6 +1282,7 @@ export const runtime = {
     imageDataUrl?: string;
     filename?: string;
     template?: ArtifactRemixRequest["template"];
+    shortId?: string;
   }): TelegramPrepareShareResponse | null {
     if (this.state.platform.id !== "telegram") {
       return null;
@@ -1290,18 +1295,22 @@ export const runtime = {
       return null;
     }
 
-    const state = this.privateBuildTelegramStartState(payload.template);
-    const compactState = {
-      v: 1,
-      t: state.testId,
-      f: state.feedItemId,
-      m: state.template,
-      r: state.resultKey
-    };
-    const encodedState = `c.${btoa(JSON.stringify(compactState))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/g, "")}`;
+    let encodedState = payload.shortId ?? "";
+    if (!encodedState) {
+      const state = this.privateBuildTelegramStartState(payload.template);
+      const compactState = {
+        v: 1,
+        t: state.testId,
+        f: state.feedItemId,
+        m: state.template,
+        r: state.resultKey
+      };
+      encodedState = `c.${btoa(JSON.stringify(compactState))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "")}`;
+    }
+
     const miniAppShortName =
       (import.meta.env.VITE_TELEGRAM_MINI_APP_SHORT_NAME as string | undefined)?.trim() ||
       DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
@@ -1327,46 +1336,54 @@ export const runtime = {
     imageDataUrl?: string;
     filename?: string;
     template?: ArtifactRemixRequest["template"];
+    shortId?: string;
   }): Promise<TelegramPrepareShareResponse | null> {
     if (this.state.platform.id !== "telegram") {
       return null;
     }
 
-    const request: TelegramPrepareShareRequest = {
-      text: payload.text,
-      title: payload.title,
-      imageDataUrl: payload.imageDataUrl,
-      filename: payload.filename,
-      userId: this.state.profile?.provider === "telegram" ? this.state.profile.id : undefined,
-      initDataRaw: this.state.launchContext.initDataRaw,
-      state: this.privateBuildTelegramStartState(payload.template)
-    };
-
-    const endpoint = resolveTelegramPrepareShareUrl();
-    if (endpoint) {
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(request)
-        });
-        if (response.ok) {
-          const data = (await response.json()) as unknown;
-          if (isTelegramPrepareShareResponse(data)) {
-            if (!data.messageId) {
-              console.warn("[telegram-share] prepared message unavailable", data.debugReason ?? "missing_message_id");
-            }
-            return data;
-          }
-        }
-      } catch {
-        // Fall back to local deeplink generation below.
-      }
-    }
-
+    // Completely bypass /api/telegram/share-result for prepared messages
+    // instead natively resolving the shortId into a deep link
     return this.privateBuildLocalTelegramShare(payload);
+  },
+
+  async saveSessionResult(artifact: any, template?: string): Promise<string | null> {
+    if (!this.state.session.latestResult) {
+      return null;
+    }
+    const endpoint = resolveResultsSaveUrl();
+    if (!endpoint) return null;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          result: {
+            testId: this.state.session.selectedTest.id,
+            resultKey: this.state.session.latestResult.resultKey,
+            score: this.state.session.latestResult.score || 0,
+            title: artifact.title || "",
+            body: artifact.body || "",
+            insight: artifact.insight || "",
+            hook: artifact.hook || "",
+            signature: artifact.signature || "",
+            sharePrompt: artifact.shareHint || "",
+            names: {
+              primaryName: this.state.session.names.primaryName,
+              partnerName: this.state.session.names.partnerName
+            },
+            template,
+            imageRecipeId: this.state.session.selectedTest.imageRecipeId
+          }
+        })
+      });
+      if (response.ok) {
+        const body = await response.json() as { id?: string };
+        return body.id ?? null;
+      }
+    } catch {}
+    return null;
   },
 
   async shareResultArtifact(payload: {
@@ -1375,6 +1392,7 @@ export const runtime = {
     imageDataUrl?: string;
     filename?: string;
     template?: ArtifactRemixRequest["template"];
+    shortId?: string;
   }): Promise<void> {
     if (this.state.platform.id === "telegram") {
       const telegramShare = await this.prepareTelegramShare(payload);
@@ -1406,6 +1424,7 @@ export const runtime = {
     imageDataUrl?: string;
     filename?: string;
     template?: ArtifactRemixRequest["template"];
+    shortId?: string;
   }): Promise<boolean> {
     if (!this.canShareToStory() || !this.state.share.shareToStory) {
       return false;

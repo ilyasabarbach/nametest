@@ -97,11 +97,11 @@ export function decodeSignedStartAppPayload(token: string): TelegramStartAppStat
   }
 
   try {
-    const payload = JSON.parse(json) as TelegramStartAppState;
-    if (payload?.version !== 1 || typeof payload.testId !== "string") {
+    const payload = JSON.parse(json) as any;
+    if ((payload?.version !== 1 && payload?.version !== 2) || typeof payload.testId !== "string") {
       return null;
     }
-    return payload;
+    return payload as TelegramStartAppState;
   } catch {
     return null;
   }
@@ -149,7 +149,7 @@ export function resolveStartAppState(token: string): TelegramStartAppState | nul
   return decodeSignedStartAppPayload(token);
 }
 
-export function buildDeepLink(startState: TelegramStartAppState): string | null {
+export function buildDeepLink(startState: TelegramStartAppState, shortId?: string): string | null {
   const botUsername = normalizeBotUsername(process.env.TELEGRAM_BOT_USERNAME) ?? DEFAULT_TELEGRAM_BOT_USERNAME;
   if (!botUsername) {
     return null;
@@ -158,7 +158,7 @@ export function buildDeepLink(startState: TelegramStartAppState): string | null 
   const miniAppShortName =
     process.env.TELEGRAM_MINI_APP_SHORT_NAME?.trim().replace(/^\/+/, "") || DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
   const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
-  const shortToken = storeStartAppState(startState);
+  const shortToken = shortId ?? storeStartAppState(startState);
   return `https://t.me${basePath}?startapp=${encodeURIComponent(shortToken)}`;
 }
 
