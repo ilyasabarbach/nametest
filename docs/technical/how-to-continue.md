@@ -141,6 +141,7 @@ Recent Telegram-specific progress already made:
 - The same `/api/telegram/*` handlers now also exist under `apps/game-web/api/telegram/*` for app-root-only deployments, which closes the production 404 gap where Telegram share preparation endpoints were missing in deployed builds
 - Runtime scene restore can now be invalidated across releases by setting `VITE_APP_BUILD_ID`; this prevents reopening stale old-version scenes after a deploy when Telegram keeps the webview session alive
 - Telegram app-root serverless routes now explicitly request Node runtime and the share-result handler now has a hard-fallback response path, reducing live `500` risk when deployment/runtime behavior differs from local expectations
+- `apps/game-web` now typechecks its `api/**/*.ts` routes directly and the app-root share-result route is self-contained instead of importing shared helper code, reducing the chance of production-only bundling failures on Telegram share preparation
 
 ## Files Most Likely To Need Changes Next
 
