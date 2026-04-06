@@ -134,20 +134,6 @@ function toTelegramShareUrl(payload: SharePayload): string | null {
   return shareUrl.toString();
 }
 
-function toTelegramNativeShareUrl(payload: SharePayload): string | null {
-  const targetUrl = payload.linkUrl;
-  if (!targetUrl) {
-    return null;
-  }
-
-  const nativeUrl = new URL("tg://msg_url");
-  nativeUrl.searchParams.set("url", targetUrl);
-  if (payload.text) {
-    nativeUrl.searchParams.set("text", payload.text);
-  }
-  return nativeUrl.toString();
-}
-
 function showTelegramShareFallback(
   shareUrl: string,
   shareText?: string,
@@ -679,10 +665,33 @@ export const telegramShare: IShare = {
   async share(payload: SharePayload) {
     const webApp = getTelegramWebApp();
     if (payload.telegramMessageId && webApp?.shareMessage) {
-      await new Promise<void>((resolve) => {
-        webApp.shareMessage?.(payload.telegramMessageId!, () => resolve());
+      const didSend = await new Promise<boolean>((resolve) => {
+        let resolved = false;
+        const resolveOnce = (value: boolean) => {
+          if (resolved) {
+            return;
+          }
+          resolved = true;
+          resolve(value);
+        };
+
+        const timeoutId = window.setTimeout(() => {
+          resolveOnce(false);
+        }, 1200);
+
+        try {
+          webApp.shareMessage?.(payload.telegramMessageId!, (sent) => {
+            window.clearTimeout(timeoutId);
+            resolveOnce(Boolean(sent));
+          });
+        } catch {
+          window.clearTimeout(timeoutId);
+          resolveOnce(false);
+        }
       });
-      return;
+      if (didSend) {
+        return;
+      }
     }
 
     const shareUrl = toTelegramShareUrl(payload);
