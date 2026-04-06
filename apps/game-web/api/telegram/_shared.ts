@@ -10,6 +10,14 @@ export type TelegramStartAppState = {
 
 const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
 const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
+const STARTAPP_TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7;
+
+type StoredStartAppState = {
+  state: TelegramStartAppState;
+  expiresAt: number;
+};
+
+const startAppStateStore = new Map<string, StoredStartAppState>();
 
 export function writeJson(res: any, status: number, body: unknown): void {
   res.statusCode = status;
@@ -99,6 +107,48 @@ export function decodeSignedStartAppPayload(token: string): TelegramStartAppStat
   }
 }
 
+function cleanupExpiredStartAppTokens(now = Date.now()): void {
+  for (const [token, entry] of startAppStateStore.entries()) {
+    if (entry.expiresAt <= now) {
+      startAppStateStore.delete(token);
+    }
+  }
+}
+
+function createShortStartAppToken(): string {
+  const random = randomUUID().replace(/-/g, "").slice(0, 10);
+  return `r${random}`;
+}
+
+export function storeStartAppState(state: TelegramStartAppState): string {
+  const now = Date.now();
+  cleanupExpiredStartAppTokens(now);
+  const token = createShortStartAppToken();
+  startAppStateStore.set(token, {
+    state,
+    expiresAt: now + STARTAPP_TOKEN_TTL_MS
+  });
+  return token;
+}
+
+export function resolveStartAppState(token: string): TelegramStartAppState | null {
+  if (!token) {
+    return null;
+  }
+
+  if (token.startsWith("r")) {
+    cleanupExpiredStartAppTokens();
+    const entry = startAppStateStore.get(token);
+    if (!entry || entry.expiresAt <= Date.now()) {
+      startAppStateStore.delete(token);
+      return null;
+    }
+    return entry.state;
+  }
+
+  return decodeSignedStartAppPayload(token);
+}
+
 export function buildDeepLink(startState: TelegramStartAppState): string | null {
   const botUsername = normalizeBotUsername(process.env.TELEGRAM_BOT_USERNAME) ?? DEFAULT_TELEGRAM_BOT_USERNAME;
   if (!botUsername) {
@@ -108,7 +158,8 @@ export function buildDeepLink(startState: TelegramStartAppState): string | null 
   const miniAppShortName =
     process.env.TELEGRAM_MINI_APP_SHORT_NAME?.trim().replace(/^\/+/, "") || DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
   const basePath = miniAppShortName ? `/${botUsername}/${miniAppShortName}` : `/${botUsername}`;
-  return `https://t.me${basePath}?startapp=${encodeURIComponent(encodeStartAppState(startState))}`;
+  const shortToken = storeStartAppState(startState);
+  return `https://t.me${basePath}?startapp=${encodeURIComponent(shortToken)}`;
 }
 
 export function parseTelegramInitData(raw: string): {

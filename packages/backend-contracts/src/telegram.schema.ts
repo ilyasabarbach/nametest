@@ -30,6 +30,13 @@ export type TelegramStartAppState = {
 export type TelegramStartAppResolveResponse = {
   status: "ok" | "invalid";
   state?: TelegramStartAppState;
+  fallback?: boolean;
+  reason?: string;
+};
+
+export type TelegramStartAppResolveRequest = {
+  startapp?: string;
+  initDataRaw?: string;
 };
 
 export type TelegramPrepareShareRequest = {

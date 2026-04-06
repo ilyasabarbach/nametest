@@ -36,6 +36,9 @@ This is the quickest "where are we now?" document.
 - `apps/game-web/api/telegram/*` routes are now explicitly pinned to Node runtime and `share-result` now has a safe top-level fallback response, so deployment/runtime mismatches are less likely to surface as hard `500` errors during live Telegram share flows
 - `apps/game-web/tsconfig.json` now includes `api/**/*.ts` plus Node types, and the app-root `share-result` route has been rewritten as a self-contained handler to reduce production bundling/import risk on Vercel-style deployments
 - Telegram app-root and root serverless route imports now use explicit ESM `.js` extensions for shared helpers, which resolves Vercel `ERR_MODULE_NOT_FOUND` crashes when Node executes generated ESM route files
+- Telegram deep links now use short `startapp` tokens backed by server-side state lookup instead of long base64 JSON payloads, which keeps parameters inside Telegram limits and avoids truncation-driven decode failures
+- Telegram `startapp` resolve now runs through robust try/catch and returns `200` with `fallback: true` on failure instead of surfacing hard `500` responses, so the app can safely fall back to home
+- Telegram `startapp` resolve now requires verified `initDataRaw` on POST (runtime path) before resolving any token, so launch state is validated with `TELEGRAM_BOT_TOKEN` HMAC rules before use
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout

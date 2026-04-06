@@ -143,6 +143,8 @@ Recent Telegram-specific progress already made:
 - Telegram app-root serverless routes now explicitly request Node runtime and the share-result handler now has a hard-fallback response path, reducing live `500` risk when deployment/runtime behavior differs from local expectations
 - `apps/game-web` now typechecks its `api/**/*.ts` routes directly and the app-root share-result route is self-contained instead of importing shared helper code, reducing the chance of production-only bundling failures on Telegram share preparation
 - Telegram route imports now use explicit ESM `.js` helper paths, which avoids Vercel runtime `ERR_MODULE_NOT_FOUND` failures on `apps/game-web/api/telegram/*` and root `/api/telegram/*` handlers
+- Telegram deep-linking now uses short `startapp` tokens plus backend state lookup instead of long base64 JSON payloads; runtime resolves via POST with `initDataRaw` and should treat `fallback: true` responses as safe degrade-to-home behavior
+- Production env templates now exist in `apps/game-web/.env.production.example`, `apps/game-web/.env.api.production.example`, and `apps/discovery-feed-api/.env.production.example`, and `TELEGRAM_STARTAPP_SECRET` should be treated as required for deep-linking features
 - Telegram share-preparation requests now include `initDataRaw`, and share responses now carry explicit `debugReason` values when no prepared `messageId` is available, so the next live test can distinguish app bugs from bot/BotFather capability gaps immediately
 
 ## Files Most Likely To Need Changes Next

@@ -6,7 +6,7 @@ import {
   savePreparedInlineMessage,
   writeJson,
   type TelegramStartAppState
-} from "./_shared";
+} from "./_shared.js";
 
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method === "OPTIONS") {

@@ -624,6 +624,33 @@ function resolveFeedSelection(
 }
 
 function decodeLocalStartAppState(token: string): TelegramStartAppState | null {
+  if (token.startsWith("c.")) {
+    try {
+      const compactPayload = token.slice(2);
+      const normalized = compactPayload.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized + "=".repeat((4 - (normalized.length % 4 || 4)) % 4);
+      const compact = JSON.parse(atob(padded)) as {
+        v?: number;
+        t?: string;
+        f?: string;
+        m?: ArtifactRemixRequest["template"];
+        r?: string;
+      };
+      if (compact?.v !== 1 || typeof compact.t !== "string") {
+        return null;
+      }
+      return {
+        version: 1,
+        testId: compact.t,
+        feedItemId: compact.f,
+        template: compact.m,
+        resultKey: compact.r
+      };
+    } catch {
+      return null;
+    }
+  }
+
   const [encodedPayload] = token.split(".", 1);
   try {
     const normalized = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
@@ -683,13 +710,22 @@ async function resolveTelegramLaunchContext(launchContext: PlatformLaunchContext
     const startAppUrl = resolveTelegramStartAppResolveUrl();
     if (startAppUrl) {
       try {
-        const resolveUrl = new URL(startAppUrl);
-        resolveUrl.searchParams.set("startapp", launchContext.startParam);
-        const response = await fetch(resolveUrl.toString());
+        const response = await fetch(startAppUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            startapp: launchContext.startParam,
+            initDataRaw: launchContext.initDataRaw
+          })
+        });
         if (response.ok) {
           const payload = (await response.json()) as unknown;
           if (isTelegramStartAppResolveResponse(payload) && payload.status === "ok") {
             startAppState = payload.state ?? null;
+          } else if (isTelegramStartAppResolveResponse(payload) && payload.fallback) {
+            console.warn("[telegram-startapp] fallback mode", payload.reason ?? "unknown_reason");
           }
         }
       } catch {
@@ -1255,10 +1291,17 @@ export const runtime = {
     }
 
     const state = this.privateBuildTelegramStartState(payload.template);
-    const encodedState = btoa(JSON.stringify(state))
+    const compactState = {
+      v: 1,
+      t: state.testId,
+      f: state.feedItemId,
+      m: state.template,
+      r: state.resultKey
+    };
+    const encodedState = `c.${btoa(JSON.stringify(compactState))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
-      .replace(/=+$/g, "");
+      .replace(/=+$/g, "")}`;
     const miniAppShortName =
       (import.meta.env.VITE_TELEGRAM_MINI_APP_SHORT_NAME as string | undefined)?.trim() ||
       DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME;
