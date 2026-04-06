@@ -31,6 +31,8 @@ This is the quickest "where are we now?" document.
 - Telegram phone share now prefers the native `shareMessage(messageId)` flow via backend-prepared messages, with `t.me/share/url` kept only as fallback, which should eliminate the extra dark webpage task when the backend has a working `TELEGRAM_BOT_TOKEN`
 - Game web now defaults its Telegram/backend calls to same-origin `/api/...` routes, and the repo now includes root serverless Telegram endpoints for init verification, `startapp` resolution, and share preparation, so a Vercel-style deploy can support native Telegram share without requiring the separate discovery-feed API workspace to be deployed first
 - Telegram mobile share now also tries the native `tg://msg_url` path before `t.me/share/url` when no prepared message ID is available, reducing the chance of extra dark web-page tasks on Android Telegram clients during fallback sharing
+- The same Telegram serverless handlers now also live under `apps/game-web/api/telegram/*`, so app-root-only deployments (for example Vercel configured to `apps/game-web`) can resolve `/api/telegram/*` instead of returning 404
+- Session persistence now supports optional deployment reset via `VITE_APP_BUILD_ID`; when it changes across releases, stale scene restore from older builds is ignored
 - Android shell now has first-pass native branding resources: app name, themes, launch background, and adaptive launcher icons
 - Android app launches on a real phone
 - Home screen has been redesigned into a bright white editorial discovery feed instead of the older dark selector-first layout

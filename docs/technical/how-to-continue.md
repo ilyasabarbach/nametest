@@ -138,6 +138,8 @@ Recent Telegram-specific progress already made:
 - Telegram chat-share now asks the backend for a prepared native message tied to the current Telegram user and uses `shareMessage(...)` first on phone, so `t.me/share/url` should only appear as a fallback path rather than the default mobile share experience
 - The repo now also has root `/api/telegram/*` serverless handlers intended for same-origin web deploys such as Vercel, and `GameRuntime` now defaults backend resolution to `window.location.origin`, so Telegram share no longer depends on a separately deployed local API workspace just to prepare native shares
 - Telegram mobile fallback sharing now prefers `tg://msg_url` before web share URLs when a prepared message is unavailable, which is intended to avoid the dark extra web task behavior seen on Android Telegram while still keeping desktop/web Telegram share behavior unchanged
+- The same `/api/telegram/*` handlers now also exist under `apps/game-web/api/telegram/*` for app-root-only deployments, which closes the production 404 gap where Telegram share preparation endpoints were missing in deployed builds
+- Runtime scene restore can now be invalidated across releases by setting `VITE_APP_BUILD_ID`; this prevents reopening stale old-version scenes after a deploy when Telegram keeps the webview session alive
 
 ## Files Most Likely To Need Changes Next
 

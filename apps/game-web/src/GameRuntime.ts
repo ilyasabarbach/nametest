@@ -103,12 +103,15 @@ type ResolvedTelegramLaunch = {
 };
 
 type PersistedAppState = {
+  appBuildId?: string;
   session?: SessionState;
   homeSelection?: RuntimeState["homeSelection"];
   homeDraftNames?: RuntimeState["homeDraftNames"];
   resultDraftPartnerName?: string;
   sceneHistory?: string[];
 };
+
+const RUNTIME_BUILD_ID = (import.meta.env.VITE_APP_BUILD_ID as string | undefined)?.trim();
 
 const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
 const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
@@ -190,7 +193,11 @@ async function loadStoredAppState(storage: IStorage): Promise<PersistedAppState 
   }
 
   try {
-    return JSON.parse(raw) as PersistedAppState;
+    const parsed = JSON.parse(raw) as PersistedAppState;
+    if (RUNTIME_BUILD_ID && parsed.appBuildId && parsed.appBuildId !== RUNTIME_BUILD_ID) {
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
@@ -1388,6 +1395,7 @@ export const runtime = {
 
   async persistAppState(): Promise<void> {
     const appState: PersistedAppState = {
+      appBuildId: RUNTIME_BUILD_ID,
       session: this.state.session,
       homeSelection: this.state.homeSelection,
       homeDraftNames: this.state.homeDraftNames,
