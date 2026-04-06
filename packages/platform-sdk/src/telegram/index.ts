@@ -689,7 +689,8 @@ export const telegramShare: IShare = {
           resolveOnce(false);
         }
       });
-      if (didSend) {
+      const handoffObserved = document.hidden || document.visibilityState === "hidden";
+      if (didSend || handoffObserved) {
         return;
       }
     }
