@@ -30,7 +30,7 @@ This is the quickest "where are we now?" document.
 - Telegram chat-share bridge calls now trust the native Telegram handoff first instead of immediately force-navigating to the share URL, which should prevent the duplicate dark `Webpage` tab that appeared alongside the real forward/share surface on live devices
 - Telegram phone share now prefers the native `shareMessage(messageId)` flow via backend-prepared messages, with `t.me/share/url` kept only as fallback, which should eliminate the extra dark webpage task when the backend has a working `TELEGRAM_BOT_TOKEN`
 - Game web now defaults its Telegram/backend calls to same-origin `/api/...` routes, and the repo now includes root serverless Telegram endpoints for init verification, `startapp` resolution, and share preparation, so a Vercel-style deploy can support native Telegram share without requiring the separate discovery-feed API workspace to be deployed first
-- Telegram mobile share now also tries the native `tg://msg_url` path before `t.me/share/url` when no prepared message ID is available, reducing the chance of extra dark web-page tasks on Android Telegram clients during fallback sharing
+- Telegram mobile share no longer auto-jumps into `tg://msg_url` / `t.me/share/url` fallback when no prepared message ID is available; it now stays in-app and shows a manual share sheet instead of minimizing into the broken dark-webpage flow
 - The same Telegram serverless handlers now also live under `apps/game-web/api/telegram/*`, so app-root-only deployments (for example Vercel configured to `apps/game-web`) can resolve `/api/telegram/*` instead of returning 404
 - Session persistence now supports optional deployment reset via `VITE_APP_BUILD_ID`; when it changes across releases, stale scene restore from older builds is ignored
 - `apps/game-web/api/telegram/*` routes are now explicitly pinned to Node runtime and `share-result` now has a safe top-level fallback response, so deployment/runtime mismatches are less likely to surface as hard `500` errors during live Telegram share flows
@@ -141,6 +141,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - Telegram share button should now always trigger a visible share navigation path even when one Telegram WebApp API method is unavailable in a specific client build
 - Telegram chat-share should now open without waiting on share-card image rendering, so tapping the button inside Telegram should feel immediate
 - Telegram chat-share should now show a visible fallback sheet even when no Telegram share surface opens automatically, so live-device testing can still proceed without invisible failure
+- Telegram share-preparation responses now carry explicit debug reasons like `missing_user_id`, `missing_bot_token`, or bot-capability gaps, so live-device debugging no longer depends on guessing why `messageId` was absent
 - Telegram story-share should only appear when `VITE_TELEGRAM_PUBLIC_BASE_URL` is configured and the API can serve a public result poster URL
 - Daily reward appears only once per day
 - Test reveal pacing feels good across repeated plays
@@ -195,6 +196,7 @@ These are not forgotten. They are simply parked while local gameplay is being re
 - The next realism step is not broad AI thumbnails; it is tuning the new opt-in Google-photo + narrow AI-poster path until the personalized result artifact clearly feels worth sharing on-device
 - Telegram Mini App platform seams now exist in code, but the branch is not publish-ready until there is a real bot, BotFather Main Mini App setup, public HTTPS hosting, verified Telegram init-data in production, and true Telegram-client QA
 - Telegram-native virality is still only partially complete: exact-test `startapp` routing and prepared share links exist, but the bot-driven re-entry loop, App Center polish, and real share-to-story/public-media validation still need end-to-end testing on Telegram clients
+- Live bot capability now appears to be the main share blocker: if `savePreparedInlineMessage` still returns no `messageId`, check that the bot actually has inline mode enabled and a Main Mini App configured in BotFather, because the client now degrades safely instead of hiding that backend/config gap behind bad mobile fallback behavior
 - Real-device QA is now finding narrower polish issues, especially around short-height behavior, rather than basic structural layout failure
 - Persistence and back continuity are stronger now, but they still need real-device verification across Android pause/resume, process death, and share-return edge cases
 - Android-style back/home continuity is improving and now uses a lightweight scene-history path, but the full scene model still is not yet a true URL-like page stack

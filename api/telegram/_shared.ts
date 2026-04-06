@@ -8,6 +8,16 @@ export type TelegramStartAppState = {
   resultKey?: string;
 };
 
+export type PreparedInlineMessageResult = {
+  messageId?: string;
+  errorDescription?: string;
+};
+
+export type BotCapabilities = {
+  supportsInlineQueries?: boolean;
+  hasMainWebApp?: boolean;
+};
+
 const DEFAULT_TELEGRAM_BOT_USERNAME = "cosmikmatch_bot";
 const DEFAULT_TELEGRAM_MINI_APP_SHORT_NAME = "cosmic_match";
 
@@ -208,13 +218,40 @@ export function verifyTelegramInitData(raw: string): {
   };
 }
 
+export async function getBotCapabilities(botToken: string): Promise<BotCapabilities> {
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/getMe`);
+    if (!response.ok) {
+      return {};
+    }
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      result?: {
+        supports_inline_queries?: boolean;
+        has_main_web_app?: boolean;
+      };
+    };
+    if (!payload.ok || !payload.result) {
+      return {};
+    }
+
+    return {
+      supportsInlineQueries: payload.result.supports_inline_queries,
+      hasMainWebApp: payload.result.has_main_web_app
+    };
+  } catch {
+    return {};
+  }
+}
+
 export async function savePreparedInlineMessage(input: {
   botToken: string;
   userId: string;
   title: string;
   text: string;
   deepLinkUrl: string;
-}): Promise<string | null> {
+}): Promise<PreparedInlineMessageResult> {
   const endpoint = `https://api.telegram.org/bot${input.botToken}/savePreparedInlineMessage`;
   const messageText = `${input.text}\n${input.deepLinkUrl}`;
   const response = await fetch(endpoint, {
@@ -237,21 +274,30 @@ export async function savePreparedInlineMessage(input: {
         }
       },
       allow_user_chats: true,
+      allow_bot_chats: true,
       allow_group_chats: true,
       allow_channel_chats: true
     })
   });
 
   if (!response.ok) {
-    return null;
+    const payload = (await response.json().catch(() => ({}))) as {
+      description?: string;
+    };
+    return {
+      errorDescription: payload.description || `http_${response.status}`
+    };
   }
 
   const payload = (await response.json()) as {
     ok?: boolean;
+    description?: string;
     result?: {
       id?: string;
     };
   };
 
-  return payload.ok && payload.result?.id ? payload.result.id : null;
+  return payload.ok && payload.result?.id
+    ? { messageId: payload.result.id }
+    : { errorDescription: payload.description || "missing_message_id" };
 }

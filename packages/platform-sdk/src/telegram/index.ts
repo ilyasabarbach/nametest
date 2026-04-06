@@ -148,7 +148,15 @@ function toTelegramNativeShareUrl(payload: SharePayload): string | null {
   return nativeUrl.toString();
 }
 
-function showTelegramShareFallback(shareUrl: string, shareText?: string): void {
+function showTelegramShareFallback(
+  shareUrl: string,
+  shareText?: string,
+  options?: {
+    title?: string;
+    body?: string;
+    openLabel?: string;
+  }
+): void {
   const existing = document.querySelector<HTMLElement>("[data-telegram-share-fallback]");
   existing?.remove();
 
@@ -175,11 +183,12 @@ function showTelegramShareFallback(shareUrl: string, shareText?: string): void {
   card.style.color = "#23160f";
 
   const title = document.createElement("strong");
-  title.textContent = "Telegram share needs a manual nudge";
+  title.textContent = options?.title ?? "Telegram share needs a manual nudge";
   title.style.fontSize = "20px";
 
   const body = document.createElement("p");
-  body.textContent = "The automatic share handoff did not open. You can still open the Telegram share screen directly.";
+  body.textContent =
+    options?.body ?? "The automatic share handoff did not open. You can still open the Telegram share screen directly.";
   body.style.margin = "0";
   body.style.lineHeight = "1.45";
 
@@ -203,7 +212,7 @@ function showTelegramShareFallback(shareUrl: string, shareText?: string): void {
 
   const openButton = document.createElement("button");
   openButton.type = "button";
-  openButton.textContent = "Open Telegram share";
+  openButton.textContent = options?.openLabel ?? "Open Telegram share";
   openButton.style.flex = "1 1 180px";
   openButton.style.border = "0";
   openButton.style.borderRadius = "14px";
@@ -681,11 +690,12 @@ export const telegramShare: IShare = {
       const platform = webApp?.platform ?? "";
       const useNativePhoneShare = platform === "android" || platform === "ios";
       if (useNativePhoneShare) {
-        const nativeUrl = toTelegramNativeShareUrl(payload);
-        if (nativeUrl) {
-          openShareUrl(nativeUrl, webApp, payload.text, shareUrl);
-          return;
-        }
+        showTelegramShareFallback(shareUrl, payload.text, {
+          title: "Share link ready",
+          body: "Native Telegram share is not available yet for this build. You can copy the link now, or open the web share screen manually.",
+          openLabel: "Open web share"
+        });
+        return;
       }
 
       openShareUrl(shareUrl, webApp, payload.text);

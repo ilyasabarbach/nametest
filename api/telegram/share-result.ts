@@ -1,5 +1,7 @@
 import {
   buildDeepLink,
+  getBotCapabilities,
+  parseTelegramInitData,
   readJsonBody,
   savePreparedInlineMessage,
   writeJson,
@@ -45,21 +47,41 @@ export default async function handler(req: any, res: any): Promise<void> {
   shareUrl.searchParams.set("text", payload.text);
 
   let messageId: string | undefined;
+  let debugReason: string | undefined;
   const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim();
-  if (botToken && typeof payload.userId === "string") {
-    try {
-      const preparedId = await savePreparedInlineMessage({
-        botToken,
-        userId: payload.userId,
-        title: typeof payload.title === "string" ? payload.title : "Cosmic Match result",
-        text: payload.text,
-        deepLinkUrl
-      });
-      if (preparedId) {
-        messageId = preparedId;
+  const parsedInitData =
+    typeof payload.initDataRaw === "string" && payload.initDataRaw.trim() ? parseTelegramInitData(payload.initDataRaw) : null;
+  const effectiveUserId =
+    typeof payload.userId === "string" && payload.userId.trim()
+      ? payload.userId.trim()
+      : parsedInitData?.user?.id;
+
+  if (!botToken) {
+    debugReason = "missing_bot_token";
+  } else if (!effectiveUserId) {
+    debugReason = "missing_user_id";
+  } else {
+    const botCapabilities = await getBotCapabilities(botToken);
+    if (botCapabilities.supportsInlineQueries === false) {
+      debugReason = "bot_inline_mode_disabled";
+    } else if (botCapabilities.hasMainWebApp === false) {
+      debugReason = "bot_main_web_app_disabled";
+    } else {
+      try {
+        const prepared = await savePreparedInlineMessage({
+          botToken,
+          userId: effectiveUserId,
+          title: typeof payload.title === "string" ? payload.title : "Cosmic Match result",
+          text: payload.text,
+          deepLinkUrl
+        });
+        messageId = prepared.messageId;
+        if (!prepared.messageId) {
+          debugReason = prepared.errorDescription ?? "missing_message_id";
+        }
+      } catch {
+        debugReason = "save_prepared_inline_message_failed";
       }
-    } catch {
-      messageId = undefined;
     }
   }
 
@@ -70,6 +92,7 @@ export default async function handler(req: any, res: any): Promise<void> {
     shareText: payload.text,
     messageId,
     storyWidgetLinkUrl: deepLinkUrl,
-    storyWidgetLinkName: "Make yours"
+    storyWidgetLinkName: "Make yours",
+    debugReason
   });
 }

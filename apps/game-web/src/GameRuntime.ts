@@ -1295,6 +1295,7 @@ export const runtime = {
       imageDataUrl: payload.imageDataUrl,
       filename: payload.filename,
       userId: this.state.profile?.provider === "telegram" ? this.state.profile.id : undefined,
+      initDataRaw: this.state.launchContext.initDataRaw,
       state: this.privateBuildTelegramStartState(payload.template)
     };
 
@@ -1311,6 +1312,9 @@ export const runtime = {
         if (response.ok) {
           const data = (await response.json()) as unknown;
           if (isTelegramPrepareShareResponse(data)) {
+            if (!data.messageId) {
+              console.warn("[telegram-share] prepared message unavailable", data.debugReason ?? "missing_message_id");
+            }
             return data;
           }
         }

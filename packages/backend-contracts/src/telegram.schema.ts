@@ -38,6 +38,7 @@ export type TelegramPrepareShareRequest = {
   imageDataUrl?: string;
   filename?: string;
   userId?: string;
+  initDataRaw?: string;
   state: TelegramStartAppState;
 };
 
@@ -50,6 +51,7 @@ export type TelegramPrepareShareResponse = {
   storyMediaUrl?: string;
   storyWidgetLinkUrl?: string;
   storyWidgetLinkName?: string;
+  debugReason?: string;
 };
 
 function isObjectRecord(value: unknown): value is Record<string, unknown> {
