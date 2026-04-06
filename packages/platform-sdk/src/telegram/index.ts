@@ -394,6 +394,7 @@ function openShareUrl(
   shareText?: string,
   webFallbackUrl?: string
 ): void {
+  const isWebPlatform = webApp?.platform === "weba" || webApp?.platform === "webk" || webApp?.platform === "tdesktop";
   const assist = showTelegramShareAssist(webFallbackUrl ?? shareUrl, shareText);
   let handoffObserved = false;
   let bridgeAttempted = false;
@@ -423,15 +424,17 @@ function openShareUrl(
     }, bridgeAttempted ? 900 : 500);
   };
 
-  try {
-    if (webApp?.openTelegramLink) {
-      bridgeAttempted = true;
-      webApp.openTelegramLink(shareUrl);
-      showManualFallback();
-      return;
+  if (!isWebPlatform) {
+    try {
+      if (webApp?.openTelegramLink) {
+        bridgeAttempted = true;
+        webApp.openTelegramLink(shareUrl);
+        showManualFallback();
+        return;
+      }
+    } catch {
+      // Continue to fallback methods.
     }
-  } catch {
-    // Continue to fallback methods.
   }
 
   try {
@@ -668,16 +671,15 @@ export const telegramShare: IShare = {
       const didSend = await new Promise<boolean>((resolve) => {
         let resolved = false;
         const resolveOnce = (value: boolean) => {
-          if (resolved) {
-            return;
-          }
+          if (resolved) return;
           resolved = true;
           resolve(value);
         };
 
+        // We use a longer timeout. If Telegram silents ignores shareMessage, we must fallback.
         const timeoutId = window.setTimeout(() => {
           resolveOnce(false);
-        }, 1200);
+        }, 2000);
 
         try {
           webApp.shareMessage?.(payload.telegramMessageId!, (sent) => {
@@ -689,9 +691,10 @@ export const telegramShare: IShare = {
           resolveOnce(false);
         }
       });
+      
       const handoffObserved = document.hidden || document.visibilityState === "hidden";
       if (didSend || handoffObserved) {
-        return;
+        return; // Success or native sheet opened.
       }
     }
 
