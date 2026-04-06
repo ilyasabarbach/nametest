@@ -74,7 +74,8 @@ function getTelegramWebApp(): TelegramWebApp | null {
 }
 
 function isTelegramMiniApp(): boolean {
-  return Boolean(getTelegramWebApp());
+  const webApp = getTelegramWebApp();
+  return Boolean(webApp && webApp.platform && webApp.platform !== "unknown" && (webApp.initData || webApp.initDataUnsafe));
 }
 
 function getTelegramSearchParams(): URLSearchParams {
@@ -673,37 +674,14 @@ export const telegramShare: IShare = {
     if (shareUrl && webApp?.switchInlineQuery) {
       try {
         const queryText = `Check out my result! ${payload.linkUrl || shareUrl}`;
-        webApp.switchInlineQuery(queryText, ["users", "groups", "chats"]);
+        webApp.switchInlineQuery(queryText, ["users", "groups", "channels"]);
         return;
       } catch (e) {
         console.warn("[share] switchInlineQuery failed", e);
       }
     }
 
-    if (shareUrl) {
-      const platform = webApp?.platform ?? "";
-      const useNativePhoneShare = platform === "android" || platform === "ios";
-      if (useNativePhoneShare) {
-        showTelegramShareFallback(shareUrl, payload.text, {
-          title: "Share link ready",
-          body: "Native Telegram share is not available yet for this build. You can copy the link now, or open the web share screen manually.",
-          openLabel: "Open web share"
-        });
-        return;
-      }
-
-      openShareUrl(shareUrl, webApp, payload.text);
-      return;
-    }
-
-    if (payload.text) {
-      const fallbackShareUrl = new URL("https://t.me/share/url");
-      fallbackShareUrl.searchParams.set("url", "https://t.me");
-      fallbackShareUrl.searchParams.set("text", payload.text);
-      openShareUrl(fallbackShareUrl.toString(), webApp, payload.text);
-      return;
-    }
-
+    // Fallback directly to browser share (which handles the copy link natively)
     await browserShare.share(payload);
   },
   canShareToStory() {

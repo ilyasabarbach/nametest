@@ -4,6 +4,11 @@ import { runtime } from "./GameRuntime";
 import { installPlatformLifecycle } from "./platform/installLifecycle";
 
 function applyPlatformEnvironment(): void {
+  // Ensure we tell Telegram we are ready as early as possible so UI does not hang or fallback.
+  if ((window as any).Telegram?.WebApp) {
+    (window as any).Telegram.WebApp.ready?.();
+  }
+
   const root = document.documentElement;
 
   const syncTheme = () => {

@@ -775,11 +775,30 @@ export const runtime = {
   },
 
   async init(): Promise<void> {
-    this.state.launchContext = this.state.platform.getLaunchContext?.() ?? {
-      source: "unknown",
-      platform: this.state.platform.id,
-      isNativeShell: false
-    };
+    if (this.state.platform.id === "telegram") {
+      let attempts = 0;
+      while (attempts < 20) {
+        const webApp = (window as any).Telegram?.WebApp;
+        if (webApp && webApp.platform && webApp.platform !== "unknown" && (webApp.initData || webApp.initDataUnsafe)) {
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        attempts++;
+      }
+      
+      // Update the launch context now that the WebApp object has safely hydrated
+      this.state.launchContext = this.state.platform.getLaunchContext?.() ?? {
+        source: "unknown",
+        platform: this.state.platform.id,
+        isNativeShell: false
+      };
+    } else {
+      this.state.launchContext = this.state.platform.getLaunchContext?.() ?? {
+        source: "unknown",
+        platform: this.state.platform.id,
+        isNativeShell: false
+      };
+    }
 
     const [remoteConfig, progress, locale, profile, platformProfile, resolvedTelegramLaunch] = await Promise.all([
       loadRemoteConfig(this.state.remoteConfigService),
