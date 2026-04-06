@@ -142,6 +142,7 @@ Recent Telegram-specific progress already made:
 - Runtime scene restore can now be invalidated across releases by setting `VITE_APP_BUILD_ID`; this prevents reopening stale old-version scenes after a deploy when Telegram keeps the webview session alive
 - Telegram app-root serverless routes now explicitly request Node runtime and the share-result handler now has a hard-fallback response path, reducing live `500` risk when deployment/runtime behavior differs from local expectations
 - `apps/game-web` now typechecks its `api/**/*.ts` routes directly and the app-root share-result route is self-contained instead of importing shared helper code, reducing the chance of production-only bundling failures on Telegram share preparation
+- Telegram route imports now use explicit ESM `.js` helper paths, which avoids Vercel runtime `ERR_MODULE_NOT_FOUND` failures on `apps/game-web/api/telegram/*` and root `/api/telegram/*` handlers
 - Telegram share-preparation requests now include `initDataRaw`, and share responses now carry explicit `debugReason` values when no prepared `messageId` is available, so the next live test can distinguish app bugs from bot/BotFather capability gaps immediately
 
 ## Files Most Likely To Need Changes Next

@@ -1,4 +1,4 @@
-import { readJsonBody, verifyTelegramInitData, writeJson } from "./_shared";
+import { readJsonBody, verifyTelegramInitData, writeJson } from "./_shared.js";
 
 export const config = {
   runtime: "nodejs"

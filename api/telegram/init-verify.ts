@@ -1,4 +1,4 @@
-import { readJsonBody, verifyTelegramInitData, writeJson } from "./_shared";
+import { readJsonBody, verifyTelegramInitData, writeJson } from "./_shared.js";
 
 export default async function handler(req: any, res: any): Promise<void> {
   if (req.method === "OPTIONS") {

@@ -1,4 +1,4 @@
-import { decodeSignedStartAppPayload, writeJson } from "./_shared";
+import { decodeSignedStartAppPayload, writeJson } from "./_shared.js";
 
 export const config = {
   runtime: "nodejs"
