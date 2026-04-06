@@ -137,6 +137,7 @@ Recent Telegram-specific progress already made:
 - Telegram chat-share no longer force-navigates to the share URL immediately after a successful bridge call, which should stop the extra blank/dark `Webpage` surface that was appearing on top of the real Telegram forward chooser during live testing
 - Telegram chat-share now asks the backend for a prepared native message tied to the current Telegram user and uses `shareMessage(...)` first on phone, so `t.me/share/url` should only appear as a fallback path rather than the default mobile share experience
 - The repo now also has root `/api/telegram/*` serverless handlers intended for same-origin web deploys such as Vercel, and `GameRuntime` now defaults backend resolution to `window.location.origin`, so Telegram share no longer depends on a separately deployed local API workspace just to prepare native shares
+- Telegram mobile fallback sharing now prefers `tg://msg_url` before web share URLs when a prepared message is unavailable, which is intended to avoid the dark extra web task behavior seen on Android Telegram while still keeping desktop/web Telegram share behavior unchanged
 
 ## Files Most Likely To Need Changes Next
 

@@ -134,6 +134,20 @@ function toTelegramShareUrl(payload: SharePayload): string | null {
   return shareUrl.toString();
 }
 
+function toTelegramNativeShareUrl(payload: SharePayload): string | null {
+  const targetUrl = payload.linkUrl;
+  if (!targetUrl) {
+    return null;
+  }
+
+  const nativeUrl = new URL("tg://msg_url");
+  nativeUrl.searchParams.set("url", targetUrl);
+  if (payload.text) {
+    nativeUrl.searchParams.set("text", payload.text);
+  }
+  return nativeUrl.toString();
+}
+
 function showTelegramShareFallback(shareUrl: string, shareText?: string): void {
   const existing = document.querySelector<HTMLElement>("[data-telegram-share-fallback]");
   existing?.remove();
@@ -379,8 +393,13 @@ function showTelegramShareAssist(shareUrl: string, shareText?: string): { close(
   };
 }
 
-function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText?: string): void {
-  const assist = showTelegramShareAssist(shareUrl, shareText);
+function openShareUrl(
+  shareUrl: string,
+  webApp: TelegramWebApp | null,
+  shareText?: string,
+  webFallbackUrl?: string
+): void {
+  const assist = showTelegramShareAssist(webFallbackUrl ?? shareUrl, shareText);
   let handoffObserved = false;
   let bridgeAttempted = false;
   const markHandoff = () => {
@@ -396,8 +415,16 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText
         return;
       }
 
+      if (webFallbackUrl && webFallbackUrl !== shareUrl) {
+        try {
+          webApp?.openTelegramLink?.(webFallbackUrl);
+        } catch {
+          // keep manual fallback below
+        }
+      }
+
       assist.markManual();
-      showTelegramShareFallback(shareUrl, shareText);
+      showTelegramShareFallback(webFallbackUrl ?? shareUrl, shareText);
     }, bridgeAttempted ? 900 : 500);
   };
 
@@ -425,10 +452,11 @@ function openShareUrl(shareUrl: string, webApp: TelegramWebApp | null, shareText
 
   const popup = window.open(shareUrl, "_blank", "noopener,noreferrer");
   if (!popup) {
+    const finalUrl = webFallbackUrl ?? shareUrl;
     try {
-      window.location.assign(shareUrl);
+      window.location.assign(finalUrl);
     } catch {
-      window.location.href = shareUrl;
+      window.location.href = finalUrl;
     }
     showManualFallback();
   }
@@ -650,6 +678,16 @@ export const telegramShare: IShare = {
 
     const shareUrl = toTelegramShareUrl(payload);
     if (shareUrl) {
+      const platform = webApp?.platform ?? "";
+      const useNativePhoneShare = platform === "android" || platform === "ios";
+      if (useNativePhoneShare) {
+        const nativeUrl = toTelegramNativeShareUrl(payload);
+        if (nativeUrl) {
+          openShareUrl(nativeUrl, webApp, payload.text, shareUrl);
+          return;
+        }
+      }
+
       openShareUrl(shareUrl, webApp, payload.text);
       return;
     }
