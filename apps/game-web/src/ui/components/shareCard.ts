@@ -88,14 +88,14 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
   }
 
   context.fillStyle = template === "headline" ? "#201708" : "#f8f4e8";
-  context.font = "bold 66px Georgia";
+  context.font = "bold 66px Outfit";
   context.fillText(options.brandLabel, 90, 160);
 
-  context.font = "32px Georgia";
+  context.font = "32px Outfit";
   context.fillStyle = template === "headline" ? "#7f4d1d" : "#ffd166";
   context.fillText(options.names, 90, 240);
 
-  context.font = "bold 34px Georgia";
+  context.font = "bold 34px Outfit";
   context.fillStyle = template === "headline" ? "#8c2410" : options.accent;
   context.fillText(options.hook.toUpperCase(), 90, 296);
 
@@ -111,33 +111,33 @@ export async function buildShareCard(options: ShareCardOptions): Promise<string>
   context.fill();
 
   context.fillStyle = template === "headline" ? "rgba(32, 23, 8, 0.12)" : "rgba(255,255,255,0.1)";
-  context.font = "bold 28px Georgia";
+  context.font = "bold 28px Outfit";
   context.fillText(options.testLabel.toUpperCase(), 110, 392);
 
   context.fillStyle = template === "headline" ? "#8c2410" : options.accent;
-  context.font = "bold 144px Georgia";
+  context.font = "bold 144px Outfit";
   context.fillText(options.score, 110, 560);
 
   context.fillStyle = template === "headline" ? "#201708" : "#f8f4e8";
-  context.font = "bold 84px Georgia";
+  context.font = "bold 84px Outfit";
   wrapText(context, options.title, 110, 700, 820, 94);
 
-  context.font = "40px Georgia";
+  context.font = "40px Outfit";
   wrapText(context, options.body, 110, 900, 840, 58);
 
   context.fillStyle = template === "headline" ? "#6f5b40" : "#b7d7ff";
-  context.font = "italic 34px Georgia";
+  context.font = "italic 34px Outfit";
   wrapText(context, options.insight, 110, 1190, 820, 48);
 
   context.fillStyle = template === "headline" ? "#8c2410" : "#ffd166";
-  context.font = "bold 34px Georgia";
+  context.font = "bold 34px Outfit";
   context.fillText(`${options.signatureLabel}: ${options.signature}`, 110, 1410);
 
   context.fillStyle = template === "headline" ? "rgba(32, 23, 8, 0.12)" : "rgba(255,255,255,0.12)";
   roundRect(context, 72, 1560, 936, 200, template === "tabloid" ? 20 : 36);
   context.fill();
   context.fillStyle = template === "headline" ? "#201708" : "#f8f4e8";
-  context.font = "32px Georgia";
+  context.font = "32px Outfit";
   wrapText(context, options.sharePrompt, 110, 1640, 840, 46);
 
   return canvas.toDataURL("image/png");

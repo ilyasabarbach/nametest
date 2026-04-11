@@ -161,7 +161,7 @@ export class HomeScene extends Phaser.Scene {
 
     this.add
       .text(26, 34, runtime.copy["home.brand"], {
-        fontFamily: "Georgia",
+        fontFamily: "Outfit",
         fontSize: "18px",
         color: "#b8562d"
       })

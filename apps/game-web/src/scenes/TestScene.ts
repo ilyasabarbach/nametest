@@ -36,14 +36,14 @@ export class TestScene extends Phaser.Scene {
     this.add.circle(width / 2, orbY, Math.min(54, width * 0.11), 0xffffff, 0.22);
 
     const symbol = this.add.text(width / 2, orbY - 4, this.getSymbolGlyph(selectedTest.art.symbol), {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: `${Math.max(34, Math.min(64, width * 0.08))}px`,
       color: "#f8f4e8"
     }).setOrigin(0.5);
     pulse(symbol);
 
     const testTitle = this.add.text(width / 2, Math.max(54, height * 0.1), runtime.copy[selectedTest.titleKey], {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: "18px",
       color: "#ffd166",
       align: "center"
@@ -51,7 +51,7 @@ export class TestScene extends Phaser.Scene {
     testTitle.setAlpha(0.92);
 
     const reading = this.add.text(width / 2, height / 2 + 30, revealSteps[0]?.title ?? runtime.copy["test.readingDefault"], {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: `${Math.max(28, Math.min(40, width * 0.05))}px`,
       color: "#f8f4e8",
       align: "center",
@@ -59,7 +59,7 @@ export class TestScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const detail = this.add.text(width / 2, height / 2 + 94, revealSteps[0]?.detail ?? "", {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: "18px",
       color: "#dfe8ff",
       align: "center",
@@ -81,13 +81,13 @@ export class TestScene extends Phaser.Scene {
     ).setOrigin(0, 0.5);
 
     const progressLabel = this.add.text(width / 2, progressBoxY + 28, "", {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: "14px",
       color: "#b7c8ef"
     }).setOrigin(0.5);
 
     const skipHint = this.add.text(width / 2, height - 44, runtime.copy["test.skipHint"], {
-      fontFamily: "Georgia",
+      fontFamily: "Outfit",
       fontSize: "14px",
       color: "#f8f4e8"
     }).setOrigin(0.5);

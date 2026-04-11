@@ -77,7 +77,7 @@ export class ResultScene extends Phaser.Scene {
           runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
         ),
         {
-          fontFamily: "Georgia",
+          fontFamily: "Outfit",
           fontSize: "26px",
           color: "#f8f4e8"
         }
