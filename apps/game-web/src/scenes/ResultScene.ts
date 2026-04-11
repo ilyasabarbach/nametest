@@ -111,7 +111,9 @@ export class ResultScene extends Phaser.Scene {
       partnerName: partnerDraft,
       partnerLabel: runtime.copy["home.partnerLabel"],
       retryPartnerVisible,
-      retryLabel: runtime.copy["result.retry"],
+      retryLabel: runtime.isViewingSharedResult() 
+        ? (runtime.copy["result.makeYours"] ?? "✨ Play this test")
+        : runtime.copy["result.retry"],
       rewardLabel: runtime.copy["result.reward"],
       continueTitle: runtime.copy["result.continueTitle"],
       continueBody: runtime.copy["result.continueBody"],

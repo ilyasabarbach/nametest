@@ -14,6 +14,7 @@ export type StoredResult = {
   names?: { primaryName: string; partnerName?: string };
   template?: string;
   imageRecipeId?: string;
+  creatorId?: string;
 };
 
 // Fallback in-memory map for local development if KV is missing

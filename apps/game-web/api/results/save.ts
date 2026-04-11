@@ -1,4 +1,4 @@
-import { writeJson, readJsonBody } from "../telegram/_shared.js";
+import { writeJson, readJsonBody, verifyTelegramInitData } from "../telegram/_shared.js";
 import { saveResultToStore, type StoredResult } from "./_store.js";
 
 export const config = {
@@ -49,6 +49,13 @@ export default async function handler(req: any, res: any): Promise<void> {
       template: body.result.template,
       imageRecipeId: body.result.imageRecipeId
     };
+
+    if (body.initDataRaw && typeof body.initDataRaw === "string") {
+      const verification = verifyTelegramInitData(body.initDataRaw);
+      if (verification.status === "verified" && verification.user?.id) {
+        payload.creatorId = verification.user.id;
+      }
+    }
 
     const id = await saveResultToStore(payload);
     writeJson(res, 200, { ok: true, id });

@@ -1378,6 +1378,7 @@ export const runtime = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          initDataRaw: this.state.launchContext.initDataRaw,
           result: {
             testId: this.state.session.selectedTest.id,
             resultKey: this.state.session.latestResult.resultKey,
@@ -1403,6 +1404,14 @@ export const runtime = {
       }
     } catch {}
     return null;
+  },
+
+  isViewingSharedResult(): boolean {
+    if (!this.state.launchStartAppState || !this.state.session.latestResult) {
+      return false;
+    }
+    return this.state.launchStartAppState.resultKey === this.state.session.latestResult.resultKey && 
+           this.state.launchStartAppState.testId === this.state.session.selectedTest.id;
   },
 
   async shareResultArtifact(payload: {
@@ -1469,6 +1478,9 @@ export const runtime = {
   },
 
   canShowReward() {
+    if (this.state.platform.id === "telegram") {
+      return false; // Disable reward flow on Telegram for frictionless viral onboarding
+    }
     return this.state.session.latestResult
       ? canUnlockAlternateResult(this.state.session.latestResult, this.state.session.rewardState)
       : false;

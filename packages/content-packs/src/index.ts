@@ -8,14 +8,7 @@ import futureCareer from "./tests/future-career.json";
 import secretCrush from "./tests/secret-crush.json";
 import starAura from "./tests/star-aura.json";
 import weddingBells from "./tests/wedding-bells.json";
-import destinyHeadline from "./tests/destiny-headline.json";
-import pastLifeEcho from "./tests/past-life-echo.json";
-import hiddenGift from "./tests/hidden-gift.json";
-import auraPalette from "./tests/aura-palette.json";
 import groupChatRole from "./tests/group-chat-role.json";
-import soulStory from "./tests/soul-story.json";
-import photoArchetype from "./tests/photo-archetype.json";
-import moviePoster from "./tests/movie-poster.json";
 import common from "./copy/en/common.json";
 import tests from "./copy/en/tests.json";
 import results from "./copy/en/results.json";
@@ -32,18 +25,10 @@ export const defaultTests = [
   weddingBells,
   friendshipScore,
   secretCrush,
+  groupChatRole,
   futureCareer,
   dramaMeter,
-  starAura,
-  fameLevel,
-  destinyHeadline,
-  pastLifeEcho,
-  hiddenGift,
-  auraPalette,
-  groupChatRole,
-  soulStory,
-  photoArchetype,
-  moviePoster
+  starAura
 ] as TestDefinition[];
 export const enCopy: Record<string, string> = {
   ...common,
