@@ -90,320 +90,265 @@ export function showHomeOverlay(args: {
   const showStats = args.showStats ?? true;
 
   const panel = document.createElement("form");
-  panel.className = "hud-panel hud-panel--home-feed hud-stack";
+  panel.className = "fixed inset-0 z-50 overflow-y-auto overflow-x-hidden transition-all duration-300 pointer-events-auto bg-[#0f1014] text-[#dce1fb] font-body";
+  panel.style.backgroundImage = 'radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(190, 0, 98, 0.08) 0%, transparent 40%)';
   panel.dir = args.currentLocale === "ar" ? "rtl" : "ltr";
 
   const hasSelection = () => Boolean(currentSelectedId);
-
+  const getSelectedTest = () => testsById.get(currentSelectedId);
   const getSelectedFeedItem = () =>
     hasSelection()
       ? (feedItems.find((item) => item.id === currentSelectedFeedItemId) ??
         feedItems.find((item) => item.testId === currentSelectedId))
       : undefined;
 
-  const selectedFeedItem = getSelectedFeedItem();
-  const getSelectedTest = () => testsById.get(currentSelectedId);
-  const isTouchSelection = () => getSelectedTest()?.interactionMode === "tap";
-
-  const getCardTemplate = (item: FeedItem, index: number, lane: "hot" | "feed") => {
-    if (lane === "hot") {
-      return index === 0 ? "lead" : index % 2 === 0 ? "compact" : "stacked";
-    }
-
-    if (item.hot && index % 4 === 0) {
-      return "wide";
-    }
-
-    return index % 3 === 1 ? "compact" : "stacked";
-  };
-
-  const getCardFamily = (item: FeedItem, lane: "hot" | "feed") => {
-    if (item.testId === "past-life-echo" || item.testId === "star-aura") {
-      return "portrait";
-    }
-
-    if (item.testId === "destiny-headline" || item.testId === "fame-level") {
-      return "tabloid";
-    }
-
-    if (item.testId === "future-career" || item.testId === "wedding-bells") {
-      return "calendar";
-    }
-
-    if (item.testId === "friendship-score" || item.testId === "hidden-gift") {
-      return "touch";
-    }
-
-    return lane === "hot" ? "feature" : "story";
-  };
-
-  const renderCards = (items: FeedItem[], lane: "hot" | "feed", extraClass = "") =>
+  const renderCards = (items: FeedItem[]) =>
     items
-      .map((item, index) => {
+      .map((item) => {
         const selected = item.id === currentSelectedFeedItemId;
         const lockedLabel = item.lockedLabel ?? testsById.get(item.testId)?.lockedLabel;
-        const template = getCardTemplate(item, index, lane);
-        const family = getCardFamily(item, lane);
-        return `
-          <button
-            class="hud-feed-card hud-feed-card--${template} hud-feed-card--family-${family} ${selected ? "selected" : ""} ${lockedLabel ? "locked" : ""} ${extraClass}"
-            type="button"
-            data-test-id="${item.testId}"
-            data-feed-item-id="${item.id}"
-            style="--feed-start:${item.palette[0]}; --feed-end:${item.palette[1]};"
-          >
-            <span class="hud-feed-card__thumb">
-              <img class="hud-feed-card__image" src="${item.imageUrl}" alt="${item.title}" />
-              ${item.hot ? `<span class="hud-feed-card__hot">${args.hotLabel}</span>` : ""}
-              <span class="hud-feed-card__tag">${item.tag}</span>
-            </span>
-            <span class="hud-feed-card__body">
-              <strong>${item.title}</strong>
-              <small>${lockedLabel ?? item.teaser}</small>
-              ${lockedLabel ? "" : `<em>${item.socialProof}</em>`}
-            </span>
-          </button>
-        `;
+        return \`
+          <div class="surface-container-low rounded-2xl p-4 border \${selected ? 'border-primary' : 'border-outline-variant/5'} shadow-lg flex flex-col gap-4 group cursor-pointer" data-test-id="\${item.testId}" data-feed-item-id="\${item.id}">
+            <div class="aspect-square rounded-xl overflow-hidden bg-surface-container-highest relative">
+              \${lockedLabel ? \`<div class="absolute inset-0 bg-black/60 z-10 flex items-center justify-center"><span class="text-xs font-bold text-white">\${lockedLabel}</span></div>\` : ''}
+              <img class="w-full h-full object-cover transition duration-500 group-hover:scale-110 \${lockedLabel ? 'grayscale' : ''}" src="\${item.imageUrl}" alt="\${item.title}" />
+              \${item.hot ? \`<div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow animate-pulse">\${args.hotLabel}</div>\` : ''}
+            </div>
+            <div class="space-y-1">
+              <h3 class="font-bold text-sm text-on-surface truncate">\${item.title}</h3>
+              <p class="text-[10px] text-on-surface-variant font-medium tracking-wide uppercase truncate">\${item.teaser}</p>
+            </div>
+          </div>
+        \`;
       })
       .join("");
 
-  panel.innerHTML = `
-    <div class="hud-social-chrome hud-social-chrome--home">
-      <div class="hud-social-chrome__left">
-        <button class="hud-settings-button hud-icon-button" type="button" data-action="toggle-settings" title="${args.languageLabel}" aria-label="${args.languageLabel}">
-          &#9881;
-        </button>
-        <div class="hud-settings-menu hidden" data-settings-menu>
-          <strong>${args.languageLabel}</strong>
-          <div class="hud-settings-menu__list">
-            ${args.locales
-              .map(
-                (locale) => `
-                  <button
-                    class="hud-locale-chip ${locale.id === args.currentLocale ? "selected" : ""}"
-                    type="button"
-                    data-locale-id="${locale.id}"
-                    title="${locale.nativeLabel}"
-                  >
-                    ${locale.label}
-                  </button>
-                `
-              )
-              .join("")}
+  panel.innerHTML = \`
+    <header class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(147,51,234,0.1)] flex justify-between items-center px-6 h-16 w-full pointer-events-auto">
+      <button type="button" class="text-slate-500 hover:text-purple-200 transition-colors active:scale-95 duration-300">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <h1 class="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-600 font-headline uppercase tracking-[0.2em] text-xs pb-1" data-app-title>\${args.socialBrandLabel}</h1>
+      <button type="button" class="text-slate-500 hover:text-purple-200 transition-colors active:scale-95 duration-300" data-action="toggle-settings">
+        <span class="material-symbols-outlined">settings</span>
+      </button>
+    </header>
+    
+    <div class="fixed top-16 right-6 mt-2 hidden bg-surface-container-high rounded-xl p-4 shadow-2xl z-50 flex-col gap-2" data-settings-menu>
+      <h3 class="text-sm font-bold text-primary border-b border-white/10 pb-2 mb-2">\${args.languageLabel}</h3>
+      \${args.locales
+        .map(
+          (locale) => \`
+            <button
+              class="text-left px-4 py-2 rounded border \${locale.id === args.currentLocale ? 'border-primary text-primary bg-primary/10' : 'border-transparent text-slate-300 hover:bg-white/5'} text-sm font-medium transition-colors"
+              type="button"
+              data-locale-id="\${locale.id}"
+            >
+              \${locale.nativeLabel}
+            </button>
+          \`
+        )
+        .join("")}
+    </div>
+
+    <!-- Feed View -->
+    <main class="pt-24 pb-32 px-6 max-w-2xl mx-auto space-y-10 transition-opacity duration-300" data-view="feed">
+      \${args.feedItems.length > 0 ? \`
+        <!-- Hero Card -->
+        <section class="relative group cursor-pointer" data-test-id="\${feedItems[0].testId}" data-feed-item-id="\${feedItems[0].id}">
+          <div class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary opacity-20 blur-2xl group-hover:opacity-40 transition duration-1000"></div>
+          <div class="relative bg-surface-container-highest rounded-2xl overflow-hidden shadow-2xl border border-outline-variant/10">
+            <div class="h-64 w-full relative overflow-hidden">
+              <img class="w-full h-full object-cover transition duration-700 group-hover:scale-105" src="\${feedItems[0].imageUrl}" />
+              <div class="absolute inset-0 bg-gradient-to-t from-surface-container-highest via-transparent to-transparent"></div>
+            </div>
+            <div class="p-8 space-y-4">
+              <div class="space-y-1">
+                <span class="font-bold uppercase tracking-widest text-primary text-[10px]">\${args.dailyLabel}</span>
+                <h2 class="text-3xl font-extrabold tracking-tight text-on-surface">\${feedItems[0].title}</h2>
+              </div>
+              <p class="text-on-surface-variant text-sm leading-relaxed max-w-xs">\${feedItems[0].teaser}</p>
+              <button type="button" class="mt-4 px-8 py-4 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container font-bold rounded-full shadow-[0_0_25px_rgba(147,51,234,0.4)] active:scale-95 transition-transform pointer-events-none">
+                \${args.startLabel}
+              </button>
+            </div>
+          </div>
+        </section>
+      \` : ''}
+
+      \${showStats ? \`
+        <!-- Stat Pills -->
+        <section class="flex gap-3 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
+          <div class="flex-shrink-0 bg-surface-container-highest/40 backdrop-blur-xl border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-sm">local_fire_department</span>
+            <span class="text-xs font-semibold tracking-wide text-on-surface">\${args.streakValue} \${args.streakLabel}</span>
+          </div>
+          <div class="flex-shrink-0 bg-surface-container-highest/40 backdrop-blur-xl border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-2">
+            <span class="material-symbols-outlined text-secondary text-sm">play_circle</span>
+            <span class="text-xs font-semibold tracking-wide text-on-surface">\${args.sessionsValue} \${args.sessionsLabel}</span>
+          </div>
+          <div class="flex-shrink-0 bg-surface-container-highest/40 backdrop-blur-xl border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-2">
+            <span class="material-symbols-outlined text-tertiary text-sm">monetization_on</span>
+            <span class="text-xs font-semibold tracking-wide text-on-surface">\${args.rewardValue} \${args.rewardsLabel}</span>
+          </div>
+        </section>
+      \` : ''}
+
+      <!-- Feed Grid -->
+      <section class="grid grid-cols-2 gap-4" data-feed-grid>
+        \${renderCards(feedItems.slice(1))}
+      </section>
+      <div class="text-center py-4 text-xs font-label uppercase tracking-widest text-slate-500" data-feed-sentinel>\${hasMoreFeed ? args.feedLoadingLabel : ""}</div>
+    </main>
+
+    <!-- Composer View (Input Form) styling taken explicitly from Stitch TestScene.ts prompt !-->
+    <main class="hidden absolute inset-0 z-50 pt-24 pb-40 px-6 max-w-md mx-auto w-full bg-[#0c1324] backdrop-blur-xl transition-opacity duration-300 transform" data-view="composer" style="background: radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.15) 0%, rgba(12, 19, 36, 1) 70%); min-height: 100vh;">
+      <input type="hidden" name="selectedTestId" value="\${currentSelectedId}" />
+      
+      <div class="flex justify-between items-center mb-10 w-full cursor-pointer" data-action="close-composer">
+          <span class="material-symbols-outlined text-purple-400">arrow_back</span>
+          <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Back</span>
+      </div>
+
+      <div class="mb-12 text-center mt-4">
+        <span class="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-2 block" data-selected-teaser></span>
+        <h2 class="text-4xl font-extrabold tracking-tight text-on-surface leading-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary" data-selected-title></h2>
+        <p class="text-sm mt-4 text-slate-400" data-selected-subtitle></p>
+      </div>
+
+      <div class="space-y-4 relative w-full" data-form-fields>
+        <div class="group relative w-full" data-primary-field>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2 ml-4" data-primary-label>\${args.primaryLabel}</label>
+          <div class="bg-[rgba(21,27,45,0.6)] backdrop-blur-md rounded-2xl p-[1px] bg-gradient-to-b from-purple-500/30 to-transparent focus-within:from-purple-500 transition-all duration-500 w-full border border-white/5 shadow-2xl">
+            <input class="w-full bg-surface-container-lowest/80 border-none rounded-2xl px-6 py-5 text-on-surface placeholder:text-slate-600 focus:ring-0 text-lg font-medium tracking-wide outline-none placeholder-slate-600 focus:placeholder-transparent" name="primaryName" maxlength="20" autocomplete="off" value="\${args.defaultPrimaryName}" type="text" />
+          </div>
+        </div>
+
+        <div class="flex justify-center -my-3 relative z-10 hidden" data-camera-button>
+          <button type="button" class="w-14 h-14 rounded-full bg-[rgba(21,27,45,0.9)] backdrop-blur-xl flex items-center justify-center text-primary shadow-2xl border border-white/10 hover:scale-110 active:scale-95 transition-transform" data-action="tap-photo">
+            <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+          </button>
+        </div>
+
+        <div class="group relative w-full" data-partner-field>
+          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2 ml-4" data-partner-label>\${args.partnerLabel}</label>
+          <div class="bg-[rgba(21,27,45,0.6)] backdrop-blur-md rounded-2xl p-[1px] bg-gradient-to-b from-purple-500/30 to-transparent focus-within:from-purple-500 transition-all duration-500 w-full border border-white/5 shadow-2xl">
+            <input class="w-full bg-surface-container-lowest/80 border-none rounded-2xl px-6 py-5 text-on-surface placeholder:text-slate-600 focus:ring-0 text-lg font-medium tracking-wide outline-none placeholder-slate-600 focus:placeholder-transparent" name="partnerName" maxlength="20" autocomplete="off" value="\${args.defaultPartnerName}" type="text" />
           </div>
         </div>
       </div>
-      <div class="hud-social-chrome__logo">
-        <strong>${args.socialBrandLabel}</strong>
-      </div>
-      <div class="hud-social-chrome__right"></div>
-    </div>
-    <div class="hud-landing-story hud-stack ${hasSelection() ? "" : "hidden"}" data-landing-story>
-      <div class="hud-landing-story__copy">
-        <h2 data-selected-headline>${selectedFeedItem?.title ?? testsById.get(currentSelectedId)?.label ?? ""}</h2>
-        <p class="hud-label" data-selected-teaser>${selectedFeedItem?.teaser ?? testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
-      </div>
-      <div class="hud-home-composer hud-stack ${isTouchSelection() ? "hidden" : ""}" data-home-composer>
-        <div class="hud-home-composer__copy">
-          <strong data-selected-title>${testsById.get(currentSelectedId)?.label ?? ""}</strong>
-          <p class="hud-label" data-selected-subtitle>${testsById.get(currentSelectedId)?.subtitle ?? ""}</p>
-        </div>
-        <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
-        <label class="hud-stack hud-home-composer__field">
-          <span class="hud-label hud-home-composer__field-label" data-primary-label>${testsById.get(currentSelectedId)?.primaryPromptLabel ?? args.primaryLabel}</span>
-          <input
-            class="hud-input"
-            name="primaryName"
-            maxlength="20"
-            autocomplete="off"
-            value="${args.defaultPrimaryName}"
-            placeholder="${testsById.get(currentSelectedId)?.primaryPromptPlaceholder ?? ""}"
-          />
-        </label>
-        <label class="hud-stack hud-home-composer__field ${testsById.get(currentSelectedId)?.requiresPartner ? "" : "hidden"}" data-partner-field>
-          <span class="hud-label hud-home-composer__field-label" data-partner-label>${testsById.get(currentSelectedId)?.partnerPromptLabel ?? args.partnerLabel}</span>
-          <input
-            class="hud-input"
-            name="partnerName"
-            maxlength="20"
-            autocomplete="off"
-            value="${args.defaultPartnerName}"
-            placeholder="${testsById.get(currentSelectedId)?.partnerPromptPlaceholder ?? ""}"
-          />
-        </label>
-        <button class="hud-button hud-button--editorial" type="submit">${args.startLabel}</button>
-        <p class="hud-home-privacy">${args.privacyLabel}</p>
-      </div>
-      <button class="hud-landing-story__tap hud-landing-story__tap--standalone ${isTouchSelection() ? "" : "hidden"}" type="button" data-action="tap-photo">
-        ${getSelectedTest()?.tapLabel ?? ""}
-      </button>
-    </div>
-    <div class="hud-home-section hud-stack">
-      <div class="hud-home-section__title">
-        <span class="hud-home-section__badge">${args.hotLabel}</span>
-        <strong>${args.popularLabel}</strong>
-      </div>
-      <div class="hud-home-hot-strip" data-hot-strip>
-        ${renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hot", "hud-feed-card--hot")}
-      </div>
-    </div>
-    <div class="hud-home-section hud-stack">
-      <div class="hud-home-section__title">
-        <span class="hud-label">${args.eventLabel}: ${args.eventTheme}</span>
-        ${args.dailyRewardCoins > 0 ? `<span class="hud-home-section__reward">+${args.dailyRewardCoins}</span>` : ""}
-      </div>
-      <div class="hud-discovery-feed" data-feed-grid>
-        ${renderCards(feedItems, "feed")}
-      </div>
-      <div class="hud-feed-sentinel" data-feed-sentinel>${hasMoreFeed ? args.feedLoadingLabel : ""}</div>
-    </div>
-    <div class="hud-home-footnote hud-stack">
-      ${
-        args.nextUnlock
-          ? `
-            <div class="hud-next-unlock hud-stack">
-              <div class="hud-next-unlock__header">
-                <span class="hud-label">${args.nextUnlock.title}</span>
-                <strong>${args.nextUnlock.label}</strong>
-              </div>
-              <div class="hud-next-unlock__track">
-                <span class="hud-next-unlock__fill" style="width:${Math.max(8, Math.min(100, Math.round(args.nextUnlock.progressValue * 100)))}%"></span>
-              </div>
-              <div class="hud-next-unlock__meta">
-                <span>${args.nextUnlock.remainingLabel}</span>
-                <span>${args.nextUnlock.progressLabel}</span>
-              </div>
-            </div>
-          `
-          : ""
-      }
-      ${
-        showStats
-          ? `
-            <div class="hud-pill-row hud-pill-row-wide hud-home-stats">
-              <div class="hud-pill"><strong>${args.streakValue}</strong><span>${args.streakLabel}</span></div>
-              <div class="hud-pill"><strong>${args.sessionsValue}</strong><span>${args.sessionsLabel}</span></div>
-              <div class="hud-pill"><strong>${args.rewardValue}</strong><span>${args.rewardsLabel}</span></div>
-              <div class="hud-pill"><strong>${args.collectionValue}</strong><span>${args.collectionLabel}</span></div>
-            </div>
-          `
-          : ""
-      }
-    </div>
-  `;
 
+      <div class="fixed bottom-28 left-0 w-full px-6 flex flex-col items-center justify-center z-40 bg-gradient-to-t from-[#0c1324] via-[#0c1324] to-transparent pt-10 pb-6 w-full">
+        <button type="submit" class="w-full max-w-sm h-20 rounded-2xl bg-gradient-to-r from-tertiary-container via-primary-container to-secondary-container text-white font-black text-lg tracking-[0.1em] uppercase shadow-[0_20px_50px_rgba(147,51,234,0.4)] flex items-center justify-center gap-3 active:scale-95 transition-transform w-[90%] mx-auto">
+          <span>\${args.startLabel}</span>
+          <span class="material-symbols-outlined">flare</span>
+        </button>
+        <p class="text-[9px] mt-4 text-slate-500 text-center">\${args.privacyLabel}</p>
+      </div>
+    </main>
+
+    <nav class="fixed bottom-0 w-full bg-slate-950/90 backdrop-blur-2xl rounded-t-[2rem] z-50 flex justify-around items-center px-8 pb-6 pt-4 shadow-[0_-10px_40px_rgba(147,51,234,0.15)] pointer-events-auto">
+      <button type="button" class="bg-purple-500/20 text-purple-300 rounded-full p-3 shadow-[0_0_15px_rgba(147,51,234,0.4)] active:scale-90 duration-200 transition-all">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">explore</span>
+      </button>
+      <button type="button" class="text-slate-600 p-3 hover:text-purple-400 active:scale-90 duration-200 transition-all">
+        <span class="material-symbols-outlined">auto_awesome</span>
+      </button>
+      <button type="button" class="text-slate-600 p-3 hover:text-purple-400 active:scale-90 duration-200 transition-all">
+        <span class="material-symbols-outlined">person</span>
+      </button>
+    </nav>
+  \`;
+
+  const viewFeed = panel.querySelector<HTMLElement>('[data-view="feed"]');
+  const viewComposer = panel.querySelector<HTMLElement>('[data-view="composer"]');
+  
   const selectedTitle = panel.querySelector<HTMLElement>("[data-selected-title]");
   const selectedSubtitle = panel.querySelector<HTMLElement>("[data-selected-subtitle]");
-  const selectedHeadline = panel.querySelector<HTMLElement>("[data-selected-headline]");
   const selectedTeaser = panel.querySelector<HTMLElement>("[data-selected-teaser]");
   const selectedInput = panel.querySelector<HTMLInputElement>('input[name="selectedTestId"]');
   const submitButton = panel.querySelector<HTMLButtonElement>('button[type="submit"]');
+  
+  const primaryField = panel.querySelector<HTMLElement>("[data-primary-field]");
+  const partnerField = panel.querySelector<HTMLElement>("[data-partner-field]");
+  const formFields = panel.querySelector<HTMLElement>("[data-form-fields]");
+  
   const primaryInput = panel.querySelector<HTMLInputElement>('input[name="primaryName"]');
   const partnerInput = panel.querySelector<HTMLInputElement>('input[name="partnerName"]');
-  const primaryLabel = panel.querySelector<HTMLElement>("[data-primary-label]");
-  const partnerField = panel.querySelector<HTMLElement>("[data-partner-field]");
-  const partnerLabel = panel.querySelector<HTMLElement>("[data-partner-label]");
-  const hotStrip = panel.querySelector<HTMLElement>("[data-hot-strip]");
+  const primaryLabelHtml = panel.querySelector<HTMLElement>("[data-primary-label]");
+  const partnerLabelHtml = panel.querySelector<HTMLElement>("[data-partner-label]");
+  const tapPhotoButton = panel.querySelector<HTMLButtonElement>('[data-action="tap-photo"]');
+  const cameraButtonWrap = panel.querySelector<HTMLElement>('[data-camera-button]');
+  const titleBarText = panel.querySelector<HTMLElement>("[data-app-title]");
+
   const feedGrid = panel.querySelector<HTMLElement>("[data-feed-grid]");
   const sentinel = panel.querySelector<HTMLElement>("[data-feed-sentinel]");
-  const landingStory = panel.querySelector<HTMLElement>("[data-landing-story]");
-  const composer = panel.querySelector<HTMLElement>("[data-home-composer]");
   const settingsMenu = panel.querySelector<HTMLElement>("[data-settings-menu]");
-  const tapPhotoButton = panel.querySelector<HTMLButtonElement>('[data-action="tap-photo"]');
 
   const syncDraft = () => {
     args.onDraftChange(primaryInput?.value ?? "", partnerInput?.value ?? "");
   };
 
-  const syncLandingVisibility = () => {
-    landingStory?.classList.toggle("hidden", !hasSelection());
-  };
-
   const submitCurrentSelection = () => {
-    if (!currentSelectedId) {
-      return;
-    }
-
-    if (testsById.get(currentSelectedId)?.lockedLabel) {
-      return;
-    }
-
+    if (!currentSelectedId) return;
+    if (testsById.get(currentSelectedId)?.lockedLabel) return;
     syncDraft();
     args.onSubmit(currentSelectedId, currentSelectedFeedItemId, primaryInput?.value ?? "", partnerInput?.value ?? "");
   };
 
   const updateSelection = (testId: string, feedItemId?: string) => {
     const nextTest = testsById.get(testId);
-    if (!nextTest) {
-      return;
-    }
+    if (!nextTest) return;
 
     currentSelectedId = testId;
     currentSelectedFeedItemId =
       feedItems.find((item) => item.id === feedItemId && item.testId === testId)?.id ??
       feedItems.find((item) => item.testId === testId)?.id ??
       currentSelectedFeedItemId;
-    selectedInput?.setAttribute("value", testId);
-    if (selectedInput) {
-      selectedInput.value = testId;
-    }
-    if (selectedTitle) {
-      selectedTitle.textContent = nextTest.label;
-    }
-    if (selectedSubtitle) {
-      selectedSubtitle.textContent = nextTest.subtitle;
-    }
-    if (primaryLabel) {
-      primaryLabel.textContent = nextTest.primaryPromptLabel;
-    }
-    if (primaryInput) {
-      primaryInput.placeholder = nextTest.primaryPromptPlaceholder;
-    }
-    if (partnerField) {
-      partnerField.classList.toggle("hidden", !nextTest.requiresPartner);
-    }
-    if (partnerLabel) {
-      partnerLabel.textContent = nextTest.partnerPromptLabel ?? args.partnerLabel;
-    }
+      
+    if (selectedInput) selectedInput.value = testId;
+    
+    if (selectedTitle) selectedTitle.textContent = nextTest.label;
+    if (selectedSubtitle) selectedSubtitle.textContent = nextTest.subtitle;
+    if (primaryLabelHtml) primaryLabelHtml.textContent = nextTest.primaryPromptLabel;
+    if (primaryInput) primaryInput.placeholder = nextTest.primaryPromptPlaceholder;
+    
+    if (partnerField) partnerField.classList.toggle("hidden", !nextTest.requiresPartner);
+    if (partnerLabelHtml) partnerLabelHtml.textContent = nextTest.partnerPromptLabel ?? args.partnerLabel;
     if (partnerInput) {
       partnerInput.placeholder = nextTest.partnerPromptPlaceholder ?? "";
-      if (!nextTest.requiresPartner) {
-        partnerInput.value = "";
-      }
+      if (!nextTest.requiresPartner) partnerInput.value = "";
     }
+    
     const nextFeedItem = getSelectedFeedItem();
-    if (selectedHeadline) {
-      selectedHeadline.textContent = nextFeedItem?.title ?? nextTest.label;
-    }
-    if (selectedTeaser) {
-      selectedTeaser.textContent = nextFeedItem?.teaser ?? nextTest.subtitle;
-    }
+    if (selectedTeaser) selectedTeaser.textContent = nextFeedItem?.teaser ?? nextTest.subtitle;
+    
     if (submitButton) {
       submitButton.disabled = Boolean(nextTest.lockedLabel);
-      submitButton.textContent = nextTest.lockedLabel ?? args.startLabel;
+      submitButton.querySelector('span')!.textContent = nextTest.lockedLabel ?? args.startLabel;
+      submitButton.classList.toggle("hidden", nextTest.interactionMode === "tap");
     }
-    composer?.classList.toggle("hidden", nextTest.interactionMode === "tap");
-    tapPhotoButton?.classList.toggle("hidden", nextTest.interactionMode !== "tap");
-    if (tapPhotoButton) {
-      tapPhotoButton.textContent = nextTest.tapLabel;
-      tapPhotoButton.disabled = Boolean(nextTest.lockedLabel);
-    }
-
-    panel.querySelectorAll<HTMLElement>("[data-test-id]").forEach((button) => {
-      if (button.classList.contains("hud-feed-card")) {
-        button.classList.toggle("selected", button.dataset.feedItemId === currentSelectedFeedItemId);
-      }
-    });
-    syncLandingVisibility();
+    
+    formFields?.classList.toggle("hidden", nextTest.interactionMode === "tap");
+    cameraButtonWrap?.classList.toggle("hidden", nextTest.interactionMode !== "tap");
+    if (tapPhotoButton) tapPhotoButton.disabled = Boolean(nextTest.lockedLabel);
+    
+    viewFeed?.classList.add("hidden");
+    viewComposer?.classList.remove("hidden");
+    if (titleBarText) titleBarText.style.opacity = '0';
   };
+
+  panel.querySelector('[data-action="close-composer"]')?.addEventListener("click", () => {
+    viewFeed?.classList.remove("hidden");
+    viewComposer?.classList.add("hidden");
+    if (titleBarText) titleBarText.style.opacity = '1';
+    currentSelectedId = "";
+  });
 
   panel.querySelectorAll<HTMLButtonElement>("[data-locale-id]").forEach((button) => {
     button.addEventListener("click", () => {
       const localeId = button.dataset.localeId as HomeFeedLocale | undefined;
-      if (!localeId || localeId === args.currentLocale) {
-        return;
-      }
-
+      if (!localeId || localeId === args.currentLocale) return;
       void args.onChangeLocale(localeId);
     });
   });
@@ -411,42 +356,20 @@ export function showHomeOverlay(args: {
   panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
     settingsMenu?.classList.toggle("hidden");
   });
-  const handlePlatformSettingsToggle = () => {
-    if (!panel.isConnected) {
-      window.removeEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
-      return;
-    }
-
-    settingsMenu?.classList.toggle("hidden");
-  };
-  window.addEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
-  panel.addEventListener("click", (event) => {
-    const target = event.target as HTMLElement | null;
-    if (!target?.closest("[data-action='toggle-settings']") && !target?.closest("[data-settings-menu]")) {
-      settingsMenu?.classList.add("hidden");
-    }
-  });
 
   function attachCardListeners() {
-    panel.querySelectorAll<HTMLButtonElement>("[data-test-id]").forEach((button) => {
-      if (button.dataset.bound === "true") {
-        return;
-      }
+    panel.querySelectorAll<HTMLElement>("[data-test-id]").forEach((button) => {
+      if (button.dataset.bound === "true") return;
       button.dataset.bound = "true";
-      button.addEventListener("click", () => {
-        const testId = button.dataset.testId;
-        const feedItemId = button.dataset.feedItemId;
+      button.addEventListener("click", (e) => {
+        // Find closest parent just in case
+        const target = e.currentTarget as HTMLElement;
+        const testId = target.dataset.testId;
+        const feedItemId = target.dataset.feedItemId;
         const lockedLabel = testsById.get(testId ?? "")?.lockedLabel;
-        if (!testId) {
-          return;
-        }
+        if (!testId) return;
 
         updateSelection(testId, feedItemId);
-        panel.scrollTo({ top: 0, behavior: "smooth" });
-        landingStory?.scrollIntoView({ behavior: "smooth", block: "start" });
-        if (!lockedLabel) {
-          args.onSelectTest(testId, feedItemId);
-        }
       });
     });
   }
@@ -456,25 +379,15 @@ export function showHomeOverlay(args: {
   partnerInput?.addEventListener("input", syncDraft);
 
   const rerenderFeed = () => {
-    if (hotStrip) {
-      hotStrip.innerHTML = renderCards(feedItems.filter((item) => item.hot).slice(0, 4), "hot", "hud-feed-card--hot");
-    }
-    if (feedGrid) {
-      feedGrid.innerHTML = renderCards(feedItems, "feed");
-    }
-    if (sentinel) {
-      sentinel.textContent = hasMoreFeed ? args.feedLoadingLabel : "";
-    }
+    if (feedGrid) feedGrid.innerHTML = renderCards(feedItems.slice(1));
+    if (sentinel) sentinel.textContent = hasMoreFeed ? args.feedLoadingLabel : "";
     attachCardListeners();
-    updateSelection(currentSelectedId, currentSelectedFeedItemId);
   };
 
   attachCardListeners();
 
   const loadMore = async () => {
-    if (!hasMoreFeed || loadingMore) {
-      return;
-    }
+    if (!hasMoreFeed || loadingMore) return;
     loadingMore = true;
     const nextPage = await args.onLoadMore();
     hasMoreFeed = nextPage.hasMore;
@@ -483,18 +396,13 @@ export function showHomeOverlay(args: {
       rerenderFeed();
     }
     loadingMore = false;
-    if (sentinel && !hasMoreFeed) {
-      sentinel.textContent = "";
-    }
+    if (sentinel && !hasMoreFeed) sentinel.textContent = "";
   };
 
   if (sentinel && hasMoreFeed && "IntersectionObserver" in window) {
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((entry) => entry.isIntersecting)) {
-        void loadMore();
-      }
+      if (entries.some((entry) => entry.isIntersecting)) void loadMore();
     }, { root: panel, rootMargin: "240px 0px" });
-
     observer.observe(sentinel);
   }
 
@@ -502,13 +410,10 @@ export function showHomeOverlay(args: {
     event.preventDefault();
     const form = new FormData(panel);
     const selectedTestId = String(form.get("selectedTestId") ?? currentSelectedId);
-    if (!selectedTestId) {
-      return;
-    }
+    if (!selectedTestId) return;
     const selectedTest = testsById.get(selectedTestId);
-    if (selectedTest?.lockedLabel) {
-      return;
-    }
+    if (selectedTest?.lockedLabel) return;
+    
     syncDraft();
     args.onSubmit(
       selectedTestId,
@@ -518,7 +423,6 @@ export function showHomeOverlay(args: {
     );
   });
 
-  syncLandingVisibility();
   if (hasSelection()) {
     updateSelection(currentSelectedId, currentSelectedFeedItemId);
   }

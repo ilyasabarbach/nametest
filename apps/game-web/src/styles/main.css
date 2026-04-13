@@ -43,11 +43,9 @@ body {
 
 #hud-root {
   pointer-events: none;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  overflow-y: hidden;
-  overflow-x: hidden;
+  position: absolute;
+  inset: 0;
+  z-index: 50;
 }
 
 .hud-panel {
