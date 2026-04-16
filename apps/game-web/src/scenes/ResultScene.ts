@@ -263,11 +263,12 @@ export class ResultScene extends Phaser.Scene {
       onPurchasePremium: async () => {
         const success = await runtime.purchasePremiumReport();
         if (success) {
-          window.alert("Payment successful! Premium Report unlocked. (MVP Placeholder)");
+          window.alert("Payment successful! Premium Cosmic Insight unlocked.");
         } else {
-          window.alert("Payment failed or was cancelled.");
+          window.alert("Payment failed, was cancelled, or invoice is not available yet.");
         }
       },
+      premiumButtonLabel: runtime.copy["result.premiumInsightCta"] ?? "Premium Cosmic Insight (5 ⭐️)",
       onShare: async (selectedTemplate, artifact) => {
         try {
           const imageDataUrl =

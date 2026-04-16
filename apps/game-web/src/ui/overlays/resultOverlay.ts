@@ -84,6 +84,7 @@ export function showResultOverlay(args: {
   onShare: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
   onShareToStory?: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
   onPurchasePremium?: () => Promise<void>;
+  premiumButtonLabel?: string;
   onReward: () => void;
   rewardVisible: boolean;
   accent: string;
@@ -235,7 +236,7 @@ export function showResultOverlay(args: {
       <div class="w-full max-w-md mt-4">
         <button type="button" class="w-full bg-gradient-to-br from-[#FFD700]/20 to-[#FF8C00]/20 border border-[#FFD700]/50 text-[#FFD700] h-14 rounded-full flex items-center justify-center gap-3 font-bold text-sm shadow-xl active:scale-95 transition-transform" data-action="purchase-premium">
           <span class="material-symbols-outlined">star</span>
-          Unlock Premium Report (50 Stars)
+          ${args.premiumButtonLabel ?? "Premium Cosmic Insight (5 ⭐️)"}
         </button>
       </div>` : ''}
       

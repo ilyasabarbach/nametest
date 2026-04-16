@@ -1509,11 +1509,14 @@ export const runtime = {
     }
 
     try {
-      const response = await fetch("/api/telegram/invoice", {
+      const response = await fetch("/api/payments/create-invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          initDataRaw: this.state.launchContext.initDataRaw
+          initDataRaw: this.state.launchContext.initDataRaw,
+          title: this.state.copy["result.premiumInsightTitle"] ?? "Premium Cosmic Insight",
+          starsCost: 5,
+          testId: this.state.session.selectedTest.id
         })
       });
 
