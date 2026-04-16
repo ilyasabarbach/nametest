@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -14,32 +14,32 @@
           extend: {
             "colors": {
                     "secondary-fixed": "#ffd9e2",
-                    "secondary": "#ffb1c7",
+                    "secondary": "var(--tg-theme-button-color)",
                     "on-error-container": "#ffdad6",
                     "on-primary": "#490080",
                     "inverse-surface": "#dce1fb",
                     "surface-variant": "#2e3447",
                     "on-error": "#690005",
-                    "surface-container-lowest": "#070d1f",
+                    "surface-container-lowest": "var(--tg-theme-bg-color)",
                     "error": "#ffb4ab",
                     "on-primary-fixed-variant": "#6800b4",
                     "on-tertiary-container": "#ffe7dd",
                     "inverse-on-surface": "#2a3043",
                     "on-primary-container": "#f6e6ff",
-                    "surface-container-highest": "#2e3447",
+                    "surface-container-highest": "var(--tg-theme-secondary-bg-color)",
                     "secondary-fixed-dim": "#ffb1c7",
                     "tertiary-fixed": "#ffdbca",
-                    "background": "#0c1324",
-                    "primary-container": "#9333ea",
-                    "surface": "#0c1324",
+                    "background": "var(--tg-theme-bg-color)",
+                    "primary-container": "var(--tg-theme-button-color)",
+                    "surface": "var(--tg-theme-bg-color)",
                     "outline": "#988ca0",
                     "error-container": "#93000a",
                     "inverse-primary": "#861fdd",
                     "on-secondary-container": "#ffd0dc",
-                    "surface-bright": "#33394c",
+                    "surface-bright": "var(--tg-theme-secondary-bg-color)",
                     "on-tertiary-fixed-variant": "#783200",
                     "on-secondary": "#650031",
-                    "surface-container": "#191f31",
+                    "surface-container": "var(--tg-theme-secondary-bg-color)",
                     "on-tertiary-fixed": "#341100",
                     "on-primary-fixed": "#2c0051",
                     "surface-tint": "#ddb8ff",
@@ -48,18 +48,20 @@
                     "tertiary-container": "#b14c00",
                     "primary-fixed-dim": "#ddb8ff",
                     "on-secondary-fixed": "#3f001c",
-                    "secondary-container": "#be0062",
-                    "surface-container-high": "#23293c",
-                    "on-background": "#dce1fb",
+                    "secondary-container": "var(--tg-theme-button-color)",
+                    "surface-container-high": "var(--tg-theme-secondary-bg-color)",
+                    "on-background": "var(--tg-theme-text-color)",
                     "outline-variant": "#4d4354",
-                    "on-surface": "#dce1fb",
+                    "on-surface": "var(--tg-theme-text-color)",
                     "on-tertiary": "#552100",
-                    "primary": "#ddb8ff",
+                    "primary": "var(--tg-theme-link-color)",
                     "tertiary-fixed-dim": "#ffb690",
-                    "surface-dim": "#0c1324",
+                    "surface-dim": "var(--tg-theme-bg-color)",
                     "on-surface-variant": "#cfc2d7",
                     "primary-fixed": "#f0dbff",
-                    "surface-container-low": "#151b2d"
+                    "surface-container-low": "var(--tg-theme-secondary-bg-color)",
+                    "button-color": "var(--tg-theme-button-color)",
+                    "button-text-color": "var(--tg-theme-button-text-color)"
             },
             "borderRadius": {
                     "DEFAULT": "0.25rem",
