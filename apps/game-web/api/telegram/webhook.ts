@@ -34,7 +34,17 @@ export default async function handler(req: any, res: any): Promise<void> {
       return;
     }
 
-    if (body.message?.text?.startsWith("/start")) {
+    if (body.pre_checkout_query) {
+      const endpoint = `https://api.telegram.org/bot${botToken}/answerPreCheckoutQuery`;
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pre_checkout_query_id: body.pre_checkout_query.id,
+          ok: true
+        })
+      });
+    } else if (body.message?.text?.startsWith("/start")) {
       const chatId = body.message.chat.id;
       const miniAppShortName =
         process.env.TELEGRAM_MINI_APP_SHORT_NAME?.trim().replace(/^\/+/, "") || "cosmic_match";

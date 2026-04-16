@@ -79,6 +79,7 @@ export function showResultOverlay(args: {
   ) => Promise<Partial<ResultArtifactState> | null>;
   onShare: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
   onShareToStory?: (template: ArtifactTemplate, artifact: ResultArtifactState) => void;
+  onPurchasePremium?: () => Promise<void>;
   onReward: () => void;
   rewardVisible: boolean;
   accent: string;
@@ -201,6 +202,14 @@ export function showResultOverlay(args: {
         </button>
         ${shareStoryHtml}
       </div>
+      
+      ${args.onPurchasePremium ? `
+      <div class="w-full max-w-md mt-4">
+        <button type="button" class="w-full bg-gradient-to-br from-[#FFD700]/20 to-[#FF8C00]/20 border border-[#FFD700]/50 text-[#FFD700] h-14 rounded-full flex items-center justify-center gap-3 font-bold text-sm shadow-xl active:scale-95 transition-transform" data-action="purchase-premium">
+          <span class="material-symbols-outlined">star</span>
+          Unlock Premium Report (50 Stars)
+        </button>
+      </div>` : ''}
       
       ${remixSectionHtml}     
       ${storiesSectionHtml}
@@ -376,6 +385,22 @@ export function showResultOverlay(args: {
 
   panel.querySelector('[data-action="share"]')?.addEventListener("click", () => args.onShare(currentTemplate, currentArtifact));
   panel.querySelector('[data-action="share-story"]')?.addEventListener("click", () => args.onShareToStory?.(currentTemplate, currentArtifact));
+
+  const premiumButton = panel.querySelector<HTMLButtonElement>('[data-action="purchase-premium"]');
+  premiumButton?.addEventListener("click", async () => {
+    if (!args.onPurchasePremium || premiumButton.disabled) return;
+    
+    const prevHtml = premiumButton.innerHTML;
+    premiumButton.disabled = true;
+    premiumButton.innerHTML = `<span class="material-symbols-outlined animate-spin">refresh</span> Processing...`;
+    
+    try {
+      await args.onPurchasePremium();
+    } finally {
+      premiumButton.disabled = false;
+      premiumButton.innerHTML = prevHtml;
+    }
+  });
 
   setHud(panel);
 }

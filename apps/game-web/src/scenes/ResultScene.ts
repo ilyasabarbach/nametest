@@ -251,6 +251,14 @@ export class ResultScene extends Phaser.Scene {
         });
         this.scene.start("TestScene");
       },
+      onPurchasePremium: async () => {
+        const success = await runtime.purchasePremiumReport();
+        if (success) {
+          window.alert("Payment successful! Premium Report unlocked. (MVP Placeholder)");
+        } else {
+          window.alert("Payment failed or was cancelled.");
+        }
+      },
       onShare: async (selectedTemplate, artifact) => {
         const imageDataUrl =
           runtime.platform.id === "telegram"

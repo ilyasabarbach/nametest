@@ -45,4 +45,5 @@ export interface IPlatform {
   expand?(): void;
   requestFullscreen?(): Promise<void> | void;
   installLifecycle?(hooks: PlatformLifecycleHooks): Promise<(() => void) | void> | (() => void) | void;
+  requestInvoicePayment?(invoiceUrl: string): Promise<boolean>;
 }

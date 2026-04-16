@@ -49,6 +49,7 @@ type TelegramWebApp = {
   disableClosingConfirmation?(): void;
   openTelegramLink?(url: string): void;
   openLink?(url: string, options?: Record<string, unknown>): void;
+  openInvoice?(url: string, callback?: (status: "paid" | "cancelled" | "failed" | "pending" | string) => void): void;
   shareToStory?(mediaUrl: string, params?: Record<string, unknown>): void;
   shareMessage?(messageId: string, callback?: (sent: boolean) => void): void;
   switchInlineQuery?(query: string, choose_chat_types?: Array<"users" | "bots" | "groups" | "channels" | "chats" | string>): void;
@@ -621,6 +622,18 @@ export const telegramPlatform: IPlatform = {
       webApp?.SettingsButton?.offClick?.(onSettings);
       document.removeEventListener("visibilitychange", onVisibility);
     };
+  },
+  requestInvoicePayment(invoiceUrl: string): Promise<boolean> {
+    return new Promise((resolve) => {
+      const webApp = getTelegramWebApp();
+      if (!webApp || !webApp.openInvoice) {
+        resolve(false);
+        return;
+      }
+      webApp.openInvoice(invoiceUrl, (status) => {
+        resolve(status === "paid");
+      });
+    });
   }
 };
 

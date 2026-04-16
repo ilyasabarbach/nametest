@@ -1414,6 +1414,35 @@ export const runtime = {
            this.state.launchStartAppState.testId === this.state.session.selectedTest.id;
   },
 
+  async purchasePremiumReport(): Promise<boolean> {
+    if (this.state.platform.id !== "telegram" || !this.state.platform.requestInvoicePayment) {
+      return false;
+    }
+
+    try {
+      const response = await fetch("/api/telegram/invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          initDataRaw: this.state.launchContext.initDataRaw
+        })
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const body = await response.json();
+      if (!body.invoiceUrl) {
+        return false;
+      }
+
+      return await this.state.platform.requestInvoicePayment(body.invoiceUrl);
+    } catch {
+      return false;
+    }
+  },
+
   async shareResultArtifact(payload: {
     title: string;
     text: string;
