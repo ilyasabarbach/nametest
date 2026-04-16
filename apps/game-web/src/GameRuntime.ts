@@ -70,6 +70,7 @@ type RuntimeState = {
   locale: HomeFeedLocale;
   discoveryFeedItems: DiscoveryFeedItemPayload[];
   discoveryFeedNextCursor?: string;
+  globalDiscoverFeed: Array<{ name: string; title: string; accent?: string; id: string; testId: string }>;
   remoteConfig: RemoteConfigPayload;
   progress: PlayerProgress;
   allTests: TestDefinition[];
@@ -355,6 +356,7 @@ function createInitialState(services: PlatformServices): RuntimeState {
     locale: "en",
     discoveryFeedItems: [],
     discoveryFeedNextCursor: undefined,
+    globalDiscoverFeed: [],
     remoteConfig: fallbackRemoteConfig as RemoteConfigPayload,
     progress: createPlayerProgress(),
     allTests: defaultTests,

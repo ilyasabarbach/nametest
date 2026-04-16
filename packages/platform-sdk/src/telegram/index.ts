@@ -45,6 +45,8 @@ type TelegramWebApp = {
   ready?(): void;
   expand?(): void;
   requestFullscreen?(): Promise<void> | void;
+  setHeaderColor?(color: string): void;
+  setBackgroundColor?(color: string): void;
   enableClosingConfirmation?(): void;
   disableClosingConfirmation?(): void;
   openTelegramLink?(url: string): void;
