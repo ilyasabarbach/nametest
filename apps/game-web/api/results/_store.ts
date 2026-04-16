@@ -25,10 +25,78 @@ export type DiscoverFeedItem = {
   testId: string;
 };
 
+export type RecentResultItem = {
+  id: string;
+  name: string;
+  resultTitle: string;
+  testId: string;
+  createdAt: string;
+};
+
 // Fallback in-memory map for local development if KV is missing
 const memoryStore = new Map<string, { result: StoredResult; expiresAt: number }>();
 const memoryDiscoverFeed: DiscoverFeedItem[] = [];
+const memoryRecentResults: RecentResultItem[] = [];
 const TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
+
+function toSafeFirstName(name: string | undefined): string {
+  const raw = String(name ?? "").trim();
+  if (!raw) {
+    return "Someone";
+  }
+
+  const firstToken = raw.split(/\s+/)[0] ?? "Someone";
+  const sanitized = firstToken.replace(/[^a-zA-Z0-9'-]/g, "").slice(0, 24);
+  if (!sanitized) {
+    return "Someone";
+  }
+
+  return sanitized[0].toUpperCase() + sanitized.slice(1);
+}
+
+export async function recordRecentResultToStore(input: {
+  testId: string;
+  resultTitle: string;
+  primaryName?: string;
+}): Promise<void> {
+  const kvUrl = process.env.KV_REST_API_URL;
+  const kvToken = process.env.KV_REST_API_TOKEN;
+
+  const item: RecentResultItem = {
+    id: randomUUID().replace(/-/g, "").slice(0, 12),
+    name: toSafeFirstName(input.primaryName),
+    resultTitle: String(input.resultTitle || "a new reading").slice(0, 80),
+    testId: String(input.testId || "unknown"),
+    createdAt: new Date().toISOString()
+  };
+
+  if (kvUrl && kvToken) {
+    try {
+      const response = await fetch(`${kvUrl}/pipeline`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${kvToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify([
+          ["LPUSH", "recent_results", JSON.stringify(item)],
+          ["LTRIM", "recent_results", 0, 99]
+        ])
+      });
+      if (!response.ok) {
+        console.warn("[kv-store] Failed to append recent_results", await response.text());
+      }
+      return;
+    } catch (error) {
+      console.warn("[kv-store] recordRecentResultToStore exception", error);
+    }
+  }
+
+  memoryRecentResults.unshift(item);
+  if (memoryRecentResults.length > 100) {
+    memoryRecentResults.pop();
+  }
+}
 
 export async function saveResultToStore(result: StoredResult): Promise<string> {
   const shortHash = randomUUID().replace(/-/g, "").slice(0, 8);
@@ -152,4 +220,33 @@ export async function getDiscoverFeedFromStore(): Promise<DiscoverFeedItem[]> {
   }
 
   return [];
+}
+
+export async function getRecentResultsFromStore(limit = 10): Promise<RecentResultItem[]> {
+  const kvUrl = process.env.KV_REST_API_URL;
+  const kvToken = process.env.KV_REST_API_TOKEN;
+  const safeLimit = Math.max(1, Math.min(50, Number(limit) || 10));
+
+  if (kvUrl && kvToken) {
+    try {
+      const response = await fetch(`${kvUrl}`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${kvToken}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(["LRANGE", "recent_results", 0, safeLimit - 1])
+      });
+      if (response.ok) {
+        const body = (await response.json()) as { result?: string[] | null };
+        if (body && Array.isArray(body.result)) {
+          return body.result.map((entry) => JSON.parse(entry) as RecentResultItem);
+        }
+      }
+    } catch (error) {
+      console.warn("[kv-store] getRecentResultsFromStore exception", error);
+    }
+  }
+
+  return memoryRecentResults.slice(0, safeLimit);
 }

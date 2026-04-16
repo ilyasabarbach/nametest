@@ -25,6 +25,10 @@ export class HomeScene extends Phaser.Scene {
     const homeDraftNames = runtime.getHomeDraftNames();
     const homeSelection = runtime.getHomeSelection();
     const selectedTestId = homeSelection.selectedTestId;
+    const recentDiscoveries = runtime.getRecentDiscoveries().map((entry) => ({
+      id: entry.id,
+      message: `${entry.name} just found: ${entry.resultTitle}!`
+    }));
 
     showHomeOverlay({
       socialBrandLabel: runtime.copy["app.title"],
@@ -33,6 +37,8 @@ export class HomeScene extends Phaser.Scene {
       heroBody: homeFeedUiCopy.heroBody[locale],
       languageLabel: homeFeedUiCopy.languageLabel[locale],
       themeLabel: runtime.copy["settings.themeLabel"] ?? "Theme",
+      recentDiscoveriesLabel: runtime.copy["home.recentDiscoveries"] ?? "Recent Cosmic Discoveries",
+      recentDiscoveries,
       themePreference: getThemePreference(),
       hotLabel: homeFeedUiCopy.hotLabel[locale],
       popularLabel: homeFeedUiCopy.popularLabel[locale],

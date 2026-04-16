@@ -71,6 +71,7 @@ type RuntimeState = {
   discoveryFeedItems: DiscoveryFeedItemPayload[];
   discoveryFeedNextCursor?: string;
   globalDiscoverFeed: Array<{ name: string; title: string; accent?: string; id: string; testId: string }>;
+  recentDiscoveries: Array<{ id: string; name: string; resultTitle: string; testId: string; createdAt?: string }>;
   remoteConfig: RemoteConfigPayload;
   progress: PlayerProgress;
   allTests: TestDefinition[];
@@ -310,6 +311,56 @@ function resolveResultsSaveUrl(): string | null {
   return resolveBackendUrl("VITE_RESULTS_SAVE_URL", "/api/results/save");
 }
 
+function resolveResultsDiscoverUrl(): string | null {
+  return resolveBackendUrl("VITE_RESULTS_DISCOVER_URL", "/api/results/discover");
+}
+
+function resolveResultsRecentUrl(): string | null {
+  return resolveBackendUrl("VITE_RESULTS_RECENT_URL", "/api/results/recent");
+}
+
+async function loadRecentDiscoveries(): Promise<Array<{ id: string; name: string; resultTitle: string; testId: string; createdAt?: string }>> {
+  const endpoint = resolveResultsDiscoverUrl();
+  if (!endpoint) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(endpoint, { method: "GET" });
+    if (!response.ok) {
+      return [];
+    }
+
+    const body = (await response.json()) as unknown;
+    const list = (body as { recentResults?: unknown[] } | null)?.recentResults;
+    if (!Array.isArray(list)) {
+      return [];
+    }
+
+    const normalized: Array<{ id: string; name: string; resultTitle: string; testId: string; createdAt?: string }> = [];
+    for (const item of list) {
+      const entry = item as Record<string, unknown>;
+      const id = String(entry.id ?? "").trim();
+      const name = String(entry.name ?? "").trim();
+      const resultTitle = String(entry.resultTitle ?? "").trim();
+      const testId = String(entry.testId ?? "").trim();
+      const createdAt = String(entry.createdAt ?? "").trim();
+      if (!id || !name || !resultTitle || !testId) {
+        continue;
+      }
+
+      normalized.push({ id, name, resultTitle, testId, createdAt });
+      if (normalized.length >= 10) {
+        break;
+      }
+    }
+
+    return normalized;
+  } catch {
+    return [];
+  }
+}
+
 async function blobToSizedDataUrl(blob: Blob, maxSize: number): Promise<string> {
   const objectUrl = URL.createObjectURL(blob);
   try {
@@ -357,6 +408,7 @@ function createInitialState(services: PlatformServices): RuntimeState {
     discoveryFeedItems: [],
     discoveryFeedNextCursor: undefined,
     globalDiscoverFeed: [],
+    recentDiscoveries: [],
     remoteConfig: fallbackRemoteConfig as RemoteConfigPayload,
     progress: createPlayerProgress(),
     allTests: defaultTests,
@@ -870,8 +922,10 @@ export const runtime = {
     this.state.activeEvent = getLimitedEvent(dateKey);
     this.state.lastDailyRewardCoins = dailyReward.rewardCoins;
     const firstFeedPage = await loadDiscoveryFeedPage(locale);
+    const recentDiscoveries = await loadRecentDiscoveries();
     this.state.discoveryFeedItems = firstFeedPage.items;
     this.state.discoveryFeedNextCursor = firstFeedPage.nextCursor;
+    this.state.recentDiscoveries = recentDiscoveries;
     this.state.session = {
       ...this.state.flow.createSession(activeTest),
       playerProgress: effectiveProgress,
@@ -1102,6 +1156,10 @@ export const runtime = {
     return this.state.discoveryFeedItems;
   },
 
+  getRecentDiscoveries() {
+    return this.state.recentDiscoveries;
+  },
+
   hasMoreDiscoveryFeed() {
     return Boolean(this.state.discoveryFeedNextCursor);
   },
@@ -1265,6 +1323,35 @@ export const runtime = {
       this.state.allTests
     );
     this.refreshAvailability();
+    void this.publishRecentDiscovery();
+  },
+
+  async publishRecentDiscovery(): Promise<void> {
+    if (!this.state.session.latestResult) {
+      return;
+    }
+
+    const endpoint = resolveResultsRecentUrl();
+    if (!endpoint) {
+      return;
+    }
+
+    const card = this.latestCard();
+    try {
+      await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          testId: this.state.session.selectedTest.id,
+          resultTitle: card.headline,
+          primaryName: this.state.session.names.primaryName
+        })
+      });
+
+      this.state.recentDiscoveries = await loadRecentDiscoveries();
+    } catch {
+      // Ignore social-proof submission failures to keep game flow smooth.
+    }
   },
 
   latestCard() {
@@ -1537,8 +1624,10 @@ export const runtime = {
     this.state.locale = locale;
     this.state.copy = resolveCopyForLocale(locale);
     const firstFeedPage = await loadDiscoveryFeedPage(locale);
+    const recentDiscoveries = await loadRecentDiscoveries();
     this.state.discoveryFeedItems = firstFeedPage.items;
     this.state.discoveryFeedNextCursor = firstFeedPage.nextCursor;
+    this.state.recentDiscoveries = recentDiscoveries;
     this.state.homeSelection = this.state.homeSelection.selectedTestId
       ? resolveFeedSelection(
           firstFeedPage.items,

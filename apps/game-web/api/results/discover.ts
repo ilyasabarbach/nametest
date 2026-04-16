@@ -1,5 +1,5 @@
 import { writeJson } from "../telegram/_shared.js";
-import { getDiscoverFeedFromStore } from "./_store.js";
+import { getDiscoverFeedFromStore, getRecentResultsFromStore } from "./_store.js";
 
 export const config = {
   runtime: "nodejs"
@@ -20,8 +20,11 @@ export default async function handler(req: any, res: any): Promise<void> {
       return;
     }
 
-    const feed = await getDiscoverFeedFromStore();
-    writeJson(res, 200, { items: feed });
+    const [feed, recentResults] = await Promise.all([
+      getDiscoverFeedFromStore(),
+      getRecentResultsFromStore(10)
+    ]);
+    writeJson(res, 200, { items: feed, recentResults });
   } catch (error) {
     console.error("[results/discover] exception", error);
     writeJson(res, 500, { error: "server_exception" });

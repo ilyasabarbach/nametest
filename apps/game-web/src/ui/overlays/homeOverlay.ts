@@ -37,6 +37,8 @@ export function showHomeOverlay(args: {
   heroBody: string;
   languageLabel: string;
   themeLabel: string;
+  recentDiscoveriesLabel: string;
+  recentDiscoveries: Array<{ id: string; message: string }>;
   themePreference: ThemePreference;
   hotLabel: string;
   popularLabel: string;
@@ -237,6 +239,26 @@ export function showHomeOverlay(args: {
           <div class="flex-shrink-0 bg-surface-container-highest/40 backdrop-blur-xl border border-white/5 rounded-full px-5 py-2.5 flex items-center gap-2">
             <span class="material-symbols-outlined text-tertiary text-sm">monetization_on</span>
             <span class="text-xs font-semibold tracking-wide text-on-surface">${args.rewardValue} ${args.rewardsLabel}</span>
+          </div>
+        </section>
+      ` : ''}
+
+      ${args.recentDiscoveries.length > 0 ? `
+        <section class="rounded-2xl border border-white/10 p-4 backdrop-blur-xl" style="background: color-mix(in srgb, var(--tg-theme-secondary-bg-color) 88%, transparent);">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-sm font-bold" style="color:var(--tg-theme-text-color);">${args.recentDiscoveriesLabel}</h3>
+            <span class="text-[10px] uppercase tracking-[0.12em]" style="color:${hintColor};">Live</span>
+          </div>
+          <div class="max-h-36 overflow-y-auto rounded-xl border border-white/5" style="background: color-mix(in srgb, var(--tg-theme-bg-color) 70%, transparent);">
+            ${args.recentDiscoveries
+              .map(
+                (item) => `
+                  <div class="px-3 py-2 text-sm border-b border-white/5 last:border-b-0" data-recent-id="${item.id}" style="color:var(--tg-theme-text-color);">
+                    ${item.message}
+                  </div>
+                `
+              )
+              .join("")}
           </div>
         </section>
       ` : ''}
