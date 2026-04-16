@@ -12,6 +12,7 @@ import {
 import { playToneSequence } from "../ui/transitions/playTone";
 import { homeFeedCards, homeFeedUiCopy } from "@nametests/content-packs";
 import { homeFeedThumbs } from "../assets/feed";
+import { getThemePreference, setThemePreference } from "../ui/themePreference";
 
 type NextStory = {
   id: string;
@@ -87,6 +88,8 @@ export class ResultScene extends Phaser.Scene {
       socialBrandLabel: runtime.copy["app.title"],
       homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       languageLabel: runtime.copy["home.languageLabel"] ?? "Language",
+      themeLabel: runtime.copy["settings.themeLabel"] ?? "Theme",
+      themePreference: getThemePreference(),
       locales: runtime.getSupportedLocales(),
       currentLocale: runtime.locale,
       hook: card.hook,
@@ -209,6 +212,9 @@ export class ResultScene extends Phaser.Scene {
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);
         this.scene.restart();
+      },
+      onChangeTheme: (preference) => {
+        setThemePreference(preference);
       },
       onSelectStory: (testId, storyId) => {
         runtime.setHomeSelection(testId, storyId);

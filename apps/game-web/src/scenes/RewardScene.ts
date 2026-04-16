@@ -11,6 +11,7 @@ import {
 } from "../ui/components/artifactPresentation";
 import { buildShareCard } from "../ui/components/shareCard";
 import { homeFeedThumbs } from "../assets/feed";
+import { getThemePreference, setThemePreference } from "../ui/themePreference";
 
 type NextStory = {
   id: string;
@@ -85,6 +86,8 @@ export class RewardScene extends Phaser.Scene {
       socialBrandLabel: runtime.copy["app.title"],
       homeButtonLabel: runtime.copy["home.homeButton"] ?? "Home",
       languageLabel: runtime.copy["home.languageLabel"] ?? "Language",
+      themeLabel: runtime.copy["settings.themeLabel"] ?? "Theme",
+      themePreference: getThemePreference(),
       locales: runtime.getSupportedLocales(),
       currentLocale: runtime.locale,
       hook: card.hook,
@@ -205,6 +208,9 @@ export class RewardScene extends Phaser.Scene {
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);
         this.scene.restart();
+      },
+      onChangeTheme: (preference) => {
+        setThemePreference(preference);
       },
       onSelectStory: (testId, storyId) => {
         runtime.setHomeSelection(testId, storyId);

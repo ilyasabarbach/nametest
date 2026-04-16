@@ -2,6 +2,7 @@ import "./styles/main.css";
 import { createGame } from "./boot/createGame";
 import { runtime } from "./GameRuntime";
 import { installPlatformLifecycle } from "./platform/installLifecycle";
+import { getThemePreference, type ThemePreference } from "./ui/themePreference";
 
 function applyPlatformEnvironment(): void {
   const telegramWebApp = (window as any).Telegram?.WebApp;
@@ -17,6 +18,7 @@ function applyPlatformEnvironment(): void {
   });
 
   const root = document.documentElement;
+  let currentThemePreference: ThemePreference = getThemePreference();
   const telegramThemeMap: Record<string, string> = {
     bg_color: "--tg-theme-bg-color",
     secondary_bg_color: "--tg-theme-secondary-bg-color",
@@ -33,16 +35,30 @@ function applyPlatformEnvironment(): void {
     destructive_text_color: "--tg-theme-destructive-text-color"
   };
   const getCssVar = (name: string) => getComputedStyle(root).getPropertyValue(name).trim();
+  const clearTelegramThemeVars = () => {
+    for (const [key, mappedVar] of Object.entries(telegramThemeMap)) {
+      root.style.removeProperty(`--telegram-${key}`);
+      root.style.removeProperty(mappedVar);
+    }
+  };
 
   const syncTheme = () => {
     const theme = runtime.platform.getTheme?.();
-    root.dataset.platformTheme = theme?.colorScheme ?? "light";
-    for (const [key, value] of Object.entries(theme?.colors ?? {})) {
-      root.style.setProperty(`--telegram-${key}`, value);
-      const mappedVar = telegramThemeMap[key];
-      if (mappedVar) {
-        root.style.setProperty(mappedVar, value);
+    const platformScheme = theme?.colorScheme === "dark" ? "dark" : "light";
+    const effectiveScheme = currentThemePreference === "auto" ? platformScheme : currentThemePreference;
+    root.dataset.themePreference = currentThemePreference;
+    root.dataset.platformTheme = effectiveScheme;
+
+    if (currentThemePreference === "auto") {
+      for (const [key, value] of Object.entries(theme?.colors ?? {})) {
+        root.style.setProperty(`--telegram-${key}`, value);
+        const mappedVar = telegramThemeMap[key];
+        if (mappedVar) {
+          root.style.setProperty(mappedVar, value);
+        }
       }
+    } else {
+      clearTelegramThemeVars();
     }
 
     const bgColor = getCssVar("--tg-theme-bg-color");
@@ -67,6 +83,14 @@ function applyPlatformEnvironment(): void {
   syncViewport();
   runtime.platform.onThemeChange?.(() => syncTheme());
   runtime.platform.onViewportChange?.(() => syncViewport());
+  window.addEventListener("app:theme-preference", (event) => {
+    const preference = (event as CustomEvent<{ preference?: ThemePreference }>).detail?.preference;
+    if (!preference) {
+      return;
+    }
+    currentThemePreference = preference;
+    syncTheme();
+  });
   window.addEventListener("resize", syncViewport);
 }
 

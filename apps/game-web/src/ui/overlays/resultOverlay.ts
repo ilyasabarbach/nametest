@@ -1,6 +1,7 @@
 import { setHud } from "../components/hud";
 import type { ArtifactTemplate } from "../components/artifactPresentation";
 import type { HomeFeedLocale } from "@nametests/content-packs";
+import type { ThemePreference } from "../themePreference";
 
 type ResultStory = {
   id: string;
@@ -32,6 +33,8 @@ export function showResultOverlay(args: {
   socialBrandLabel: string;
   homeButtonLabel: string;
   languageLabel: string;
+  themeLabel: string;
+  themePreference: ThemePreference;
   locales: Array<{ id: HomeFeedLocale; label: string; nativeLabel: string }>;
   currentLocale: HomeFeedLocale;
   hook: string;
@@ -70,6 +73,7 @@ export function showResultOverlay(args: {
   onRetry: (partnerName: string) => void;
   onGoHome: () => void;
   onChangeLocale: (locale: HomeFeedLocale) => Promise<void> | void;
+  onChangeTheme: (preference: ThemePreference) => void;
   onSelectStory?: (testId: string, storyId: string) => void;
   onStartNext?: (testId: string, storyId: string, partnerName: string) => void;
   onRequestAiRemix?: (template: ArtifactTemplate) => Promise<Partial<ResultArtifactState> | null>;
@@ -149,6 +153,30 @@ export function showResultOverlay(args: {
       <div class="fixed top-16 right-6 mt-2 hidden bg-surface-container-high rounded-xl p-4 shadow-2xl z-50 flex-col gap-2" data-settings-menu>
         <h3 class="text-sm font-bold text-primary border-b border-white/10 pb-2 mb-2">${args.languageLabel}</h3>
         ${localesHtml}
+        <h3 class="text-sm font-bold text-primary border-b border-white/10 pb-2 mt-3 mb-2">${args.themeLabel}</h3>
+        <div class="grid grid-cols-3 gap-2">
+          <button
+            class="px-3 py-2 rounded border ${args.themePreference === "auto" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+            type="button"
+            data-theme-pref="auto"
+          >
+            Auto
+          </button>
+          <button
+            class="px-3 py-2 rounded border ${args.themePreference === "light" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+            type="button"
+            data-theme-pref="light"
+          >
+            Light
+          </button>
+          <button
+            class="px-3 py-2 rounded border ${args.themePreference === "dark" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+            type="button"
+            data-theme-pref="dark"
+          >
+            Dark
+          </button>
+        </div>
       </div>
     </header>
     
@@ -343,6 +371,24 @@ export function showResultOverlay(args: {
       }
 
       void args.onChangeLocale(localeId);
+    });
+  });
+
+  panel.querySelectorAll<HTMLButtonElement>("[data-theme-pref]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const preference = button.dataset.themePref as ThemePreference | undefined;
+      if (!preference) {
+        return;
+      }
+
+      args.onChangeTheme(preference);
+      panel.querySelectorAll<HTMLButtonElement>("[data-theme-pref]").forEach((entry) => {
+        const selected = entry.dataset.themePref === preference;
+        entry.classList.toggle("border-primary", selected);
+        entry.classList.toggle("text-primary", selected);
+        entry.classList.toggle("bg-primary/10", selected);
+        entry.classList.toggle("border-transparent", !selected);
+      });
     });
   });
 

@@ -5,6 +5,7 @@ import { isNameValid, sanitizeName, type TestInputValue } from "@nametests/core"
 import { homeFeedThumbs } from "../assets/feed";
 import { runtime } from "../GameRuntime";
 import { showHomeOverlay } from "../ui/overlays/homeOverlay";
+import { getThemePreference, setThemePreference } from "../ui/themePreference";
 
 export class HomeScene extends Phaser.Scene {
   constructor() {
@@ -30,6 +31,8 @@ export class HomeScene extends Phaser.Scene {
       heroTitle: homeFeedUiCopy.heroTitle[locale],
       heroBody: homeFeedUiCopy.heroBody[locale],
       languageLabel: homeFeedUiCopy.languageLabel[locale],
+      themeLabel: runtime.copy["settings.themeLabel"] ?? "Theme",
+      themePreference: getThemePreference(),
       hotLabel: homeFeedUiCopy.hotLabel[locale],
       popularLabel: homeFeedUiCopy.popularLabel[locale],
       composerLabel: homeFeedUiCopy.composerLabel[locale],
@@ -95,6 +98,9 @@ export class HomeScene extends Phaser.Scene {
       onChangeLocale: async (nextLocale) => {
         await runtime.setLocale(nextLocale);
         this.scene.restart();
+      },
+      onChangeTheme: (preference) => {
+        setThemePreference(preference);
       },
       onLoadMore: async () => {
         const items = await runtime.loadMoreDiscoveryFeed();
