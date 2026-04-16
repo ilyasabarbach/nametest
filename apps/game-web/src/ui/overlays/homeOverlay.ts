@@ -92,10 +92,25 @@ export function showHomeOverlay(args: {
   let hasMoreFeed = args.hasMoreFeed;
   let loadingMore = false;
   const showStats = args.showStats ?? true;
+  const isLightTheme =
+    args.themePreference === "light" ||
+    (args.themePreference === "auto" && document.documentElement.dataset.platformTheme === "light");
+  const iconColor = "color-mix(in srgb, var(--tg-theme-text-color) 68%, transparent)";
+  const hintColor = "var(--tg-theme-hint-color)";
+  const inputShellBg = isLightTheme
+    ? "color-mix(in srgb, var(--tg-theme-secondary-bg-color) 96%, transparent)"
+    : "color-mix(in srgb, var(--tg-theme-secondary-bg-color) 70%, transparent)";
+  const composerGradient = isLightTheme
+    ? "radial-gradient(circle at 50% -20%, color-mix(in srgb, var(--tg-theme-link-color) 20%, transparent) 0%, var(--tg-theme-bg-color) 70%)"
+    : "radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.15) 0%, rgba(12, 19, 36, 1) 70%)";
 
   const panel = document.createElement("form");
-  panel.className = "fixed inset-0 z-50 overflow-y-auto overflow-x-hidden transition-all duration-300 pointer-events-auto bg-[#0f1014] text-[#dce1fb] font-body";
-  panel.style.backgroundImage = 'radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(190, 0, 98, 0.08) 0%, transparent 40%)';
+  panel.className = "fixed inset-0 z-50 overflow-y-auto overflow-x-hidden transition-all duration-300 pointer-events-auto font-body";
+  panel.style.color = "var(--tg-theme-text-color)";
+  panel.style.backgroundColor = "var(--tg-theme-bg-color)";
+  panel.style.backgroundImage = isLightTheme
+    ? "radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--tg-theme-link-color) 10%, transparent) 0%, transparent 42%), radial-gradient(circle at 80% 70%, color-mix(in srgb, var(--tg-theme-button-color) 10%, transparent) 0%, transparent 42%)"
+    : "radial-gradient(circle at 20% 30%, rgba(147, 51, 234, 0.08) 0%, transparent 40%), radial-gradient(circle at 80% 70%, rgba(190, 0, 98, 0.08) 0%, transparent 40%)";
   panel.dir = args.currentLocale === "ar" ? "rtl" : "ltr";
 
   const hasSelection = () => Boolean(currentSelectedId);
@@ -128,12 +143,12 @@ export function showHomeOverlay(args: {
       .join("");
 
   panel.innerHTML = `
-    <header class="fixed top-0 w-full z-[80] bg-slate-950/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(147,51,234,0.1)] flex justify-between items-center px-6 h-16 w-full pointer-events-auto">
-      <button type="button" class="text-slate-500 hover:text-purple-200 transition-colors active:scale-95 duration-300">
+    <header class="fixed top-0 w-full z-[80] backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full pointer-events-auto" style="background:color-mix(in srgb, var(--tg-theme-bg-color) 88%, transparent); box-shadow:0 4px 30px color-mix(in srgb, var(--tg-theme-link-color) 15%, transparent);">
+      <button type="button" class="transition-colors active:scale-95 duration-300" style="color:${iconColor};">
         <span class="material-symbols-outlined">menu</span>
       </button>
       <h1 class="text-xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-purple-600 font-headline uppercase tracking-[0.2em] text-xs pb-1" data-app-title>${args.socialBrandLabel}</h1>
-      <button type="button" class="text-slate-500 hover:text-purple-200 transition-colors active:scale-95 duration-300" data-action="toggle-settings">
+      <button type="button" class="transition-colors active:scale-95 duration-300" data-action="toggle-settings" style="color:${iconColor};">
         <span class="material-symbols-outlined">settings</span>
       </button>
     </header>
@@ -144,7 +159,8 @@ export function showHomeOverlay(args: {
         .map(
           (locale) => `
             <button
-              class="text-left px-4 py-2 rounded border ${locale.id === args.currentLocale ? 'border-primary text-primary bg-primary/10' : 'border-transparent text-slate-300 hover:bg-white/5'} text-sm font-medium transition-colors"
+              class="text-left px-4 py-2 rounded border ${locale.id === args.currentLocale ? 'border-primary text-primary bg-primary/10' : 'border-transparent hover:bg-white/5'} text-sm font-medium transition-colors"
+              style="${locale.id === args.currentLocale ? "" : `color:${hintColor};`}"
               type="button"
               data-locale-id="${locale.id}"
             >
@@ -156,21 +172,24 @@ export function showHomeOverlay(args: {
       <h3 class="text-sm font-bold text-primary border-b border-white/10 pb-2 mt-3 mb-2">${args.themeLabel}</h3>
       <div class="grid grid-cols-3 gap-2">
         <button
-          class="px-3 py-2 rounded border ${args.themePreference === "auto" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+          class="px-3 py-2 rounded border ${args.themePreference === "auto" ? "border-primary text-primary bg-primary/10" : "border-transparent hover:bg-white/5"} text-xs font-semibold transition-colors"
+          style="${args.themePreference === "auto" ? "" : `color:${hintColor};`}"
           type="button"
           data-theme-pref="auto"
         >
           Auto
         </button>
         <button
-          class="px-3 py-2 rounded border ${args.themePreference === "light" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+          class="px-3 py-2 rounded border ${args.themePreference === "light" ? "border-primary text-primary bg-primary/10" : "border-transparent hover:bg-white/5"} text-xs font-semibold transition-colors"
+          style="${args.themePreference === "light" ? "" : `color:${hintColor};`}"
           type="button"
           data-theme-pref="light"
         >
           Light
         </button>
         <button
-          class="px-3 py-2 rounded border ${args.themePreference === "dark" ? "border-primary text-primary bg-primary/10" : "border-transparent text-slate-300 hover:bg-white/5"} text-xs font-semibold transition-colors"
+          class="px-3 py-2 rounded border ${args.themePreference === "dark" ? "border-primary text-primary bg-primary/10" : "border-transparent hover:bg-white/5"} text-xs font-semibold transition-colors"
+          style="${args.themePreference === "dark" ? "" : `color:${hintColor};`}"
           type="button"
           data-theme-pref="dark"
         >
@@ -226,29 +245,29 @@ export function showHomeOverlay(args: {
       <section class="grid grid-cols-2 gap-4" data-feed-grid>
         ${renderCards(feedItems.slice(1))}
       </section>
-      <div class="text-center py-4 text-xs font-label uppercase tracking-widest text-slate-500" data-feed-sentinel>${hasMoreFeed ? args.feedLoadingLabel : ""}</div>
+      <div class="text-center py-4 text-xs font-label uppercase tracking-widest" style="color:${hintColor};" data-feed-sentinel>${hasMoreFeed ? args.feedLoadingLabel : ""}</div>
     </main>
 
     <!-- Composer View (Input Form) styling taken explicitly from Stitch TestScene.ts prompt !-->
-    <main class="hidden absolute inset-0 z-40 pt-24 pb-40 px-6 max-w-md mx-auto w-full bg-[#0c1324] backdrop-blur-xl transition-opacity duration-300 transform" data-view="composer" style="background: radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.15) 0%, rgba(12, 19, 36, 1) 70%); min-height: 100vh;">
+    <main class="hidden absolute inset-0 z-40 pt-24 pb-32 px-6 max-w-md mx-auto w-full backdrop-blur-xl transition-opacity duration-300 transform overflow-y-auto overscroll-contain" data-view="composer" style="background:${composerGradient}; min-height: 100vh; color: var(--tg-theme-text-color);">
       <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
       
       <div class="flex justify-between items-center mb-10 w-full cursor-pointer" data-action="close-composer">
           <span class="material-symbols-outlined text-purple-400">arrow_back</span>
-          <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500">Back</span>
+          <span class="text-[10px] uppercase tracking-[0.2em] font-bold" style="color:${hintColor};">Back</span>
       </div>
 
       <div class="mb-12 text-center mt-4">
         <span class="text-[10px] uppercase tracking-[0.3em] font-bold text-primary mb-2 block" data-selected-teaser></span>
         <h2 class="text-4xl font-extrabold tracking-tight text-on-surface leading-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary" data-selected-title></h2>
-        <p class="text-sm mt-4 text-slate-400" data-selected-subtitle></p>
+        <p class="text-sm mt-4" style="color:${hintColor};" data-selected-subtitle></p>
       </div>
 
       <div class="space-y-4 relative w-full" data-form-fields>
         <div class="group relative w-full" data-primary-field>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2 ml-4" data-primary-label>${args.primaryLabel}</label>
-          <div class="bg-[rgba(21,27,45,0.6)] backdrop-blur-md rounded-2xl p-[1px] bg-gradient-to-b from-purple-500/30 to-transparent focus-within:from-purple-500 transition-all duration-500 w-full border border-white/5 shadow-2xl">
-            <input class="w-full bg-surface-container-lowest/80 border-none rounded-2xl px-6 py-5 text-on-surface placeholder:text-slate-600 focus:ring-0 text-lg font-medium tracking-wide outline-none placeholder-slate-600 focus:placeholder-transparent" name="primaryName" maxlength="20" autocomplete="off" value="${args.defaultPrimaryName}" type="text" />
+          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] mb-2 ml-4" style="color:${hintColor};" data-primary-label>${args.primaryLabel}</label>
+          <div class="backdrop-blur-md rounded-2xl p-[1px] focus-within:from-purple-500 transition-all duration-500 w-full border shadow-2xl" style="background:${inputShellBg}; border-color:color-mix(in srgb, var(--tg-theme-link-color) 25%, transparent);">
+            <input class="w-full border-none rounded-2xl px-6 py-5 focus:ring-0 text-lg font-medium tracking-wide outline-none focus:placeholder-transparent" style="background:var(--tg-theme-secondary-bg-color); color:var(--tg-theme-text-color);" name="primaryName" maxlength="20" autocomplete="off" value="${args.defaultPrimaryName}" type="text" />
           </div>
         </div>
 
@@ -259,30 +278,30 @@ export function showHomeOverlay(args: {
         </div>
 
         <div class="group relative w-full" data-partner-field>
-          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-2 ml-4" data-partner-label>${args.partnerLabel}</label>
-          <div class="bg-[rgba(21,27,45,0.6)] backdrop-blur-md rounded-2xl p-[1px] bg-gradient-to-b from-purple-500/30 to-transparent focus-within:from-purple-500 transition-all duration-500 w-full border border-white/5 shadow-2xl">
-            <input class="w-full bg-surface-container-lowest/80 border-none rounded-2xl px-6 py-5 text-on-surface placeholder:text-slate-600 focus:ring-0 text-lg font-medium tracking-wide outline-none placeholder-slate-600 focus:placeholder-transparent" name="partnerName" maxlength="20" autocomplete="off" value="${args.defaultPartnerName}" type="text" />
+          <label class="block text-[10px] font-bold uppercase tracking-[0.15em] mb-2 ml-4" style="color:${hintColor};" data-partner-label>${args.partnerLabel}</label>
+          <div class="backdrop-blur-md rounded-2xl p-[1px] focus-within:from-purple-500 transition-all duration-500 w-full border shadow-2xl" style="background:${inputShellBg}; border-color:color-mix(in srgb, var(--tg-theme-link-color) 25%, transparent);">
+            <input class="w-full border-none rounded-2xl px-6 py-5 focus:ring-0 text-lg font-medium tracking-wide outline-none focus:placeholder-transparent" style="background:var(--tg-theme-secondary-bg-color); color:var(--tg-theme-text-color);" name="partnerName" maxlength="20" autocomplete="off" value="${args.defaultPartnerName}" type="text" />
           </div>
         </div>
       </div>
 
-      <div class="fixed bottom-28 left-0 w-full px-6 flex flex-col items-center justify-center z-40 bg-gradient-to-t from-[#0c1324] via-[#0c1324] to-transparent pt-10 pb-6 w-full">
-        <button type="submit" class="w-full max-w-sm h-20 rounded-2xl bg-gradient-to-r from-tertiary-container via-primary-container to-secondary-container text-white font-black text-lg tracking-[0.1em] uppercase shadow-[0_20px_50px_rgba(147,51,234,0.4)] flex items-center justify-center gap-3 active:scale-95 transition-transform w-[90%] mx-auto">
+      <div class="mt-8 px-1 pb-8 flex flex-col items-center justify-center w-full">
+        <button type="submit" class="w-full max-w-sm h-20 rounded-2xl font-black text-lg tracking-[0.1em] uppercase shadow-[0_20px_50px_rgba(147,51,234,0.28)] flex items-center justify-center gap-3 active:scale-95 transition-transform w-[90%] mx-auto" style="background:var(--tg-theme-button-color); color:var(--tg-theme-button-text-color);">
           <span>${args.startLabel}</span>
           <span class="material-symbols-outlined">flare</span>
         </button>
-        <p class="text-[9px] mt-4 text-slate-500 text-center">${args.privacyLabel}</p>
+        <p class="text-[9px] mt-4 text-center" style="color:${hintColor};">${args.privacyLabel}</p>
       </div>
     </main>
 
-    <nav class="fixed bottom-0 w-full bg-slate-950/90 backdrop-blur-2xl rounded-t-[2rem] z-50 flex justify-around items-center px-8 pb-6 pt-4 shadow-[0_-10px_40px_rgba(147,51,234,0.15)] pointer-events-auto">
-      <button type="button" class="bg-purple-500/20 text-purple-300 rounded-full p-3 shadow-[0_0_15px_rgba(147,51,234,0.4)] active:scale-90 duration-200 transition-all">
+    <nav class="fixed bottom-0 w-full backdrop-blur-2xl rounded-t-[2rem] z-50 flex justify-around items-center px-8 pb-6 pt-4 pointer-events-auto" style="background:color-mix(in srgb, var(--tg-theme-bg-color) 90%, transparent); box-shadow:0 -10px 40px color-mix(in srgb, var(--tg-theme-link-color) 15%, transparent);">
+      <button type="button" class="rounded-full p-3 shadow-[0_0_15px_rgba(147,51,234,0.4)] active:scale-90 duration-200 transition-all" style="background:color-mix(in srgb, var(--tg-theme-link-color) 24%, transparent); color:var(--tg-theme-link-color);">
         <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">explore</span>
       </button>
-      <button type="button" class="text-slate-600 p-3 hover:text-purple-400 active:scale-90 duration-200 transition-all">
+      <button type="button" class="p-3 active:scale-90 duration-200 transition-all" style="color:${hintColor};">
         <span class="material-symbols-outlined">auto_awesome</span>
       </button>
-      <button type="button" class="text-slate-600 p-3 hover:text-purple-400 active:scale-90 duration-200 transition-all">
+      <button type="button" class="p-3 active:scale-90 duration-200 transition-all" style="color:${hintColor};">
         <span class="material-symbols-outlined">person</span>
       </button>
     </nav>

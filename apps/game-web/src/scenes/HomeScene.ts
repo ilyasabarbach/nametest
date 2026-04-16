@@ -101,6 +101,7 @@ export class HomeScene extends Phaser.Scene {
       },
       onChangeTheme: (preference) => {
         setThemePreference(preference);
+        this.scene.restart();
       },
       onLoadMore: async () => {
         const items = await runtime.loadMoreDiscoveryFeed();
