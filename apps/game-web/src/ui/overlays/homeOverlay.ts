@@ -128,7 +128,7 @@ export function showHomeOverlay(args: {
       .join("");
 
   panel.innerHTML = `
-    <header class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(147,51,234,0.1)] flex justify-between items-center px-6 h-16 w-full pointer-events-auto">
+    <header class="fixed top-0 w-full z-[80] bg-slate-950/80 backdrop-blur-xl shadow-[0_4px_30px_rgba(147,51,234,0.1)] flex justify-between items-center px-6 h-16 w-full pointer-events-auto">
       <button type="button" class="text-slate-500 hover:text-purple-200 transition-colors active:scale-95 duration-300">
         <span class="material-symbols-outlined">menu</span>
       </button>
@@ -138,7 +138,7 @@ export function showHomeOverlay(args: {
       </button>
     </header>
     
-    <div class="fixed top-16 right-6 mt-2 hidden bg-surface-container-high rounded-xl p-4 shadow-2xl z-50 flex-col gap-2" data-settings-menu>
+    <div class="fixed top-16 right-6 mt-2 hidden bg-surface-container-high rounded-xl p-4 shadow-2xl z-[90] flex-col gap-2" data-settings-menu>
       <h3 class="text-sm font-bold text-primary border-b border-white/10 pb-2 mb-2">${args.languageLabel}</h3>
       ${args.locales
         .map(
@@ -230,7 +230,7 @@ export function showHomeOverlay(args: {
     </main>
 
     <!-- Composer View (Input Form) styling taken explicitly from Stitch TestScene.ts prompt !-->
-    <main class="hidden absolute inset-0 z-50 pt-24 pb-40 px-6 max-w-md mx-auto w-full bg-[#0c1324] backdrop-blur-xl transition-opacity duration-300 transform" data-view="composer" style="background: radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.15) 0%, rgba(12, 19, 36, 1) 70%); min-height: 100vh;">
+    <main class="hidden absolute inset-0 z-40 pt-24 pb-40 px-6 max-w-md mx-auto w-full bg-[#0c1324] backdrop-blur-xl transition-opacity duration-300 transform" data-view="composer" style="background: radial-gradient(circle at 50% -20%, rgba(147, 51, 234, 0.15) 0%, rgba(12, 19, 36, 1) 70%); min-height: 100vh;">
       <input type="hidden" name="selectedTestId" value="${currentSelectedId}" />
       
       <div class="flex justify-between items-center mb-10 w-full cursor-pointer" data-action="close-composer">
@@ -401,6 +401,23 @@ export function showHomeOverlay(args: {
 
   panel.querySelector<HTMLButtonElement>('[data-action="toggle-settings"]')?.addEventListener("click", () => {
     settingsMenu?.classList.toggle("hidden");
+  });
+
+  const handlePlatformSettingsToggle = () => {
+    if (!panel.isConnected) {
+      window.removeEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
+      return;
+    }
+
+    settingsMenu?.classList.toggle("hidden");
+  };
+  window.addEventListener("platform:settings-toggle", handlePlatformSettingsToggle);
+
+  panel.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    if (!target?.closest("[data-action='toggle-settings']") && !target?.closest("[data-settings-menu]")) {
+      settingsMenu?.classList.add("hidden");
+    }
   });
 
   function attachCardListeners() {
