@@ -3,17 +3,23 @@ import { createGame } from "./boot/createGame";
 import { runtime } from "./GameRuntime";
 import { installPlatformLifecycle } from "./platform/installLifecycle";
 import { getThemePreference, type ThemePreference } from "./ui/themePreference";
+import { triggerLightImpact } from "./ui/haptics";
 
 function applyPlatformEnvironment(): void {
   const telegramWebApp = (window as any).Telegram?.WebApp;
   // Ensure we tell Telegram we are ready as early as possible so UI does not hang or fallback.
   telegramWebApp?.ready?.();
 
-  // Globally attach light haptic feedback to all button clicks
+  // Globally attach light haptic feedback to interactive taps
   document.addEventListener("click", (event) => {
     const target = event.target as HTMLElement | null;
-    if (target?.closest("button") || target?.closest("[data-action]")) {
-      (window as any).Telegram?.WebApp?.HapticFeedback?.impactOccurred?.("light");
+    if (
+      target?.closest("button") ||
+      target?.closest("[data-action]") ||
+      target?.closest("[data-test-id]") ||
+      target?.closest("[data-next-story-id]")
+    ) {
+      triggerLightImpact();
     }
   });
 
@@ -83,6 +89,22 @@ function applyPlatformEnvironment(): void {
   syncViewport();
   runtime.platform.onThemeChange?.(() => syncTheme());
   runtime.platform.onViewportChange?.(() => syncViewport());
+
+  const telegramThemeChangedListener = () => {
+    const params = telegramWebApp?.themeParams ?? {};
+    for (const [key, mappedVar] of Object.entries(telegramThemeMap)) {
+      const value = (params as Record<string, string | undefined>)[key];
+      if (!value) {
+        continue;
+      }
+      root.style.setProperty(`--telegram-${key}`, value);
+      root.style.setProperty(mappedVar, value);
+    }
+    syncTheme();
+  };
+
+  telegramWebApp?.onEvent?.("themeChanged", telegramThemeChangedListener);
+
   window.addEventListener("app:theme-preference", (event) => {
     const preference = (event as CustomEvent<{ preference?: ThemePreference }>).detail?.preference;
     if (!preference) {

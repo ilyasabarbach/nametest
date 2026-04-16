@@ -6,6 +6,7 @@ import { homeFeedThumbs } from "../assets/feed";
 import { runtime } from "../GameRuntime";
 import { showHomeOverlay } from "../ui/overlays/homeOverlay";
 import { getThemePreference, setThemePreference } from "../ui/themePreference";
+import { triggerErrorNotification } from "../ui/haptics";
 
 export class HomeScene extends Phaser.Scene {
   constructor() {
@@ -126,11 +127,13 @@ export class HomeScene extends Phaser.Scene {
         const right = requiresPartner ? sanitizeName(partnerName) : "";
 
         if (hasPrimaryPrompt && !isNameValid(left)) {
+          triggerErrorNotification();
           window.alert(runtime.copy["home.validationPrimaryName"] ?? runtime.copy["home.validationNames"]);
           return;
         }
 
         if (requiresPartner && !isNameValid(right)) {
+          triggerErrorNotification();
           window.alert(runtime.copy["home.validationNames"]);
           return;
         }

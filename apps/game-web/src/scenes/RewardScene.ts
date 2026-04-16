@@ -12,6 +12,7 @@ import {
 import { buildShareCard } from "../ui/components/shareCard";
 import { homeFeedThumbs } from "../assets/feed";
 import { getThemePreference, setThemePreference } from "../ui/themePreference";
+import { triggerErrorNotification } from "../ui/haptics";
 
 type NextStory = {
   id: string;
@@ -241,10 +242,74 @@ export class RewardScene extends Phaser.Scene {
         this.scene.start("TestScene");
       },
       onShare: async (selectedTemplate, artifact) => {
-        const imageDataUrl =
-          runtime.platform.id === "telegram"
-            ? undefined
-            : await buildShareCard({
+        try {
+          const imageDataUrl =
+            runtime.platform.id === "telegram"
+              ? undefined
+              : await buildShareCard({
+                  brandLabel: runtime.copy["app.title"],
+                  hook: artifact.hook,
+                  testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
+                  title: artifact.title,
+                  score: card.score,
+                  body: artifact.body,
+                  insight: artifact.insight,
+                  signature: artifact.signature,
+                  signatureLabel: runtime.copy["result.signatureLabel"],
+                  sharePrompt: artifact.shareHint,
+                  names: this.formatNamesForDisplay(
+                    runtime.session.names.primaryName,
+                    runtime.session.names.partnerName,
+                    runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
+                  ),
+                  accent: artifact.accent,
+                  template: selectedTemplate,
+                  posterImageDataUrl: artifact.posterImageDataUrl
+                });
+          runtime.analytics.track({
+            name: "share_started",
+            payload: {
+              platform: runtime.platform.id,
+              surface: "chat",
+              testId: runtime.session.selectedTest.id,
+              resultKey: runtime.session.latestResult!.resultKey
+            }
+          });
+          if (runtime.platform.id === "telegram") {
+            window.sessionStorage.setItem(
+              "telegram-pending-share-return",
+              JSON.stringify({
+                surface: "chat",
+                testId: runtime.session.selectedTest.id,
+                resultKey: runtime.session.latestResult!.resultKey
+              })
+            );
+          }
+          await runtime.shareResultArtifact({
+            title: runtime.copy["result.secretTitle"],
+            text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
+            imageDataUrl,
+            filename: `${runtime.session.selectedTest.id}-secret.png`,
+            template: selectedTemplate
+          });
+          runtime.analytics.track({
+            name: "share_sent",
+            payload: {
+              platform: runtime.platform.id,
+              surface: "chat",
+              testId: runtime.session.selectedTest.id,
+              resultKey: runtime.session.latestResult!.resultKey
+            }
+          });
+        } catch {
+          triggerErrorNotification();
+          window.alert(runtime.copy["result.shareFailed"] ?? "Share failed. Please try again.");
+        }
+      },
+      onShareToStory: runtime.canShareToStory()
+        ? async (selectedTemplate, artifact) => {
+            try {
+              const imageDataUrl = await buildShareCard({
                 brandLabel: runtime.copy["app.title"],
                 hook: artifact.hook,
                 testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
@@ -264,93 +329,8 @@ export class RewardScene extends Phaser.Scene {
                 template: selectedTemplate,
                 posterImageDataUrl: artifact.posterImageDataUrl
               });
-        runtime.analytics.track({
-          name: "share_started",
-          payload: {
-            platform: runtime.platform.id,
-            surface: "chat",
-            testId: runtime.session.selectedTest.id,
-            resultKey: runtime.session.latestResult!.resultKey
-          }
-        });
-        if (runtime.platform.id === "telegram") {
-          window.sessionStorage.setItem(
-            "telegram-pending-share-return",
-            JSON.stringify({
-              surface: "chat",
-              testId: runtime.session.selectedTest.id,
-              resultKey: runtime.session.latestResult!.resultKey
-            })
-          );
-        }
-        await runtime.shareResultArtifact({
-          title: runtime.copy["result.secretTitle"],
-          text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
-          imageDataUrl,
-          filename: `${runtime.session.selectedTest.id}-secret.png`,
-          template: selectedTemplate
-        });
-        runtime.analytics.track({
-          name: "share_sent",
-          payload: {
-            platform: runtime.platform.id,
-            surface: "chat",
-            testId: runtime.session.selectedTest.id,
-            resultKey: runtime.session.latestResult!.resultKey
-          }
-        });
-      },
-      onShareToStory: runtime.canShareToStory()
-        ? async (selectedTemplate, artifact) => {
-            const imageDataUrl = await buildShareCard({
-              brandLabel: runtime.copy["app.title"],
-              hook: artifact.hook,
-              testLabel: runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id,
-              title: artifact.title,
-              score: card.score,
-              body: artifact.body,
-              insight: artifact.insight,
-              signature: artifact.signature,
-              signatureLabel: runtime.copy["result.signatureLabel"],
-              sharePrompt: artifact.shareHint,
-              names: this.formatNamesForDisplay(
-                runtime.session.names.primaryName,
-                runtime.session.names.partnerName,
-                runtime.copy[runtime.session.selectedTest.titleKey] ?? runtime.session.selectedTest.id
-              ),
-              accent: artifact.accent,
-              template: selectedTemplate,
-              posterImageDataUrl: artifact.posterImageDataUrl
-            });
-            runtime.analytics.track({
-              name: "share_started",
-              payload: {
-                platform: runtime.platform.id,
-                surface: "story",
-                testId: runtime.session.selectedTest.id,
-                resultKey: runtime.session.latestResult!.resultKey
-              }
-            });
-            if (runtime.platform.id === "telegram") {
-              window.sessionStorage.setItem(
-                "telegram-pending-share-return",
-                JSON.stringify({
-                  surface: "story",
-                  testId: runtime.session.selectedTest.id,
-                  resultKey: runtime.session.latestResult!.resultKey
-                })
-              );
-            }
-            const shared = await runtime.shareResultStoryArtifact({
-              title: runtime.copy["result.secretTitle"],
-              text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
-              imageDataUrl,
-              filename: `${runtime.session.selectedTest.id}-secret.png`,
-              template: selectedTemplate
-            });
-            if (shared) {
               runtime.analytics.track({
-                name: "share_sent",
+                name: "share_started",
                 payload: {
                   platform: runtime.platform.id,
                   surface: "story",
@@ -358,6 +338,37 @@ export class RewardScene extends Phaser.Scene {
                   resultKey: runtime.session.latestResult!.resultKey
                 }
               });
+              if (runtime.platform.id === "telegram") {
+                window.sessionStorage.setItem(
+                  "telegram-pending-share-return",
+                  JSON.stringify({
+                    surface: "story",
+                    testId: runtime.session.selectedTest.id,
+                    resultKey: runtime.session.latestResult!.resultKey
+                  })
+                );
+              }
+              const shared = await runtime.shareResultStoryArtifact({
+                title: runtime.copy["result.secretTitle"],
+                text: `${runtime.latestShareText()} ${runtime.copy["result.secretTitle"]}.`,
+                imageDataUrl,
+                filename: `${runtime.session.selectedTest.id}-secret.png`,
+                template: selectedTemplate
+              });
+              if (shared) {
+                runtime.analytics.track({
+                  name: "share_sent",
+                  payload: {
+                    platform: runtime.platform.id,
+                    surface: "story",
+                    testId: runtime.session.selectedTest.id,
+                    resultKey: runtime.session.latestResult!.resultKey
+                  }
+                });
+              }
+            } catch {
+              triggerErrorNotification();
+              window.alert(runtime.copy["result.shareFailed"] ?? "Share failed. Please try again.");
             }
           }
         : undefined,

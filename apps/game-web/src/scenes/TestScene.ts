@@ -3,6 +3,7 @@ import { runtime } from "../GameRuntime";
 import { clearHud } from "../ui/components/hud";
 import { pulse } from "../ui/transitions/pulse";
 import { playToneSequence } from "../ui/transitions/playTone";
+import { triggerSuccessNotification } from "../ui/haptics";
 
 type RevealStep = {
   title: string;
@@ -111,6 +112,7 @@ export class TestScene extends Phaser.Scene {
           resultKey: runtime.session.latestResult!.resultKey
         }
       });
+      triggerSuccessNotification();
       this.scene.start("ResultScene");
     };
 
